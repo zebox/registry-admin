@@ -1,0 +1,7 @@
+.idea
+frontend/node_modules
+frontend/yarn.lock
+frontend/build
+app/web
+bin/
+yarn.lock
