@@ -4,4 +4,7 @@ frontend/yarn.lock
 frontend/build
 app/web
 bin/
+certs/
+web/
+compile.bat
 yarn.lock
