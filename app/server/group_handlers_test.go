@@ -18,14 +18,14 @@ import (
 
 func Test_groupCreateCtrl(t *testing.T) {
 	testGroupHandlers := groupHandlers{}
-	testGroupHandlers.dataStore = prepareGroupMock(t)
+	testGroupHandlers.dataStore = prepareGroupMock()
 
 	group := store.Group{
 		Name:        "test_group_1",
 		Description: "test group_1 description",
 	}
 
-	{
+	{ //nolint dupl
 		// testing for create a new group
 
 		testResponse := responseMessage{}
@@ -74,7 +74,7 @@ func Test_groupCreateCtrl(t *testing.T) {
 
 func Test_groupInfoCtrl(t *testing.T) {
 	testGroupHandlers := groupHandlers{}
-	testGroupHandlers.dataStore = prepareGroupMock(t)
+	testGroupHandlers.dataStore = prepareGroupMock()
 
 	group := store.Group{
 		Name:        "test_group_1",
@@ -137,7 +137,7 @@ func Test_groupInfoCtrl(t *testing.T) {
 
 func Test_groupFindCtrl(t *testing.T) {
 	testGroupHandlers := groupHandlers{}
-	testGroupHandlers.dataStore = prepareGroupMock(t)
+	testGroupHandlers.dataStore = prepareGroupMock()
 
 	// create test groups
 	groups := []store.Group{
@@ -225,7 +225,7 @@ func Test_groupFindCtrl(t *testing.T) {
 
 func Test_groupUpdateCtrl(t *testing.T) {
 	testGroupHandlers := groupHandlers{}
-	testGroupHandlers.dataStore = prepareGroupMock(t)
+	testGroupHandlers.dataStore = prepareGroupMock()
 
 	group := store.Group{
 		Name:        "test_group_2",
@@ -347,7 +347,7 @@ func Test_groupUpdateCtrl(t *testing.T) {
 
 func Test_groupDeleteCtrl(t *testing.T) {
 	testGroupHandlers := groupHandlers{}
-	testGroupHandlers.dataStore = prepareGroupMock(t)
+	testGroupHandlers.dataStore = prepareGroupMock()
 
 	group := store.Group{
 		Name:        "test_group_2",
@@ -407,7 +407,7 @@ func Test_groupDeleteCtrl(t *testing.T) {
 
 }
 
-func prepareGroupMock(t *testing.T) engine.Interface {
+func prepareGroupMock() engine.Interface {
 	testGroupStorage := make(map[int64]store.Group)
 
 	var testGroupIndex int64

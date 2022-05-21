@@ -198,7 +198,7 @@ func (s *Server) routes() chi.Router {
 			rootRoute.Use(tollbooth_chi.LimitHandler(tollbooth.NewLimiter(10, nil)))
 			rootRoute.Use(authMiddleware.Trace, middleware.NoCache)
 
-			// this route expose api for manipulation with users entries
+			// this route expose api for manipulation with User entries
 			rootRoute.Route("/users", func(routeUser chi.Router) {
 				routeUser.Use(authMiddleware.Auth, middleware.NoCache)
 				routeUser.Use(authMiddleware.RBAC("admin", "manager"))
@@ -206,7 +206,7 @@ func (s *Server) routes() chi.Router {
 				routeUser.Get("/{id}", uh.userInfoCtrl)
 				routeUser.Get("/", uh.userFindCtrl)
 
-				// operation create/update/delete with Users items allow for admin only
+				// operation create/update/delete with User items allow for admin only
 				routeUser.Group(func(routeAdminUser chi.Router) {
 					routeAdminUser.Use(authMiddleware.RBAC("admin"))
 
@@ -216,7 +216,7 @@ func (s *Server) routes() chi.Router {
 				})
 			})
 
-			// this route expose api for manipulation with group items
+			// this route expose api for manipulation with Group items
 			gh := groupHandlers{eh}
 			rootRoute.Route("/groups", func(routeGroup chi.Router) {
 				routeGroup.Use(authMiddleware.Auth, middleware.NoCache)
@@ -234,6 +234,26 @@ func (s *Server) routes() chi.Router {
 					routeAdminGroup.Delete("/", gh.groupDeleteCtrl)
 				})
 			})
+
+			// this route expose api for manipulation with Access items
+			ah := accessHandlers{eh}
+			rootRoute.Route("/access", func(routeAccess chi.Router) {
+				routeAccess.Use(authMiddleware.Auth, middleware.NoCache)
+				routeAccess.Use(authMiddleware.RBAC("admin", "manager"))
+
+				routeAccess.Get("/{id}", ah.accessInfoCtrl)
+				routeAccess.Get("/", ah.accessFindCtrl)
+
+				// operation create/update/delete with Access items allow for admin only
+				routeAccess.Group(func(routeAdminAccess chi.Router) {
+					routeAdminAccess.Use(authMiddleware.RBAC("admin"))
+
+					routeAdminAccess.Post("/{id}", ah.accessAddCtrl)
+					routeAdminAccess.Put("/{id}", ah.accessUpdateCtrl)
+					routeAdminAccess.Delete("/", ah.accessDeleteCtrl)
+				})
+			})
+
 		})
 	})
 

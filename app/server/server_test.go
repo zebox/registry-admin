@@ -8,6 +8,7 @@ import (
 	"crypto/x509/pkix"
 	"encoding/json"
 	"fmt"
+	"github.com/go-chi/chi/v5"
 	log "github.com/go-pkgz/lgr"
 	"github.com/zebox/gojwk/storage"
 	"github.com/zebox/registry-admin/app/store/engine/embedded"
@@ -17,6 +18,7 @@ import (
 	"math/rand"
 	"net"
 	"net/http"
+	"net/http/httptest"
 	"os"
 	"strconv"
 	"strings"
@@ -566,6 +568,26 @@ func waitForServerStart(port int) {
 			break
 		}
 	}
+}
+
+// request is helper for testing handler request, opts can contain requested ID
+func request(t *testing.T, method, url string, handler http.HandlerFunc, body []byte, expectedStatusCode int) *httptest.ResponseRecorder {
+
+	req, errReq := http.NewRequest(method, url, bytes.NewBuffer(body))
+
+	param := strings.Split(url, "/")
+	if !strings.HasPrefix(url, "?") && len(param) > 4 {
+		rctx := chi.NewRouteContext()
+		req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
+		rctx.URLParams.Add("id", param[4])
+	}
+
+	require.NoError(t, errReq)
+	testWriter := httptest.NewRecorder()
+	h := http.HandlerFunc(handler)
+	h.ServeHTTP(testWriter, req)
+	assert.Equal(t, expectedStatusCode, testWriter.Code)
+	return testWriter
 }
 
 func prepareTestStorage(t *testing.T) *engine.InterfaceMock {
