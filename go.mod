@@ -5,12 +5,15 @@ go 1.16
 require (
 	github.com/didip/tollbooth/v6 v6.1.2
 	github.com/didip/tollbooth_chi v0.0.0-20220429013743-da966f2f674b
+	github.com/docker/distribution v2.8.1+incompatible // indirect
+	github.com/docker/libtrust v0.0.0-20160708172513-aabc10ec26b7 // indirect
 	github.com/go-chi/chi/v5 v5.0.7
 	github.com/go-chi/cors v1.2.1
 	github.com/go-pkgz/auth v1.18.0
 	github.com/go-pkgz/lgr v0.10.4
 	github.com/go-pkgz/rest v1.11.0
 	github.com/gorilla/handlers v1.5.1
+	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/jessevdk/go-flags v1.4.0
 	github.com/mattn/go-sqlite3 v1.14.10

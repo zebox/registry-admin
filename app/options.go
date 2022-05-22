@@ -19,12 +19,12 @@ type configReader interface {
 
 // Options the main parameters for the service
 type Options struct {
-	Version    string
-	Listen     string `short:"l" long:"listen" env:"LISTEN" description:"listen on host:port (127.0.0.1:80/443 without)" json:"listen"`
-	Port       int    `short:"p" long:"port" env:"PORT" description:"Main web-service port. Default:80" default:"80" json:"port"`
-	ConfigPath string `short:"f" long:"config-file" env:"CONFIG_FILE" description:"Path to config file"`
-
-	Auth struct {
+	Version      string
+	Listen       string `short:"l" long:"listen" env:"LISTEN" description:"listen on host:port (127.0.0.1:80/443 without)" json:"listen"`
+	Port         int    `short:"p" long:"port" env:"PORT" description:"Main web-service port. Default:80" default:"80" json:"port"`
+	ConfigPath   string `short:"f" long:"config-file" env:"CONFIG_FILE" description:"Path to config file"`
+	RegistryHost string `long:"registry-host" env:"REGISTRY_HOST" required:"true" description:"Main host or address to docker registry service" json:"registry_host"`
+	Auth         struct {
 		TokenSecret    string `long:"token-secret" env:"AUTH_TOKEN_SECRET" required:"true" description:"Main secret for token" json:"token_secret" `
 		HostName       string `long:"hostname" env:"AUTH_HOST_NAME" default:"localhost" description:"Main hostname of service" json:"host_name"`
 		IssuerName     string `long:"jwt-issuer" env:"AUTH_ISSUER_NAME" required:"true" default:"zebox" description:"Token issuer signature" json:"issuer_name"`
