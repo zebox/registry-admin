@@ -80,7 +80,7 @@ func (rt *registryToken) Generate(authRequest *AuthorizationRequest) (clientToke
 		Expiration: expr,
 		NotBefore:  now - 10,
 		IssuedAt:   now,
-		JWTID:      fmt.Sprintf("%d", rand.Int63()),
+		JWTID:      fmt.Sprintf("%d", rand.Intn(64)),
 		Access:     []*token.ResourceActions{},
 	}
 
