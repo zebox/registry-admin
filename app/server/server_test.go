@@ -715,7 +715,7 @@ func chooseRandomUnusedPort() (port int) {
 	return port
 }
 
-//initTestKeys will create self-signed test keys pair
+// initTestKeys will create self-signed test keys pair
 func initTestKeys(ctx context.Context, t *testing.T) (keys *gojwk.Keys, dir string, err error) {
 
 	dir, err = ioutil.TempDir(os.TempDir(), "tk")
@@ -730,7 +730,7 @@ func initTestKeys(ctx context.Context, t *testing.T) (keys *gojwk.Keys, dir stri
 		SerialNumber: big.NewInt(2019),
 		Subject: pkix.Name{
 
-			Organization:  []string{"TEST, INC."},
+			Organization:  []string{"OLYMP, INC."},
 			Country:       []string{"SPC"},
 			Province:      []string{""},
 			Locality:      []string{"Mars"},

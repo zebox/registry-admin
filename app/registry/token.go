@@ -20,6 +20,32 @@ import (
 
 const defaultTokenExpiration = 60
 
+// AuthorizationRequest is the authorization request data from registry when client auth call
+// for detailed description go to https://docs.docker.com/registry/spec/auth/jwt/
+type AuthorizationRequest struct {
+
+	// Bind to 'sub' token header
+	// The subject of the token; the name or id of the client which requested it.
+	// This should be empty (`""`) if the client did not authenticate.
+	Account string
+
+	// Bind to token 'aud' header. The intended audience of the token; the name or id of the service which will verify
+	// the token to authorize the client/subject.
+	Service string
+
+	// The subject of the token; the name or id of the client which requested it.
+	// This should be empty (`""`) if the client did not authenticate.
+	Type string
+
+	// The name of the resource of the given type hosted by the service.
+	Name string
+
+	// An array of strings which give the actions authorized on this resource.
+	Actions []string
+
+	IP string
+}
+
 // clientToken is Bearer registryToken representing authorized access for a client
 type clientToken struct {
 	// An opaque Bearer registryToken that clients should supply to subsequent requests in the Authorization header.
