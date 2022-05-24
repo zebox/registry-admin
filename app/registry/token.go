@@ -10,15 +10,21 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/pkg/errors"
 	"math/rand"
 	"strings"
 	"time"
 
 	"github.com/docker/distribution/registry/auth/token"
 	"github.com/docker/libtrust"
+
+	log "github.com/go-pkgz/lgr"
 )
 
-const defaultTokenExpiration = 60
+const (
+	defaultTokenIssuer     = "127.0.0.1"
+	defaultTokenExpiration = 60
+)
 
 // AuthorizationRequest is the authorization request data from registry when client auth call
 // for detailed description go to https://docs.docker.com/registry/spec/auth/jwt/
@@ -71,6 +77,55 @@ type registryToken struct {
 	// keys pair for generate JWT signature
 	privateKey libtrust.PrivateKey
 	publicKey  libtrust.PublicKey
+
+	l log.L
+}
+type TokenOption func(option *registryToken)
+
+// TokenExpiration option define custom token expiration time
+func TokenExpiration(expirationTime int64) TokenOption {
+	return func(rt *registryToken) {
+		rt.tokenExpiration = expirationTime
+	}
+}
+
+// TokenIssuer option define token issuer, typically the fqdn of the authorization server
+func TokenIssuer(issuer string) TokenOption {
+	return func(rt *registryToken) {
+		rt.tokenIssuer = issuer
+	}
+}
+
+// TokenLogger define logger instance
+func TokenLogger(l log.L) TokenOption {
+	return func(rt *registryToken) {
+		rt.l = l
+	}
+}
+
+// NewRegistryToken will construct new tokenRegistry instance with required options
+// and allow re-define default option for token generator
+func NewRegistryToken(key libtrust.PrivateKey, publicKey libtrust.PublicKey, secretPhrase string, opts ...TokenOption) (*registryToken, error) {
+	rt := &registryToken{
+		secret:          secretPhrase,
+		privateKey:      key,
+		publicKey:       publicKey,
+		tokenExpiration: defaultTokenExpiration,
+		tokenIssuer:     defaultTokenIssuer,
+		l:               log.Default(),
+	}
+	for _, opt := range opts {
+		opt(rt)
+	}
+
+	if len(secretPhrase) < 10 {
+		log.Print("[WARN] the secret for token sign is weak\n")
+	}
+
+	if rt.tokenExpiration < 1 {
+		return nil, errors.Errorf("token expiration time is invalid, should great more than one")
+	}
+	return rt, nil
 }
 
 func (rt *registryToken) Generate(authRequest *AuthorizationRequest) (clientToken, error) {
@@ -106,7 +161,7 @@ func (rt *registryToken) Generate(authRequest *AuthorizationRequest) (clientToke
 		Expiration: expr,
 		NotBefore:  now - 10,
 		IssuedAt:   now,
-		JWTID:      fmt.Sprintf("%d", rand.Intn(64)),
+		JWTID:      fmt.Sprintf("%d", rand.Intn(4096-1024)+1024),
 		Access:     []*token.ResourceActions{},
 	}
 
