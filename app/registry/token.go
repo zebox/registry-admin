@@ -1,10 +1,10 @@
+package registry
+
 // Token need for authenticate and manage authorizations clients using a separate access control manager.
 // A service is used by the official Docker Registry to authenticate clients and verify their authorization to Docker image repositories.
 // A client should contact the registry first. If the registry server requires authentication it will return a 401 Unauthorized response with a WWW-Authenticate header
 // with details how to authenticate to registry. After authenticate is successfully service will issue an opaque Bearer registryToken that clients should supply to subsequent requests
-// in the Authorization header.
-
-package registry
+// in the Authorization header. More details by link https://docs.docker.com/registry/spec/auth/jwt/
 
 import (
 	"encoding/base64"
@@ -25,32 +25,6 @@ const (
 	defaultTokenIssuer     = "127.0.0.1"
 	defaultTokenExpiration = 60
 )
-
-// AuthorizationRequest is the authorization request data from registry when client auth call
-// for detailed description go to https://docs.docker.com/registry/spec/auth/jwt/
-type AuthorizationRequest struct {
-
-	// Bind to 'sub' token header
-	// The subject of the token; the name or id of the client which requested it.
-	// This should be empty (`""`) if the client did not authenticate.
-	Account string
-
-	// Bind to token 'aud' header. The intended audience of the token; the name or id of the service which will verify
-	// the token to authorize the client/subject.
-	Service string
-
-	// The subject of the token; the name or id of the client which requested it.
-	// This should be empty (`""`) if the client did not authenticate.
-	Type string
-
-	// The name of the resource of the given type hosted by the service.
-	Name string
-
-	// An array of strings which give the actions authorized on this resource.
-	Actions []string
-
-	IP string
-}
 
 // clientToken is Bearer registryToken representing authorized access for a client
 type clientToken struct {
