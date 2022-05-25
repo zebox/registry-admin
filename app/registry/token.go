@@ -28,7 +28,7 @@ const (
 	defaultTokenIssuer     = "127.0.0.1"
 	defaultTokenExpiration = 60
 
-	// names of generated certificate
+	// default names of generated certificate
 	privateKeyName = "/registry_auth.key"
 	publicKeyName  = "/registry_auth.pub"
 	CAName         = "/registry_auth_ca.crt"
@@ -60,6 +60,8 @@ type registryToken struct {
 	privateKey libtrust.PrivateKey
 	publicKey  libtrust.PublicKey
 
+	keyName, publicKeyName, CARootName string // define names for certs files when CreateNew call
+
 	l log.L
 }
 type TokenOption func(option *registryToken)
@@ -85,6 +87,15 @@ func TokenLogger(l log.L) TokenOption {
 	}
 }
 
+// CertsName define custom certs file name
+func CertsName(keyName, publicKeyName, CARoot string) TokenOption {
+	return func(rt *registryToken) {
+		rt.keyName = "/" + keyName
+		rt.publicKeyName = "/" + publicKeyName
+		rt.CARootName = "/" + CARoot
+	}
+}
+
 // NewRegistryToken will construct new tokenRegistry instance with required options
 // and allow re-define default option for token generator
 func NewRegistryToken(key libtrust.PrivateKey, publicKey libtrust.PublicKey, secretPhrase string, opts ...TokenOption) (*registryToken, error) {
@@ -95,7 +106,12 @@ func NewRegistryToken(key libtrust.PrivateKey, publicKey libtrust.PublicKey, sec
 		tokenExpiration: defaultTokenExpiration,
 		tokenIssuer:     defaultTokenIssuer,
 		l:               log.Default(),
+
+		keyName:       privateKeyName,
+		publicKeyName: publicKeyName,
+		CARootName:    CAName,
 	}
+
 	for _, opt := range opts {
 		opt(rt)
 	}
@@ -143,7 +159,7 @@ func (rt *registryToken) Generate(authRequest *AuthorizationRequest) (clientToke
 		Expiration: expr,
 		NotBefore:  now - 10,
 		IssuedAt:   now,
-		JWTID:      fmt.Sprintf("%d", rand.Intn(4096-1024)+1024),
+		JWTID:      fmt.Sprintf("%d", rand.Intn(4096-1024)+1024), // nolint
 		Access:     []*token.ResourceActions{},
 	}
 
@@ -188,34 +204,34 @@ func (rt *registryToken) CreateCerts(path string) error {
 		return errCa
 	}
 
-	return saveKeys(path, privateKey, publicKey, ca)
+	return rt.saveKeys(path, privateKey, publicKey, ca)
 }
 
-func saveKeys(certPath string, privateKey libtrust.PrivateKey, publicKey libtrust.PublicKey, certificate *x509.Certificate) error {
+func (rt registryToken) saveKeys(certsPath string, privateKey libtrust.PrivateKey, publicKey libtrust.PublicKey, certificate *x509.Certificate) error {
 
 	// check if certs already exist
-	if _, err := os.Stat(certPath + privateKeyName); err == nil {
-		return errors.Errorf("private key file alread exist in: %s", certPath)
+	if _, err := os.Stat(certsPath + rt.keyName); err == nil {
+		return errors.Errorf("private key file alread exist in: %s", certsPath)
 	}
 
-	if _, err := os.Stat(certPath + publicKeyName); err == nil {
-		return errors.Errorf("public key file alread exist in: %s", certPath)
+	if _, err := os.Stat(certsPath + rt.publicKeyName); err == nil {
+		return errors.Errorf("public key file alread exist in: %s", certsPath)
 	}
 
-	if _, err := os.Stat(certPath + CAName); err == nil {
-		return errors.Errorf("CA bundle file alread exist in: %s", certPath)
+	if _, err := os.Stat(certsPath + rt.CARootName); err == nil {
+		return errors.Errorf("CA bundle file alread exist in: %s", certsPath)
 	}
 
 	// trying save new certs to files
-	if err := libtrust.SaveKey(certPath+privateKeyName, privateKey); err != nil {
+	if err := libtrust.SaveKey(certsPath+rt.keyName, privateKey); err != nil {
 		return errors.Wrap(err, "failed to parse private key to PEM")
 	}
 
-	if err := libtrust.SavePublicKey(certPath+publicKeyName, publicKey); err != nil {
+	if err := libtrust.SavePublicKey(certsPath+rt.publicKeyName, publicKey); err != nil {
 		return errors.Wrap(err, "failed to save public key to file")
 	}
 
-	err := ioutil.WriteFile(certPath+CAName, certificate.Raw, 0750)
+	err := ioutil.WriteFile(certsPath+rt.CARootName, certificate.Raw, 0644) // nolint:gosec
 	if err != nil {
 		return errors.Wrap(err, "failed to save CA bundle to file")
 	}

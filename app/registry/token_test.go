@@ -24,6 +24,9 @@ func TestNewRegistryToken(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, int64(defaultTokenExpiration), rt.tokenExpiration)
 	assert.Equal(t, defaultTokenIssuer, rt.tokenIssuer)
+	assert.Equal(t, privateKeyName, rt.keyName)
+	assert.Equal(t, publicKeyName, rt.publicKeyName)
+	assert.Equal(t, CAName, rt.CARootName)
 
 	// test with options
 	rt, err = NewRegistryToken(
@@ -32,11 +35,16 @@ func TestNewRegistryToken(t *testing.T) {
 		"super-secret-password",
 		TokenExpiration(10),
 		TokenIssuer("127.0.0.2"),
-		TokenLogger(log.Default()))
+		TokenLogger(log.Default()),
+		CertsName("test.key", "test.pub", "test_ca.crt"),
+	)
 
 	require.NoError(t, err)
 	assert.Equal(t, int64(10), rt.tokenExpiration)
 	assert.Equal(t, "127.0.0.2", rt.tokenIssuer)
+	assert.Equal(t, "/test.key", rt.keyName)
+	assert.Equal(t, "/test.pub", rt.publicKeyName)
+	assert.Equal(t, "/test_ca.crt", rt.CARootName)
 
 	// test with error
 	_, err = NewRegistryToken(
@@ -87,21 +95,15 @@ func TestRegistryToken_Generate(t *testing.T) {
 func TestRegistryToken_CreateCerts(t *testing.T) {
 
 	tmpPath := os.TempDir()
-	rt := registryToken{}
+
+	rt := registryToken{
+		keyName:       privateKeyName,
+		publicKeyName: publicKeyName,
+		CARootName:    CAName,
+	}
 
 	err := rt.CreateCerts(tmpPath)
 	require.NoError(t, err)
-
-	defer func() {
-		err = os.Remove(tmpPath + privateKeyName)
-		assert.NoError(t, err)
-
-		err = os.Remove(tmpPath + publicKeyName)
-		assert.NoError(t, err)
-
-		err = os.Remove(tmpPath + CAName)
-		assert.NoError(t, err)
-	}()
 
 	_, err = libtrust.LoadKeyFile(tmpPath + privateKeyName)
 	assert.NoError(t, err)
@@ -111,4 +113,33 @@ func TestRegistryToken_CreateCerts(t *testing.T) {
 
 	_, err = libtrust.LoadCertificateBundle(tmpPath + CAName)
 	assert.NoError(t, err)
+
+	// test with error when certs exist
+	err = rt.CreateCerts(tmpPath)
+	assert.Error(t, err)
+	assert.NoError(t, os.Remove(tmpPath+privateKeyName))
+
+	err = rt.CreateCerts(tmpPath)
+	assert.Error(t, err)
+	assert.NoError(t, os.Remove(tmpPath+publicKeyName))
+
+	err = rt.CreateCerts(tmpPath)
+	assert.Error(t, err)
+	assert.NoError(t, os.Remove(tmpPath+CAName))
+
+	// test  with error when path error
+	err = rt.CreateCerts(tmpPath + "unknown_path")
+	assert.Error(t, err)
+
+	rt.CARootName = ""
+	err = rt.CreateCerts(tmpPath)
+	assert.Error(t, err)
+
+	rt.publicKeyName = ""
+	err = rt.CreateCerts(tmpPath)
+	assert.Error(t, err)
+
+	rt.keyName = ""
+	err = rt.CreateCerts(tmpPath)
+	assert.Error(t, err)
 }
