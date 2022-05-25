@@ -6,6 +6,7 @@ import (
 	"github.com/golang-jwt/jwt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"os"
 	"testing"
 )
 
@@ -81,4 +82,33 @@ func TestRegistryToken_Generate(t *testing.T) {
 	assert.Equal(t, authReq.Account, claims["sub"])
 	assert.Equal(t, authReq.Service, claims["aud"])
 
+}
+
+func TestRegistryToken_CreateCerts(t *testing.T) {
+
+	tmpPath := os.TempDir()
+	rt := registryToken{}
+
+	err := rt.CreateCerts(tmpPath)
+	require.NoError(t, err)
+
+	defer func() {
+		err = os.Remove(tmpPath + privateKeyName)
+		assert.NoError(t, err)
+
+		err = os.Remove(tmpPath + publicKeyName)
+		assert.NoError(t, err)
+
+		err = os.Remove(tmpPath + CAName)
+		assert.NoError(t, err)
+	}()
+
+	_, err = libtrust.LoadKeyFile(tmpPath + privateKeyName)
+	assert.NoError(t, err)
+
+	_, err = libtrust.LoadPublicKeyFile(tmpPath + publicKeyName)
+	assert.NoError(t, err)
+
+	_, err = libtrust.LoadCertificateBundle(tmpPath + CAName)
+	assert.NoError(t, err)
 }

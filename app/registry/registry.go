@@ -34,13 +34,18 @@ type AuthorizationRequest struct {
 type authType int8
 
 const (
-	Basic       authType = iota // allow access using auth basic credentials
-	TokenServer                 // define this service as main auth/authz server for docker registry host
-	Token                       // defined token for access to docker registry
+	Basic     authType = iota // allow access using auth basic credentials
+	Token                     // defined token for access to docker registry
+	SelfToken                 // define this service as main auth/authz server for docker registry host
 )
 
 type registryTokenInterface interface {
+	// Generate This method will generate JWT for auth check at self-hosted docker registry host
 	Generate(authRequest *AuthorizationRequest) (clientToken, error)
+
+	// CreateCerts will create new bundle with key, cert and CA bundle where 'self-token' registry auth type is used
+	// the path input parameter define where created certs will be stored
+	CreateCerts(path string) error
 }
 
 type Options struct {

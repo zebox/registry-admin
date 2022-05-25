@@ -19,13 +19,22 @@ type configReader interface {
 
 // Options the main parameters for the service
 type Options struct {
-	Version      string
-	Listen       string `short:"l" long:"listen" env:"LISTEN" description:"listen on host:port (127.0.0.1:80/443 without)" json:"listen"`
-	Port         int    `short:"p" long:"port" env:"PORT" description:"Main web-service port. Default:80" default:"80" json:"port"`
-	ConfigPath   string `short:"f" long:"config-file" env:"CONFIG_FILE" description:"Path to config file"`
-	RegistryHost string `long:"registry-host" env:"REGISTRY_HOST" required:"true" description:"Main host or address to docker registry service" json:"registry_host"`
-	Auth         struct {
-		TokenSecret    string `long:"token-secret" env:"AUTH_TOKEN_SECRET" required:"true" description:"Main secret for token" json:"token_secret" `
+	Version    string
+	Listen     string `short:"l" long:"listen" env:"LISTEN" description:"listen on host:port (127.0.0.1:80/443 without)" json:"listen"`
+	Port       int    `short:"p" long:"port" env:"PORT" description:"Main web-service port. Default:80" default:"80" json:"port"`
+	ConfigPath string `short:"f" long:"config-file" env:"CONFIG_FILE" description:"Path to config file"`
+
+	Registry struct {
+		Host     string `long:"registry-host" env:"REGISTRY_HOST" required:"true" description:"Main host or address to docker registry service" json:"registry_host"`
+		AuthType string `long:"registry-auth-type" env:"REGISTRY_AUTH_TYPE" description:"Type for auth to docker registry service. Available 'basic', 'token' and 'self_token'. Default 'basic''" choice:"basic" choice:"token" choice:"self-token" default:"basic" json:"registry_type_auth"`
+		Login    string `long:"registry-login" env:"REGISTRY_LOGIN" description:"Username is a credential for access to registry service using basic auth type"`
+		Password string `long:"registry-password" env:"REGISTRY_PASSWORD" description:"Password is a credential for access to registry service using basic auth type"`
+		Issuer   string `long:"registry-token-issuer" env:"REGISTRY_TOKEN_ISSUER" description:"Token issuer name when using 'self-token' auth type"`
+		CertPath string `long:"registry-cert-path" env:"REGISTRY_CERT_PATH" description:"A path where will be stored new self-signed cert/keys/CA when using 'self-token' auth type"`
+	} `group:"registry" namespace:"registry" env-namespace:"REGISTRY" json:"registry"`
+
+	Auth struct {
+		TokenSecret    string `long:"token-secret" env:"AUTH_TOKEN_SECRET" required:"true" description:"Main secret for auth token sign" json:"token_secret" `
 		HostName       string `long:"hostname" env:"AUTH_HOST_NAME" default:"localhost" description:"Main hostname of service" json:"host_name"`
 		IssuerName     string `long:"jwt-issuer" env:"AUTH_ISSUER_NAME" required:"true" default:"zebox" description:"Token issuer signature" json:"issuer_name"`
 		TokenDuration  string `long:"jwt-ttl" env:"AUTH_JWT_TTL" default:"1h" description:"Define JWT expired timeout" json:"jwt_ttl"`

@@ -7,11 +7,14 @@ package registry
 // in the Authorization header. More details by link https://docs.docker.com/registry/spec/auth/jwt/
 
 import (
+	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"github.com/pkg/errors"
+	"io/ioutil"
 	"math/rand"
+	"os"
 	"strings"
 	"time"
 
@@ -24,6 +27,11 @@ import (
 const (
 	defaultTokenIssuer     = "127.0.0.1"
 	defaultTokenExpiration = 60
+
+	// names of generated certificate
+	privateKeyName = "/registry_auth.key"
+	publicKeyName  = "/registry_auth.pub"
+	CAName         = "/registry_auth_ca.crt"
 )
 
 // clientToken is Bearer registryToken representing authorized access for a client
@@ -159,6 +167,57 @@ func (rt *registryToken) Generate(authRequest *AuthorizationRequest) (clientToke
 	if err != nil && sigAlgo != algo {
 		return clientToken{}, err
 	}
+
 	tokenString := fmt.Sprintf("%s%s%s", payload, token.TokenSeparator, encodeToBase64(sig))
 	return clientToken{Token: tokenString, AccessToken: tokenString}, nil
+}
+
+func (rt *registryToken) CreateCerts(path string) error {
+	privateKey, errKey := libtrust.GenerateRSA2048PrivateKey()
+	if errKey != nil {
+		return errKey
+	}
+
+	publicKey, errPubKey := libtrust.FromCryptoPublicKey(privateKey.CryptoPublicKey())
+	if errKey != nil {
+		return errPubKey
+	}
+
+	ca, errCa := libtrust.GenerateCACert(privateKey, publicKey)
+	if errKey != nil {
+		return errCa
+	}
+
+	return saveKeys(path, privateKey, publicKey, ca)
+}
+
+func saveKeys(certPath string, privateKey libtrust.PrivateKey, publicKey libtrust.PublicKey, certificate *x509.Certificate) error {
+
+	// check if certs already exist
+	if _, err := os.Stat(certPath + privateKeyName); err == nil {
+		return errors.Errorf("private key file alread exist in: %s", certPath)
+	}
+
+	if _, err := os.Stat(certPath + publicKeyName); err == nil {
+		return errors.Errorf("public key file alread exist in: %s", certPath)
+	}
+
+	if _, err := os.Stat(certPath + CAName); err == nil {
+		return errors.Errorf("CA bundle file alread exist in: %s", certPath)
+	}
+
+	// trying save new certs to files
+	if err := libtrust.SaveKey(certPath+privateKeyName, privateKey); err != nil {
+		return errors.Wrap(err, "failed to parse private key to PEM")
+	}
+
+	if err := libtrust.SavePublicKey(certPath+publicKeyName, publicKey); err != nil {
+		return errors.Wrap(err, "failed to save public key to file")
+	}
+
+	err := ioutil.WriteFile(certPath+CAName, certificate.Raw, 0750)
+	if err != nil {
+		return errors.Wrap(err, "failed to save CA bundle to file")
+	}
+	return nil
 }
