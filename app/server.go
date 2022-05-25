@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/zebox/registry-admin/app/registry"
 	"github.com/zebox/registry-admin/app/store/engine/embedded"
 	"io"
 	"math"
@@ -133,6 +134,39 @@ func checkHostnameForURL(hostname, sslMode string) string {
 	}
 
 	return hostname
+}
+
+// createRegistryConnection will prepare registry connection instance
+func createRegistryConnection(opts RegistryGroup) (*registry.Registry, error) {
+
+	var registryOptions registry.Options
+
+	if opts.Host == "" {
+		return nil, errors.New("registry host undefined")
+	}
+
+	registryOptions.Host = strings.TrimRight(opts.Host, "/")
+
+	// select auth type
+	switch opts.AuthType {
+	case "basic":
+		registryOptions.AuthType = registry.Basic
+	case "token":
+		registryOptions.AuthType = registry.Token
+	case "self_toke":
+		registryOptions.AuthType = registry.SelfToken
+	default:
+		return nil, errors.Errorf("registry auth type '%s' not support", opts.AuthType)
+	}
+
+	if registryOptions.AuthType == registry.SelfToken && opts.CertsPath != "" {
+		if _, err := os.Stat(opts.CertsPath); err != nil {
+			return nil, err
+		}
+		registryOptions.CertsPath = opts.CertsPath
+	}
+
+	return nil, nil
 }
 
 func sizeParse(inp string) (uint64, error) {

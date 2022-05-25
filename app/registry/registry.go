@@ -56,10 +56,15 @@ type Options struct {
 	// define authenticate type for access to docker registry api
 	AuthType authType
 
-	// define path to for keys bundles
-	Key    string // is a private key
-	Cert   string // is a public key
-	CARoot string // is CA root bundle
+	// path to certs for loading private, public and CARoot files for token generator
+	CertsPath string
+
+	/*	// define path to for keys bundles
+		key    string // is a private key
+		cert   string // is a public key
+		caRoot string // is CA root bundle
+	*/
+
 }
 
 // Registry is main instance for manipulation access of self-hosted docker registry

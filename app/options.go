@@ -24,14 +24,7 @@ type Options struct {
 	Port       int    `short:"p" long:"port" env:"PORT" description:"Main web-service port. Default:80" default:"80" json:"port"`
 	ConfigPath string `short:"f" long:"config-file" env:"CONFIG_FILE" description:"Path to config file"`
 
-	Registry struct {
-		Host     string `long:"registry-host" env:"REGISTRY_HOST" required:"true" description:"Main host or address to docker registry service" json:"registry_host"`
-		AuthType string `long:"registry-auth-type" env:"REGISTRY_AUTH_TYPE" description:"Type for auth to docker registry service. Available 'basic', 'token' and 'self_token'. Default 'basic''" choice:"basic" choice:"token" choice:"self-token" default:"basic" json:"registry_type_auth"`
-		Login    string `long:"registry-login" env:"REGISTRY_LOGIN" description:"Username is a credential for access to registry service using basic auth type"`
-		Password string `long:"registry-password" env:"REGISTRY_PASSWORD" description:"Password is a credential for access to registry service using basic auth type"`
-		Issuer   string `long:"registry-token-issuer" env:"REGISTRY_TOKEN_ISSUER" description:"Token issuer name when using 'self-token' auth type"`
-		CertPath string `long:"registry-cert-path" env:"REGISTRY_CERT_PATH" description:"A path where will be stored new self-signed cert/keys/CA when using 'self-token' auth type"`
-	} `group:"registry" namespace:"registry" env-namespace:"REGISTRY" json:"registry"`
+	Registry RegistryGroup `group:"registry" namespace:"registry" env-namespace:"REGISTRY" json:"registry"`
 
 	Auth struct {
 		TokenSecret    string `long:"token-secret" env:"AUTH_TOKEN_SECRET" required:"true" description:"Main secret for auth token sign" json:"token_secret" `
@@ -73,6 +66,16 @@ type StoreGroup struct {
 	Embed struct {
 		Path string `long:"path" env:"DB_PATH" default:"./data.db" description:"parent directory for the sqlite files" json:"path"`
 	} `group:"embed" namespace:"embed" env-namespace:"embed" json:"embed"`
+}
+
+type RegistryGroup struct {
+	Host      string `long:"host" env:"REGISTRY_HOST" required:"true" description:"Main host or address to docker registry service" json:"host"`
+	AuthType  string `long:"auth-type" env:"REGISTRY_AUTH_TYPE" description:"Type for auth to docker registry service. Available 'basic', 'token' and 'self_token'. Default 'basic''" choice:"basic" choice:"token" choice:"self-token" default:"basic" json:"auth_type"`
+	Secret    string `long:"token-secret" env:"REGISTRY_TOKEN_SECRET" description:"Token secret for sign token when using 'self-token' auth type"  json:"token_secret"`
+	Login     string `long:"login" env:"REGISTRY_LOGIN" description:"Username is a credential for access to registry service using basic auth type" json:"login"`
+	Password  string `long:"password" env:"REGISTRY_PASSWORD" description:"Password is a credential for access to registry service using basic auth type" json:"password"`
+	Issuer    string `long:"token-issuer" env:"REGISTRY_TOKEN_ISSUER" description:"Token issuer name when using 'self-token' auth type"  json:"token_issuer"`
+	CertsPath string `long:"certs-path" env:"REGISTRY_CERT_PATH" description:"A path where will be stored new self-signed cert/keys/CA when using 'self-token' auth type" json:"certs_path"`
 }
 
 func parseArgs() (*Options, error) {
