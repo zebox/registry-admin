@@ -151,9 +151,7 @@ func createRegistryConnection(opts RegistryGroup) (*registry.Registry, error) {
 	switch opts.AuthType {
 	case "basic":
 		registryOptions.AuthType = registry.Basic
-	case "token":
-		registryOptions.AuthType = registry.Token
-	case "self_toke":
+	case "self_token":
 		registryOptions.AuthType = registry.SelfToken
 	default:
 		return nil, errors.Errorf("registry auth type '%s' not support", opts.AuthType)
@@ -163,8 +161,14 @@ func createRegistryConnection(opts RegistryGroup) (*registry.Registry, error) {
 		if _, err := os.Stat(opts.Certs.Path); err != nil {
 			return nil, err
 		}
-		registryOptions.CertsPath = opts.Certs.Path
+
+		registryOptions.Certs.Path = opts.Certs.Path
+		registryOptions.Certs.Key = opts.Certs.Key
+		registryOptions.Certs.PublicKey = opts.Certs.PublicKey
+		registryOptions.Certs.CARoot = opts.Certs.CARoot
+
 	}
+
 	return nil, nil
 }
 

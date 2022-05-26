@@ -35,7 +35,6 @@ type authType int8
 
 const (
 	Basic     authType = iota // allow access using auth basic credentials
-	Token                     // defined token for access to docker registry
 	SelfToken                 // define this service as main auth/authz server for docker registry host
 )
 
@@ -56,12 +55,29 @@ type Options struct {
 	// define authenticate type for access to docker registry api
 	AuthType authType
 
-	// path to certs for loading private, public and CARoot files for token generator
-	CertsPath string
+	// path to certs either for loading private, public and CARoot files or path to save when CreateCerts done
+	Certs struct {
+		Path      string
+		Key       string
+		PublicKey string
+		CARoot    string
+	}
 }
 
 // Registry is main instance for manipulation access of self-hosted docker registry
 type Registry struct {
 	Options
 	registryToken registryTokenInterface
+}
+
+func NewRegistry(opts Options) (*Registry, error) {
+
+	var r *Registry
+	r.Options = opts
+
+	if r.AuthType == SelfToken {
+
+	}
+
+	return nil, nil
 }
