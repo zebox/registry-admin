@@ -159,13 +159,12 @@ func createRegistryConnection(opts RegistryGroup) (*registry.Registry, error) {
 		return nil, errors.Errorf("registry auth type '%s' not support", opts.AuthType)
 	}
 
-	if registryOptions.AuthType == registry.SelfToken && opts.CertsPath != "" {
-		if _, err := os.Stat(opts.CertsPath); err != nil {
+	if registryOptions.AuthType == registry.SelfToken && opts.Certs.Path != "" {
+		if _, err := os.Stat(opts.Certs.Path); err != nil {
 			return nil, err
 		}
-		registryOptions.CertsPath = opts.CertsPath
+		registryOptions.CertsPath = opts.Certs.Path
 	}
-
 	return nil, nil
 }
 

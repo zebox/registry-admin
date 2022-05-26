@@ -69,13 +69,19 @@ type StoreGroup struct {
 }
 
 type RegistryGroup struct {
-	Host      string `long:"host" env:"REGISTRY_HOST" required:"true" description:"Main host or address to docker registry service" json:"host"`
-	AuthType  string `long:"auth-type" env:"REGISTRY_AUTH_TYPE" description:"Type for auth to docker registry service. Available 'basic', 'token' and 'self_token'. Default 'basic''" choice:"basic" choice:"token" choice:"self-token" default:"basic" json:"auth_type"`
-	Secret    string `long:"token-secret" env:"REGISTRY_TOKEN_SECRET" description:"Token secret for sign token when using 'self-token' auth type"  json:"token_secret"`
-	Login     string `long:"login" env:"REGISTRY_LOGIN" description:"Username is a credential for access to registry service using basic auth type" json:"login"`
-	Password  string `long:"password" env:"REGISTRY_PASSWORD" description:"Password is a credential for access to registry service using basic auth type" json:"password"`
-	Issuer    string `long:"token-issuer" env:"REGISTRY_TOKEN_ISSUER" description:"Token issuer name when using 'self-token' auth type"  json:"token_issuer"`
-	CertsPath string `long:"certs-path" env:"REGISTRY_CERT_PATH" description:"A path where will be stored new self-signed cert/keys/CA when using 'self-token' auth type" json:"certs_path"`
+	Host     string `long:"host" env:"REGISTRY_HOST" required:"true" description:"Main host or address to docker registry service" json:"host"`
+	AuthType string `long:"auth-type" env:"REGISTRY_AUTH_TYPE" description:"Type for auth to docker registry service. Available 'basic', 'token' and 'self_token'. Default 'basic''" choice:"basic" choice:"token" choice:"self-token" default:"basic" json:"auth_type"`
+	Secret   string `long:"token-secret" env:"REGISTRY_TOKEN_SECRET" description:"Token secret for sign token when using 'self-token' auth type"  json:"token_secret"`
+	Login    string `long:"login" env:"REGISTRY_LOGIN" description:"Username is a credential for access to registry service using basic auth type" json:"login"`
+	Password string `long:"password" env:"REGISTRY_PASSWORD" description:"Password is a credential for access to registry service using basic auth type" json:"password"`
+	Issuer   string `long:"token-issuer" env:"REGISTRY_TOKEN_ISSUER" description:"Token issuer name when using 'self-token' auth type"  json:"token_issuer"`
+
+	Certs struct {
+		Path      string `long:"path" env:"REGISTRY_CERT_PATH" description:"A path where will be stored new self-signed cert,keys and CA files, when 'self-token' auth type is used" json:"certs_path"`
+		Key       string `long:"key" env:"REGISTRY_KEY_PATH" description:"A path where will be stored new self-signed private key file, when 'self-token' auth type is used" json:"key"`
+		PublicKey string `long:"public-key" env:"REGISTRY_PUBLIC_KEY_PATH" description:"A path where will be stored new self-signed public key file, when 'self-token' auth type is used" json:"public_key"`
+		CARoot    string `long:"ca-root" env:"REGISTRY_CA_ROOT_PATH" description:"A path where will be stored new CA bundles file, when 'self-token' auth type is used" json:"ca_root"`
+	} `group:"certs" namespace:"certs" env-namespace:"certs" json:"certs"`
 }
 
 func parseArgs() (*Options, error) {

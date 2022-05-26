@@ -58,13 +58,6 @@ type Options struct {
 
 	// path to certs for loading private, public and CARoot files for token generator
 	CertsPath string
-
-	/*	// define path to for keys bundles
-		key    string // is a private key
-		cert   string // is a public key
-		caRoot string // is CA root bundle
-	*/
-
 }
 
 // Registry is main instance for manipulation access of self-hosted docker registry
