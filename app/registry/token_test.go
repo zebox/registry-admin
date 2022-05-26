@@ -105,6 +105,12 @@ func TestRegistryToken_CreateCerts(t *testing.T) {
 	err := rt.CreateCerts(tmpPath)
 	require.NoError(t, err)
 
+	defer func() {
+		_ = os.Remove(tmpPath + CAName)
+		_ = os.Remove(tmpPath + privateKeyName)
+		_ = os.Remove(tmpPath + publicKeyName)
+	}()
+
 	_, err = libtrust.LoadKeyFile(tmpPath + privateKeyName)
 	assert.NoError(t, err)
 
@@ -131,15 +137,19 @@ func TestRegistryToken_CreateCerts(t *testing.T) {
 	err = rt.CreateCerts(tmpPath + "unknown_path")
 	assert.Error(t, err)
 
-	rt.CARootName = ""
+	rt.publicKeyName = "*"
 	err = rt.CreateCerts(tmpPath)
 	assert.Error(t, err)
 
-	rt.publicKeyName = ""
+	rt.keyName = "*"
 	err = rt.CreateCerts(tmpPath)
 	assert.Error(t, err)
+	assert.NoError(t, os.Remove(tmpPath+privateKeyName))
 
-	rt.keyName = ""
+	rt.keyName = privateKeyName
+	rt.publicKeyName = publicKeyName
+
+	rt.CARootName = "*"
 	err = rt.CreateCerts(tmpPath)
 	assert.Error(t, err)
 }

@@ -11,6 +11,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
 	"io/ioutil"
 	"math/rand"
@@ -33,6 +34,8 @@ const (
 	publicKeyName  = "/registry_auth.pub"
 	CAName         = "/registry_auth_ca.crt"
 )
+
+var ErrTemplateCertFileAlreadyExist = "cert file '%s' already exist in %s"
 
 // clientToken is Bearer registryToken representing authorized access for a client
 type clientToken struct {
@@ -209,17 +212,28 @@ func (rt *registryToken) CreateCerts(path string) error {
 
 func (rt registryToken) saveKeys(certsPath string, privateKey libtrust.PrivateKey, publicKey libtrust.PublicKey, certificate *x509.Certificate) error {
 
+	var errExist error
 	// check if certs already exist
 	if _, err := os.Stat(certsPath + rt.keyName); err == nil {
-		return errors.Errorf("private key file alread exist in: %s", certsPath)
+		err = errors.Errorf(ErrTemplateCertFileAlreadyExist, rt.keyName, certsPath)
+		errExist = multierror.Append(errExist, err)
+		// return errors.Errorf("private key file alread exist in: %s", certsPath)
 	}
 
 	if _, err := os.Stat(certsPath + rt.publicKeyName); err == nil {
-		return errors.Errorf("public key file alread exist in: %s", certsPath)
+		err = errors.Errorf(ErrTemplateCertFileAlreadyExist, rt.publicKeyName, certsPath)
+		errExist = multierror.Append(errExist, err)
+		// return errors.Errorf("public key file alread exist in: %s", certsPath)
 	}
 
 	if _, err := os.Stat(certsPath + rt.CARootName); err == nil {
-		return errors.Errorf("CA bundle file alread exist in: %s", certsPath)
+		err = errors.Errorf(ErrTemplateCertFileAlreadyExist, rt.CARootName, certsPath)
+		errExist = multierror.Append(errExist, err)
+		// return errors.Errorf("CA bundle file alread exist in: %s", certsPath)
+	}
+
+	if errExist != nil {
+		return errExist
 	}
 
 	// trying save new certs to files
