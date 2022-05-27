@@ -11,45 +11,46 @@ import (
 )
 
 func TestNewRegistryToken(t *testing.T) {
-	privateKey, errKey := libtrust.GenerateRSA2048PrivateKey()
+	/*privateKey, errKey := libtrust.GenerateRSA2048PrivateKey()
 	require.NoError(t, errKey)
 	publicKey, errPubKey := libtrust.FromCryptoPublicKey(privateKey.CryptoPublicKey())
-	require.NoError(t, errPubKey)
+	require.NoError(t, errPubKey)*/
 
-	// test with defaults
-	rt, err := NewRegistryToken(
-		privateKey,
-		publicKey,
-		"super-secret-password")
+	// test with defaults with generate
+	rt, err := NewRegistryToken("super-secret-password")
 	require.NoError(t, err)
 	assert.Equal(t, int64(defaultTokenExpiration), rt.tokenExpiration)
 	assert.Equal(t, defaultTokenIssuer, rt.tokenIssuer)
-	assert.Equal(t, privateKeyName, rt.keyName)
-	assert.Equal(t, publicKeyName, rt.publicKeyName)
-	assert.Equal(t, CAName, rt.CARootName)
+	assert.Equal(t, privateKeyName, rt.KeyPath)
+	assert.Equal(t, publicKeyName, rt.PublicKeyPath)
+	assert.Equal(t, CAName, rt.CARootPath)
 
 	// test with options
+	tmpDir, errDir := os.MkdirTemp("test_", "test_cert")
+	require.NoError(t, errDir)
 	rt, err = NewRegistryToken(
-		privateKey,
-		publicKey,
+
 		"super-secret-password",
 		TokenExpiration(10),
 		TokenIssuer("127.0.0.2"),
 		TokenLogger(log.Default()),
-		CertsName("test.key", "test.pub", "test_ca.crt"),
+		CertsName(Certs{
+			tmpDir,
+			tmpDir + "/test.key",
+			tmpDir + "/test.pub",
+			tmpDir + "/test_ca.crt",
+		}),
 	)
 
 	require.NoError(t, err)
 	assert.Equal(t, int64(10), rt.tokenExpiration)
 	assert.Equal(t, "127.0.0.2", rt.tokenIssuer)
-	assert.Equal(t, "/test.key", rt.keyName)
-	assert.Equal(t, "/test.pub", rt.publicKeyName)
-	assert.Equal(t, "/test_ca.crt", rt.CARootName)
+	assert.Equal(t, tmpDir+"/test.key", rt.KeyPath)
+	assert.Equal(t, tmpDir+"/test.pub", rt.PublicKeyPath)
+	assert.Equal(t, tmpDir+"/test_ca.crt", rt.CARootPath)
 
 	// test with error
 	_, err = NewRegistryToken(
-		privateKey,
-		publicKey,
 		"abc",
 		TokenExpiration(0))
 	require.Error(t, err)
@@ -95,14 +96,17 @@ func TestRegistryToken_Generate(t *testing.T) {
 func TestRegistryToken_CreateCerts(t *testing.T) {
 
 	tmpPath := os.TempDir()
+	tmpDir, errDir := os.MkdirTemp("test_", "cert")
+	require.NoError(t, errDir)
 
-	rt := registryToken{
-		keyName:       privateKeyName,
-		publicKeyName: publicKeyName,
-		CARootName:    CAName,
-	}
+	rt := registryToken{}
 
-	err := rt.CreateCerts(tmpPath)
+	rt.RootPath = tmpDir
+	rt.KeyPath = tmpDir + privateKeyName
+	rt.PublicKeyPath = tmpDir + publicKeyName
+	rt.CARootPath = tmpDir + CAName
+
+	err := rt.CreateCerts()
 	require.NoError(t, err)
 
 	defer func() {
@@ -121,15 +125,15 @@ func TestRegistryToken_CreateCerts(t *testing.T) {
 	assert.NoError(t, err)
 
 	// test with error when certs exist
-	err = rt.CreateCerts(tmpPath)
+	err = rt.CreateCerts()
 	assert.Error(t, err)
 	assert.NoError(t, os.Remove(tmpPath+privateKeyName))
 
-	err = rt.CreateCerts(tmpPath)
+	err = rt.CreateCerts()
 	assert.Error(t, err)
 	assert.NoError(t, os.Remove(tmpPath+publicKeyName))
 
-	err = rt.CreateCerts(tmpPath)
+	err = rt.CreateCerts()
 	assert.Error(t, err)
 	assert.NoError(t, os.Remove(tmpPath+CAName))
 
