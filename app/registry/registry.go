@@ -55,12 +55,9 @@ type Options struct {
 	// define authenticate type for access to docker registry api
 	AuthType authType
 
-	// path to certs either for loading private, public and CARoot files or path to save when CreateCerts done
-	Certs struct {
-		Path      string
-		Key       string
-		PublicKey string
-		CARoot    string
+	// credentials define user and login pair for auth in docker registry, when auth type set as basic
+	Credentials struct {
+		Login, Password string
 	}
 }
 

@@ -30,12 +30,22 @@ const (
 	defaultTokenExpiration = 60
 
 	// default names of generated certificate
+	certsDirName   = "./registry-certs"
 	privateKeyName = "/registry_auth.key"
 	publicKeyName  = "/registry_auth.pub"
 	CAName         = "/registry_auth_ca.crt"
 )
 
 var ErrTemplateCertFileAlreadyExist = "cert file '%s' already exist in %s"
+
+// Certs will define a path to certs either for loading private, public and CARoot files or path to save ones when CreateCerts call.
+// CreateCerts doesn't overwrite existed files in a path, user should delete them before method call.
+type Certs struct {
+	RootPath      string
+	KeyPath       string
+	PublicKeyPath string
+	CARootPath    string
+}
 
 // clientToken is Bearer registryToken representing authorized access for a client
 type clientToken struct {
@@ -49,6 +59,7 @@ type clientToken struct {
 }
 
 type registryToken struct {
+	Certs
 
 	// registryToken claims field
 	tokenIssuer string
@@ -62,8 +73,6 @@ type registryToken struct {
 	// keys pair for generate JWT signature
 	privateKey libtrust.PrivateKey
 	publicKey  libtrust.PublicKey
-
-	keyName, publicKeyName, CARootName string // define names for certs files when CreateNew call
 
 	l log.L
 }
@@ -91,11 +100,12 @@ func TokenLogger(l log.L) TokenOption {
 }
 
 // CertsName define custom certs file name
-func CertsName(keyName, publicKeyName, CARoot string) TokenOption {
+func CertsName(certs Certs) TokenOption {
 	return func(rt *registryToken) {
-		rt.keyName = "/" + keyName
-		rt.publicKeyName = "/" + publicKeyName
-		rt.CARootName = "/" + CARoot
+		rt.RootPath = certs.CARootPath
+		rt.PublicKeyPath = certs.PublicKeyPath
+		rt.KeyPath = certs.KeyPath
+		rt.CARootPath = certs.CARootPath
 	}
 }
 
@@ -109,10 +119,6 @@ func NewRegistryToken(key libtrust.PrivateKey, publicKey libtrust.PublicKey, sec
 		tokenExpiration: defaultTokenExpiration,
 		tokenIssuer:     defaultTokenIssuer,
 		l:               log.Default(),
-
-		keyName:       privateKeyName,
-		publicKeyName: publicKeyName,
-		CARootName:    CAName,
 	}
 
 	for _, opt := range opts {
@@ -208,6 +214,20 @@ func (rt *registryToken) CreateCerts(path string) error {
 	}
 
 	return rt.saveKeys(path, privateKey, publicKey, ca)
+}
+
+func (rt *registryToken) loadCerts(certs *Certs) (err error) {
+
+	if _, err = os.Stat(certs.KeyPath); err != nil {
+		return err
+	}
+
+	rt.privateKey, err = libtrust.LoadKeyFile(certs.KeyPath)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (rt registryToken) saveKeys(certsPath string, privateKey libtrust.PrivateKey, publicKey libtrust.PublicKey, certificate *x509.Certificate) error {
