@@ -16,6 +16,7 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -30,7 +31,7 @@ const (
 	defaultTokenExpiration = 60
 
 	// default names of generated certificate
-	certsDirName   = "./registry-certs"
+	certsDirName   = ".registry-certs"
 	privateKeyName = "/registry_auth.key"
 	publicKeyName  = "/registry_auth.pub"
 	CAName         = "/registry_auth_ca.crt"
@@ -121,11 +122,24 @@ func NewRegistryToken(secretPhrase string, opts ...TokenOption) (*registryToken,
 		l:               log.Default(),
 	}
 
+	// Create default directory where certificates will be created by default.
+	// The directory default path is a home directory at user which process run under
+	userHomeDir, err := os.UserHomeDir()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to obtain home directory for user which process run")
+	}
+	path := filepath.ToSlash(userHomeDir) + "/" + certsDirName // fix backslashes for Windows path
+
+	if err = os.Mkdir(path, os.ModeDir); err != nil && !os.IsExist(err) {
+		return nil, errors.Wrap(err, "failed to create default directory for save certificates")
+	}
+	err = nil // reset if dir already exist error occurred
+
 	// define default certificate files path
-	rt.RootPath = certsDirName
-	rt.PublicKeyPath = certsDirName + privateKeyName
-	rt.KeyPath = certsDirName + publicKeyName
-	rt.CARootPath = certsDirName + CAName
+	rt.RootPath = path
+	rt.PublicKeyPath = rt.RootPath + publicKeyName
+	rt.KeyPath = rt.RootPath + privateKeyName
+	rt.CARootPath = rt.RootPath + CAName
 
 	for _, opt := range opts {
 		opt(rt)
@@ -233,21 +247,21 @@ func (rt *registryToken) CreateCerts() (err error) {
 
 func (rt *registryToken) loadCerts() (err error) {
 
-	if _, err = os.Stat(rt.KeyPath); err != nil {
+	if _, err = os.Stat(rt.Certs.RootPath); err != nil {
 		return err
 	}
 
-	rt.privateKey, err = libtrust.LoadKeyFile(rt.KeyPath)
+	rt.privateKey, err = libtrust.LoadKeyFile(rt.Certs.KeyPath)
 	if err != nil {
 		return err
 	}
 
-	rt.publicKey, err = libtrust.LoadKeyFile(rt.PublicKeyPath)
+	rt.publicKey, err = libtrust.LoadPublicKeyFile(rt.Certs.PublicKeyPath)
 	if err != nil {
 		return err
 	}
 
-	bundle, errCaLoad := libtrust.LoadCertificateBundle(rt.CARootPath)
+	bundle, errCaLoad := libtrust.LoadCertificateBundle(rt.Certs.CARootPath)
 	if errCaLoad != nil {
 		return errCaLoad
 	}
@@ -289,7 +303,7 @@ func (rt registryToken) saveKeys() error {
 		return errors.Wrap(err, "failed to save public key to file")
 	}
 
-	err := ioutil.WriteFile(rt.CARootPath, rt.caRoot.Raw, 0644) // nolint:gosec
+	err := ioutil.WriteFile(rt.CARootPath, rt.caRoot.Raw, os.ModePerm)
 	if err != nil {
 		return errors.Wrap(err, "failed to save CA bundle to file")
 	}

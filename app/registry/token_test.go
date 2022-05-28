@@ -7,26 +7,37 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"os"
+	"path/filepath"
 	"testing"
 )
 
 func TestNewRegistryToken(t *testing.T) {
-	/*privateKey, errKey := libtrust.GenerateRSA2048PrivateKey()
-	require.NoError(t, errKey)
-	publicKey, errPubKey := libtrust.FromCryptoPublicKey(privateKey.CryptoPublicKey())
-	require.NoError(t, errPubKey)*/
+
+	userHomeDir, err := os.UserHomeDir()
+	if err != nil {
+		require.NoError(t, err)
+	}
+	path := filepath.ToSlash(userHomeDir) + "/" + certsDirName // fix backslashes for Windows path
+
+	defer func() {
+		assert.NoError(t, os.RemoveAll(path))
+	}()
 
 	// test with defaults with generate
 	rt, err := NewRegistryToken("super-secret-password")
 	require.NoError(t, err)
 	assert.Equal(t, int64(defaultTokenExpiration), rt.tokenExpiration)
 	assert.Equal(t, defaultTokenIssuer, rt.tokenIssuer)
-	assert.Equal(t, privateKeyName, rt.KeyPath)
-	assert.Equal(t, publicKeyName, rt.PublicKeyPath)
-	assert.Equal(t, CAName, rt.CARootPath)
+	assert.Equal(t, path+privateKeyName, rt.KeyPath)
+	assert.Equal(t, path+publicKeyName, rt.PublicKeyPath)
+	assert.Equal(t, path+CAName, rt.CARootPath)
+
+	// test with loading exist certs
+	rt, err = NewRegistryToken("super-secret-password")
+	require.NoError(t, err)
 
 	// test with options
-	tmpDir, errDir := os.MkdirTemp("test_", "test_cert")
+	tmpDir, errDir := os.MkdirTemp("", "test_cert")
 	require.NoError(t, errDir)
 	rt, err = NewRegistryToken(
 
@@ -138,22 +149,22 @@ func TestRegistryToken_CreateCerts(t *testing.T) {
 	assert.NoError(t, os.Remove(tmpPath+CAName))
 
 	// test  with error when path error
-	err = rt.CreateCerts(tmpPath + "unknown_path")
+	err = rt.CreateCerts()
 	assert.Error(t, err)
 
-	rt.publicKeyName = "*"
-	err = rt.CreateCerts(tmpPath)
+	rt.Certs.KeyPath = "*"
+	err = rt.CreateCerts()
 	assert.Error(t, err)
 
-	rt.keyName = "*"
-	err = rt.CreateCerts(tmpPath)
+	rt.Certs.PublicKeyPath = "*"
+	err = rt.CreateCerts()
 	assert.Error(t, err)
 	assert.NoError(t, os.Remove(tmpPath+privateKeyName))
 
-	rt.keyName = privateKeyName
-	rt.publicKeyName = publicKeyName
+	rt.Certs.KeyPath = privateKeyName
+	rt.Certs.PublicKeyPath = publicKeyName
 
-	rt.CARootName = "*"
-	err = rt.CreateCerts(tmpPath)
+	rt.Certs.CARootPath = "*"
+	err = rt.CreateCerts()
 	assert.Error(t, err)
 }
