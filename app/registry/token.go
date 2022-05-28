@@ -7,9 +7,11 @@ package registry
 // in the Authorization header. More details by link https://docs.docker.com/registry/spec/auth/jwt/
 
 import (
+	"bytes"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
@@ -104,7 +106,7 @@ func TokenLogger(l log.L) TokenOption {
 // CertsName define custom certs file name
 func CertsName(certs Certs) TokenOption {
 	return func(rt *registryToken) {
-		rt.RootPath = certs.CARootPath
+		rt.RootPath = certs.RootPath
 		rt.PublicKeyPath = certs.PublicKeyPath
 		rt.KeyPath = certs.KeyPath
 		rt.CARootPath = certs.CARootPath
@@ -133,7 +135,6 @@ func NewRegistryToken(secretPhrase string, opts ...TokenOption) (*registryToken,
 	if err = os.Mkdir(path, os.ModeDir); err != nil && !os.IsExist(err) {
 		return nil, errors.Wrap(err, "failed to create default directory for save certificates")
 	}
-	err = nil // reset if dir already exist error occurred
 
 	// define default certificate files path
 	rt.RootPath = path
@@ -303,7 +304,17 @@ func (rt registryToken) saveKeys() error {
 		return errors.Wrap(err, "failed to save public key to file")
 	}
 
-	err := ioutil.WriteFile(rt.CARootPath, rt.caRoot.Raw, os.ModePerm)
+	certPEM := new(bytes.Buffer)
+	err := pem.Encode(certPEM, &pem.Block{
+		Type:  "CERTIFICATE",
+		Bytes: rt.caRoot.Raw,
+	})
+
+	if err != nil {
+		return errors.Wrap(err, "failed to encode certificate for file save")
+	}
+
+	err = ioutil.WriteFile(rt.CARootPath, certPEM.Bytes(), os.ModePerm)
 	if err != nil {
 		return errors.Wrap(err, "failed to save CA bundle to file")
 	}
