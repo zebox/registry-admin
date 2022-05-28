@@ -41,8 +41,8 @@ const (
 
 var ErrTemplateCertFileAlreadyExist = "cert file '%s' already exist"
 
-// Certs will define a path to certs either for loading private, public and CARoot files or path to save ones when CreateCerts call.
-// CreateCerts doesn't overwrite existed files in a path, user should delete them before method call.
+// Certs will define a path to certs either for loading private, public and CARoot files or path to save ones when createCerts call.
+// createCerts doesn't overwrite existed files in a path, user should delete them before method call.
 type Certs struct {
 	RootPath      string
 	KeyPath       string
@@ -155,7 +155,7 @@ func NewRegistryToken(secretPhrase string, opts ...TokenOption) (*registryToken,
 	}
 
 	if err := rt.loadCerts(); err != nil {
-		err = rt.CreateCerts()
+		err = rt.createCerts()
 		if err != nil {
 			return nil, err
 		}
@@ -226,7 +226,7 @@ func (rt *registryToken) Generate(authRequest *AuthorizationRequest) (clientToke
 	return clientToken{Token: tokenString, AccessToken: tokenString}, nil
 }
 
-func (rt *registryToken) CreateCerts() (err error) {
+func (rt *registryToken) createCerts() (err error) {
 
 	rt.privateKey, err = libtrust.GenerateRSA2048PrivateKey()
 	if err != nil {

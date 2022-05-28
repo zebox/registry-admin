@@ -165,7 +165,7 @@ func TestRegistryToken_CreateCerts(t *testing.T) {
 	rt.PublicKeyPath = tmpDir + publicKeyName
 	rt.CARootPath = tmpDir + CAName
 
-	err := rt.CreateCerts()
+	err := rt.createCerts()
 	require.NoError(t, err)
 
 	defer func() {
@@ -182,31 +182,31 @@ func TestRegistryToken_CreateCerts(t *testing.T) {
 	assert.NoError(t, err)
 
 	// test with error when certs exist
-	err = rt.CreateCerts()
+	err = rt.createCerts()
 	assert.Error(t, err)
 	assert.NoError(t, os.Remove(tmpDir+privateKeyName))
 
-	err = rt.CreateCerts()
+	err = rt.createCerts()
 	assert.Error(t, err)
 	assert.NoError(t, os.Remove(tmpDir+publicKeyName))
 
-	err = rt.CreateCerts()
+	err = rt.createCerts()
 	assert.Error(t, err)
 	assert.NoError(t, os.Remove(tmpDir+CAName))
 
 	// test  with error when path error
 	rt.Certs.KeyPath = "*"
-	err = rt.CreateCerts()
+	err = rt.createCerts()
 	assert.Error(t, err)
 
 	rt.Certs.PublicKeyPath = "*"
-	err = rt.CreateCerts()
+	err = rt.createCerts()
 	assert.Error(t, err)
 
 	rt.Certs.KeyPath = privateKeyName
 	rt.Certs.PublicKeyPath = publicKeyName
 
 	rt.Certs.CARootPath = "*"
-	err = rt.CreateCerts()
+	err = rt.createCerts()
 	assert.Error(t, err)
 }

@@ -1,5 +1,10 @@
 package registry
 
+import (
+	"errors"
+	"reflect"
+)
+
 // This is package implement features for interacts with instances of the docker registry,
 // which is a service to manage information about docker images and enable their distribution using HTTP API V2 protocol
 // detailed protocol description: https://docs.docker.com/registry/spec/api
@@ -41,13 +46,9 @@ const (
 type registryTokenInterface interface {
 	// Generate This method will generate JWT for auth check at self-hosted docker registry host
 	Generate(authRequest *AuthorizationRequest) (clientToken, error)
-
-	// CreateCerts will create new bundle with key, cert and CA bundle where 'self-token' registry auth type is used
-	// the path input parameter define where created certs will be stored
-	CreateCerts(path string) error
 }
 
-type Options struct {
+type Settings struct {
 
 	// Host is a fqdn of docker registry host
 	Host string
@@ -56,25 +57,58 @@ type Options struct {
 	AuthType authType
 
 	// credentials define user and login pair for auth in docker registry, when auth type set as basic
-	Credentials struct {
-		Login, Password string
+	credentials struct {
+		login, password string
 	}
+
+	// CertificatesPaths define a path to private, public keys and CA certificate.
+	// If CertificatesPaths has all fields are empty, registryToken will create keys by default, with default path.
+	// If CertificatesPaths has all fields are empty, but certificates files exist registryToken try to load existed keys and CA file.
+	CertificatesPaths Certs
 }
 
 // Registry is main instance for manipulation access of self-hosted docker registry
 type Registry struct {
-	Options
+	settings      Settings
 	registryToken registryTokenInterface
 }
 
-func NewRegistry(opts Options) (*Registry, error) {
+// NewRegistry is main constructor for create registry access API instance
+func NewRegistry(login, password, secret string, settings Settings) (*Registry, error) {
 
-	var r *Registry
-	r.Options = opts
+	var r = new(Registry)
 
-	if r.AuthType == SelfToken {
+	r.settings = settings
 
+	if r.settings.AuthType == Basic && login == "" {
+		return nil, errors.New("at least login should set when basic auth type is set")
 	}
 
-	return nil, nil
+	r.settings.credentials.login = login
+	r.settings.credentials.password = password
+
+	if r.settings.AuthType == SelfToken {
+		if len(secret) == 0 {
+			return nil, errors.New("token secret must be defined for 'self_token' auth type")
+		}
+
+		// checking for at least one field of certs path is filled, other fields must require filled too
+		v := reflect.ValueOf(settings.CertificatesPaths)
+		var certsPathIsFilled bool
+		for i := 0; i < v.NumField(); i++ {
+			field := v.Field(i).Interface()
+			switch val := field.(type) {
+			case string:
+				if val == "" && certsPathIsFilled {
+					return nil, errors.New("all fields of certificate path value required if at least on is defined")
+				}
+				if val != "" {
+					certsPathIsFilled = true
+				}
+			}
+		}
+		// registryToken, err := NewRegistryToken(secret)
+	}
+
+	return r, nil
 }

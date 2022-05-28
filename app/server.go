@@ -139,37 +139,34 @@ func checkHostnameForURL(hostname, sslMode string) string {
 // createRegistryConnection will prepare registry connection instance
 func createRegistryConnection(opts RegistryGroup) (*registry.Registry, error) {
 
-	var registryOptions registry.Options
+	var registrySettings registry.Settings
 
 	if opts.Host == "" {
 		return nil, errors.New("registry host undefined")
 	}
 
-	registryOptions.Host = strings.TrimRight(opts.Host, "/")
+	registrySettings.Host = strings.TrimRight(opts.Host, "/")
 
-	// select auth type
+	// select registry auth type
 	switch opts.AuthType {
 	case "basic":
-		registryOptions.AuthType = registry.Basic
+		registrySettings.AuthType = registry.Basic
 	case "self_token":
-		registryOptions.AuthType = registry.SelfToken
+		registrySettings.AuthType = registry.SelfToken
 	default:
 		return nil, errors.Errorf("registry auth type '%s' not support", opts.AuthType)
 	}
 
-	if registryOptions.AuthType == registry.SelfToken && opts.Certs.Path != "" {
-		if _, err := os.Stat(opts.Certs.Path); err != nil {
-			return nil, err
-		}
+	if registrySettings.AuthType == registry.SelfToken {
 
-		registryOptions.Certs.Path = opts.Certs.Path
-		registryOptions.Certs.Key = opts.Certs.Key
-		registryOptions.Certs.PublicKey = opts.Certs.PublicKey
-		registryOptions.Certs.CARoot = opts.Certs.CARoot
-
+		// paths to private, public keys and CA certificates for token generation if 'self_token' auth type defined
+		registrySettings.CertificatesPaths.RootPath = opts.Certs.Path
+		registrySettings.CertificatesPaths.KeyPath = opts.Certs.Key
+		registrySettings.CertificatesPaths.PublicKeyPath = opts.Certs.PublicKey
+		registrySettings.CertificatesPaths.CARootPath = opts.Certs.CARoot
 	}
 
-	return nil, nil
+	return registry.NewRegistry(opts.Login, opts.Password, opts.Secret, registrySettings)
 }
 
 func sizeParse(inp string) (uint64, error) {
