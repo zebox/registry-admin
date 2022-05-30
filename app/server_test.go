@@ -127,3 +127,60 @@ func Test_makeDataStore(t *testing.T) {
 	assert.Error(t, errIs)
 	assert.Equal(t, iStore, nil)
 }
+
+func Test_createRegistryConnection(t *testing.T) {
+	tmpDir, errDir := os.MkdirTemp("", "test_cert")
+	require.NoError(t, errDir)
+
+	defer func() {
+		assert.NoError(t, os.RemoveAll(tmpDir))
+	}()
+
+	opts := Options{
+		Registry: RegistryGroup{
+			Host:     "http://127.0.0.1/",
+			Port:     5000,
+			AuthType: "self_token",
+			Secret:   "test_secret",
+			Login:    "test_login",
+			Password: "test_password",
+			Certs: struct {
+				Path      string `long:"path" env:"REGISTRY_CERT_PATH" description:"A path where will be stored new self-signed cert,keys and CA files, when 'self-token' auth type is used" json:"certs_path"`
+				Key       string `long:"key" env:"REGISTRY_KEY_PATH" description:"A path where will be stored new self-signed private key file, when 'self-token' auth type is used" json:"key"`
+				PublicKey string `long:"public-key" env:"REGISTRY_PUBLIC_KEY_PATH" description:"A path where will be stored new self-signed public key file, when 'self-token' auth type is used" json:"public_key"`
+				CARoot    string `long:"ca-root" env:"REGISTRY_CA_ROOT_PATH" description:"A path where will be stored new CA bundles file, when 'self-token' auth type is used" json:"ca_root"`
+			}(struct {
+				Path      string
+				Key       string
+				PublicKey string
+				CARoot    string
+			}{Path: tmpDir + "/", Key: tmpDir + "/test.key", PublicKey: tmpDir + "/test.pub", CARoot: tmpDir + "/test.crt"}),
+		},
+	}
+
+	rc, err := createRegistryConnection(opts.Registry)
+	assert.NoError(t, err)
+	assert.NotNil(t, rc)
+
+	opts.Registry.AuthType = "basic"
+	rc, err = createRegistryConnection(opts.Registry)
+	assert.NoError(t, err)
+	assert.NotNil(t, rc)
+
+	// test for error
+	opts.Registry.AuthType = "unknown"
+	rc, err = createRegistryConnection(opts.Registry)
+	assert.Error(t, err)
+	assert.Nil(t, rc)
+
+	opts.Registry.Port = 0
+	rc, err = createRegistryConnection(opts.Registry)
+	assert.Error(t, err)
+	assert.Nil(t, rc)
+
+	opts.Registry.Host = ""
+	rc, err = createRegistryConnection(opts.Registry)
+	assert.Error(t, err)
+	assert.Nil(t, rc)
+
+}

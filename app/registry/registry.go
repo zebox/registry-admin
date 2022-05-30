@@ -43,15 +43,13 @@ const (
 	SelfToken                 // define this service as main auth/authz server for docker registry host
 )
 
-type registryTokenInterface interface {
-	// Generate This method will generate JWT for auth check at self-hosted docker registry host
-	Generate(authRequest *AuthorizationRequest) (clientToken, error)
-}
-
 type Settings struct {
 
 	// Host is a fqdn of docker registry host
 	Host string
+
+	// Port which registry accept requests
+	Port int
 
 	// define authenticate type for access to docker registry api
 	AuthType authType
@@ -70,7 +68,7 @@ type Settings struct {
 // Registry is main instance for manipulation access of self-hosted docker registry
 type Registry struct {
 	settings      Settings
-	registryToken registryTokenInterface
+	registryToken *registryToken
 }
 
 // NewRegistry is main constructor for create registry access API instance
@@ -102,12 +100,30 @@ func NewRegistry(login, password, secret string, settings Settings) (*Registry, 
 				if val == "" && certsPathIsFilled {
 					return nil, errors.New("all fields of certificate path value required if at least on is defined")
 				}
+
+				// if filled only last field of list, but previously fields not filled
+				if i == v.NumField()-1 && val != "" && !certsPathIsFilled {
+					return nil, errors.New("all fields of certificate path value required if at least on is defined")
+				}
 				if val != "" {
 					certsPathIsFilled = true
 				}
+
 			}
 		}
-		// registryToken, err := NewRegistryToken(secret)
+
+		var err error
+		if certsPathIsFilled {
+			r.registryToken, err = NewRegistryToken(secret, TokenIssuer(settings.Host), CertsName(settings.CertificatesPaths))
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			r.registryToken, err = NewRegistryToken(secret, TokenIssuer(settings.Host))
+			if err != nil {
+				return nil, err
+			}
+		}
 	}
 
 	return r, nil

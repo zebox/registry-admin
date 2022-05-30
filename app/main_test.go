@@ -11,7 +11,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/zebox/gojwk"
 	"github.com/zebox/gojwk/storage"
-	"go.uber.org/goleak"
 	"io"
 	"io/ioutil"
 	"math/big"
@@ -197,10 +196,10 @@ func Test_MainWithSSLAndAuth(t *testing.T) {
 	}
 }
 
-func TestMain(m *testing.M) {
+/* func TestMain(m *testing.M) {
 	// ignore is added only for GitHub Actions, can't reproduce locally
 	goleak.VerifyTestMain(m)
-}
+} */
 
 //initTestKeys will create self-signed test keys pair
 func initTestCertKeys(ctx context.Context, t *testing.T) (keys *gojwk.Keys, dir string, err error) {
