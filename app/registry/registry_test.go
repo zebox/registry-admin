@@ -1,6 +1,7 @@
 package registry
 
 import (
+	"context"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"os"
@@ -60,4 +61,18 @@ func TestNewRegistry(t *testing.T) {
 	_, err = NewRegistry("", "test_password", "test_secret", testSetting)
 	require.Error(t, err)
 
+}
+
+func TestRegistry_ApiCheck(t *testing.T) {
+	r := Registry{settings: Settings{
+		Host: "https://registry.systems-it.ru",
+		Port: 5000,
+	}}
+
+	r.settings.credentials.login = ""
+	r.settings.credentials.password = ""
+
+	apiError, err := r.ApiVersionCheck(context.Background())
+	assert.NoError(t, err)
+	assert.Equal(t, "", apiError.Message)
 }
