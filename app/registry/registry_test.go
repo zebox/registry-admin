@@ -2,8 +2,11 @@ package registry
 
 import (
 	"context"
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"math/rand"
+	"net"
 	"os"
 	"testing"
 )
@@ -64,15 +67,27 @@ func TestNewRegistry(t *testing.T) {
 }
 
 func TestRegistry_ApiCheck(t *testing.T) {
-	r := Registry{settings: Settings{
-		Host: "https://registry.systems-it.ru",
-		Port: 5000,
-	}}
+	testPort := chooseRandomUnusedPort()
+	testRegistry := NewMockRegistry(t, "127.0.0.1", testPort)
+	defer testRegistry.Close()
 
-	r.settings.credentials.login = ""
-	r.settings.credentials.password = ""
+	r := Registry{settings: Settings{
+		Host: "http://127.0.0.1",
+		Port: testPort,
+	}}
 
 	apiError, err := r.ApiVersionCheck(context.Background())
 	assert.NoError(t, err)
 	assert.Equal(t, "", apiError.Message)
+}
+
+func chooseRandomUnusedPort() (port int) {
+	for i := 0; i < 10; i++ {
+		port = 40000 + int(rand.Int31n(10000)) //nolint:gosec
+		if ln, err := net.Listen("tcp", fmt.Sprintf(":%d", port)); err == nil {
+			_ = ln.Close()
+			break
+		}
+	}
+	return port
 }
