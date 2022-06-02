@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"context"
 	"crypto/tls"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"reflect"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -15,6 +17,18 @@ import (
 // This is package implement features for interacts with instances of the docker registry,
 // which is a service to manage information about docker images and enable their distribution using HTTP API V2 protocol
 // detailed protocol description: https://docs.docker.com/registry/spec/api
+
+// authType define auth mechanism for accessing to docker registry using a docker HTTP API protocol
+type authType int8
+
+const (
+	Basic     authType = iota // allow access using auth basic credentials
+	SelfToken                 // define this service as main auth/authz server for docker registry host
+)
+
+var (
+	ErrNoMorePages = errors.New("no more pages")
+)
 
 // AuthorizationRequest is the authorization request data from registry when client auth call
 // for detailed description go to https://docs.docker.com/registry/spec/auth/jwt/
@@ -41,14 +55,6 @@ type AuthorizationRequest struct {
 
 	IP string
 }
-
-// authType define auth mechanism for accessing to docker registry using a docker HTTP API protocol
-type authType int8
-
-const (
-	Basic     authType = iota // allow access using auth basic credentials
-	SelfToken                 // define this service as main auth/authz server for docker registry host
-)
 
 type Settings struct {
 
@@ -78,12 +84,17 @@ type Registry struct {
 	registryToken *registryToken
 }
 
-// apiError contain detail in their relevant sections,
+// ApiError contain detail in their relevant sections,
 // are reported as part of 4xx responses, in a json response body.
-type apiError struct {
+type ApiError struct {
 	Code    string `json:"code"`
 	Message string `json:"message"`
 	Detail  string `json:"detail"`
+}
+
+type ApiResponse struct {
+	Total int64         `json:"total"`
+	Data  []interface{} `json:"data"`
 }
 
 // NewRegistry is main constructor for create registry access API instance
@@ -146,8 +157,8 @@ func NewRegistry(login, password, secret string, settings Settings) (*Registry, 
 
 // ApiVersionCheck a minimal endpoint, mounted at /v2/ will provide version support information based on its response statuses.
 // more details by link https://docs.docker.com/registry/spec/api/#api-version-check
-func (r *Registry) ApiVersionCheck(ctx context.Context) (apiError, error) {
-	var apiError apiError
+func (r *Registry) ApiVersionCheck(ctx context.Context) (ApiError, error) {
+	var apiError ApiError
 	url := fmt.Sprintf("%s:%d/v2/", r.settings.Host, r.settings.Port)
 	resp, err := r.newHttpRequest(ctx, url, "GET", nil)
 	if err != nil {
@@ -155,6 +166,34 @@ func (r *Registry) ApiVersionCheck(ctx context.Context) (apiError, error) {
 		return apiError, err
 	}
 	_ = resp.Body.Close()
+	if resp.StatusCode >= 400 {
+		apiError.Message = fmt.Sprintf("api return error code: %d", resp.StatusCode)
+	}
+	return apiError, nil
+}
+
+func (r *Registry) Catalog(ctx context.Context) (ApiResponse, error) {
+	var apiError ApiError
+	url := fmt.Sprintf("%s:%d/v2/_catalog", r.settings.Host, r.settings.Port)
+	resp, err := r.newHttpRequest(ctx, url, "GET", nil)
+	if err != nil {
+		apiError.Message = fmt.Sprintf("failed to request to registry host")
+		return apiError, err
+	}
+	if resp != nil {
+		defer func() {
+			_ = resp.Body.Close()
+		}()
+	}
+
+	type repositories struct {
+		Repositories []string `json:"repositories"`
+	}
+	var repos repositories
+	err = json.NewDecoder(resp.Body).Decode(&repos)
+	if err != nil {
+		r
+	}
 	if resp.StatusCode >= 400 {
 		apiError.Message = fmt.Sprintf("api return error code: %d", resp.StatusCode)
 	}
@@ -184,4 +223,24 @@ func (r Registry) newHttpRequest(ctx context.Context, url, method string, body [
 
 	return client.Do(req)
 
+}
+
+// getPaginationNextLink extract link for result pagination
+// Compliant client implementations should always use the Link header value when proceeding through results linearly.
+// The client may construct URLs to skip forward in the catalog.
+//
+// To get the next result set, a client would issue the request as follows, using the URL encoded in the described Link header:
+//   	GET /v2/_catalog?n=<n from the request>&last=<last repository value from previous response>
+//
+// The URL for the next block is encoded in RFC 5988 (https://tools.ietf.org/html/rfc5988#section-5)
+func getPaginationNextLink(resp *http.Response) (string, error) {
+	var nextLinkRE = regexp.MustCompile(`^ *<?([^;>]+)>? *(?:;[^;]*)*; *rel="?next"?(?:;.*)?`)
+
+	for _, link := range resp.Header[http.CanonicalHeaderKey("Link")] {
+		parts := nextLinkRE.FindStringSubmatch(link)
+		if parts != nil {
+			return parts[1], nil
+		}
+	}
+	return "", ErrNoMorePages
 }
