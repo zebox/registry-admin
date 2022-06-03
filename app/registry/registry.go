@@ -87,9 +87,9 @@ type Registry struct {
 // ApiError contain detail in their relevant sections,
 // are reported as part of 4xx responses, in a json response body.
 type ApiError struct {
-	Code    string `json:"code"`
-	Message string `json:"message"`
-	Detail  string `json:"detail"`
+	Code    string                 `json:"code"`
+	Message string                 `json:"message"`
+	Detail  map[string]interface{} `json:"detail"`
 }
 
 type ApiResponse struct {
@@ -97,8 +97,16 @@ type ApiResponse struct {
 	Data  interface{} `json:"data"`
 }
 
+// Repositories a repository items list
 type Repositories struct {
 	List     []string `json:"repositories"`
+	NextLink string   // if catalog list request with pagination response will contain next page link
+}
+
+// ImageTags a tags items list
+type ImageTags struct {
+	Name     string   `json:"name"`
+	Tags     []string `json:"tags"`
 	NextLink string   // if catalog list request with pagination response will contain next page link
 }
 
@@ -167,7 +175,7 @@ func (r *Registry) ApiVersionCheck(ctx context.Context) (ApiError, error) {
 	url := fmt.Sprintf("%s:%d/v2/", r.settings.Host, r.settings.Port)
 	resp, err := r.newHttpRequest(ctx, url, "GET", nil)
 	if err != nil {
-		apiError.Message = fmt.Sprintf("failed to request to registry host")
+		apiError.Message = fmt.Sprintf("failed to request to registry host %s", r.settings.Host)
 		return apiError, err
 	}
 	_ = resp.Body.Close()
@@ -205,6 +213,7 @@ func (r *Registry) Catalog(ctx context.Context, n, last string) (Repositories, e
 		return repos, err
 	}
 
+	// pagination request
 	if n != "" {
 		nextLink, err := getPaginationNextLink(resp)
 		if err != nil {
@@ -214,6 +223,46 @@ func (r *Registry) Catalog(ctx context.Context, n, last string) (Repositories, e
 	}
 
 	return repos, nil
+}
+
+func (r *Registry) ListingImageTags(ctx context.Context, repoName, n, last string) (ImageTags, error) {
+	var tags ImageTags
+
+	baseUrl := fmt.Sprintf("%s:%d/v2/%s/tags/list", r.settings.Host, r.settings.Port, repoName)
+
+	// pagination request
+	if n != "" {
+		baseUrl = fmt.Sprintf("%s:%d/v2/%s/tags/list?n=%s&last=%s", r.settings.Host, r.settings.Port, repoName, n, last)
+	}
+
+	resp, err := r.newHttpRequest(ctx, baseUrl, "GET", nil)
+	if err != nil {
+		return tags, err
+	}
+	if resp != nil {
+		defer func() {
+			_ = resp.Body.Close()
+		}()
+	}
+
+	if resp.StatusCode >= 400 {
+		return tags, fmt.Errorf("api return error code: %d", resp.StatusCode)
+	}
+
+	err = json.NewDecoder(resp.Body).Decode(&tags)
+	if err != nil {
+		return tags, err
+	}
+
+	if n != "" {
+		nextLink, err := getPaginationNextLink(resp)
+		if err != nil {
+			return tags, fmt.Errorf("failed parse next link baseUrl: %v", err)
+		}
+		tags.NextLink = nextLink
+	}
+
+	return tags, nil
 }
 
 // newHttpRequest prepare http client and execute a request to docker registry api

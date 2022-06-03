@@ -5,18 +5,18 @@ package registry
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/go-pkgz/rest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"net"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"regexp"
 	"strconv"
 	"sync"
 	"testing"
 )
-
-type handlerFn func(w http.ResponseWriter, r *http.Request)
 
 type repositories struct {
 	List []string `json:"repositories"`
@@ -31,39 +31,38 @@ type tags struct {
 type MockRegistry struct {
 	server   *httptest.Server
 	hostPort string
-	handlers map[string]handlerFn
+	handlers map[*regexp.Regexp]http.Handler
 	repositories
 	tagList []tags
 
 	t   testing.TB
-	mux http.ServeMux
+	mux *http.ServeMux
 	mu  sync.Mutex
-}
-
-// RegisterHandler register the specified handler for the registry mock
-func (mr *MockRegistry) RegisterHandler(path string, h handlerFn) {
-	mr.mu.Lock()
-	defer mr.mu.Unlock()
-	mr.handlers[path] = h
 }
 
 // NewMockRegistry creates a registry mock
 func NewMockRegistry(t testing.TB, host string, port int, repoNumber, tagNumber int) *MockRegistry {
 	t.Helper()
-	testRegistry := &MockRegistry{handlers: make(map[string]handlerFn)}
+	testRegistry := &MockRegistry{handlers: make(map[*regexp.Regexp]http.Handler)}
 	testRegistry.prepareRepositoriesData(repoNumber, tagNumber)
 	testRegistry.prepareRegistryMockEndpoints()
-	mux := http.NewServeMux()
+	testRegistry.mux = http.NewServeMux()
 
-	for k, v := range testRegistry.handlers {
-		mux.Handle(k, http.HandlerFunc(v))
-	}
+	testRegistry.mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		for k, v := range testRegistry.handlers {
+			if k.MatchString(r.URL.Path) {
+				v.ServeHTTP(w, r)
+				return
+			}
+		}
+
+	})
 
 	// prepare test http server
 	testRegistry.hostPort = fmt.Sprintf("%s:%d", host, port)
 	l, err := net.Listen("tcp", testRegistry.hostPort)
 	require.Nil(t, err)
-	ts := httptest.NewUnstartedServer(mux)
+	ts := httptest.NewUnstartedServer(testRegistry.mux)
 	assert.NoError(t, ts.Listener.Close())
 	ts.Listener = l
 	testRegistry.server = ts
@@ -89,8 +88,10 @@ func (mr *MockRegistry) prepareRegistryMockEndpoints() {
 	}
 
 	// bind tests docker registry api endpoints
-	mr.handlers["/v2/"] = mr.apiVersionCheck
-	mr.handlers["/v2/_catalog"] = mr.getCatalog
+	mr.handlers[regexp.MustCompile(`/v2/$`)] = http.HandlerFunc(mr.apiVersionCheck)
+	mr.handlers[regexp.MustCompile(`/v2/_catalog`)] = http.HandlerFunc(mr.getCatalog)
+	mr.handlers[regexp.MustCompile(`\/v2\/(.*)\/tags\/+`)] = http.HandlerFunc(mr.getImageTags)
+
 }
 
 func (mr *MockRegistry) prepareRepositoriesData(repoNumbers, tagNumbers int) {
@@ -133,7 +134,7 @@ func (mr *MockRegistry) apiVersionCheck(w http.ResponseWriter, r *http.Request) 
 func (mr *MockRegistry) getCatalog(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("content-type", "application/json; charset=utf-8")
 	w.Header().Set("docker-distribution-api-version", "registry/2.0")
-	urlFragments, err := url.ParseQuery(r.URL.Fragment)
+	urlFragments, err := url.ParseQuery(r.URL.RawQuery)
 	assert.NoError(mr.t, err)
 	if urlFragments.Get("n") == "" {
 		data, err := json.Marshal(mr.repositories)
@@ -145,36 +146,120 @@ func (mr *MockRegistry) getCatalog(w http.ResponseWriter, r *http.Request) {
 
 	n := urlFragments.Get("n")
 	last := urlFragments.Get("last")
-	pages, err := strconv.Atoi(n)
-	require.NoError(mr.t, err)
+	isNext, lastIndex, result, errPagination := mr.preparePaginationResult(mr.repositories.List, n, last)
+	require.NoError(mr.t, errPagination)
+	rel := ` rel="next"`
+	if !isNext {
+		rel = ""
+		result = mr.repositories.List[lastIndex:]
 
+	}
+
+	data, err := json.Marshal(Repositories{List: result})
+	assert.NoError(mr.t, err)
+
+	nextLinkUrl := fmt.Sprintf("/v2/_catalog?last=%s&n=%s; %s", mr.repositories.List[lastIndex], n, rel)
+	w.Header().Set("link", nextLinkUrl)
+	_, err = w.Write(data)
+	assert.NoError(mr.t, err)
+
+}
+
+func (mr *MockRegistry) getImageTags(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("content-type", "application/json; charset=utf-8")
+	w.Header().Set("docker-distribution-api-version", "registry/2.0")
+
+	// extractRepoName
+	var repoNameRE = regexp.MustCompile(`(?m)\/v2\/(.*)\/tags\/`)
+	repoName := repoNameRE.FindStringSubmatch(r.URL.Path)
+	if len(repoName) == 0 {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	var (
+		tags        []string
+		isRepoFound bool
+	)
+
+	for _, v := range mr.tagList {
+		if v.Name == repoName[1] {
+			tags = v.Tags
+			isRepoFound = true
+			break
+		}
+
+	}
+
+	if !isRepoFound {
+		apiError := ApiError{
+			Code:    "NAME_UNKNOWN",
+			Message: "repository name not known to registry",
+		}
+		apiError.Detail["name"] = repoName[1]
+		w.WriteHeader(http.StatusNotFound)
+		rest.RenderJSON(w, apiError)
+		return
+	}
+
+	urlFragments, err := url.ParseQuery(r.URL.RawQuery)
+	assert.NoError(mr.t, err)
+	if urlFragments.Get("n") == "" {
+		data, err := json.Marshal(ImageTags{Name: repoName[1], Tags: tags})
+		assert.NoError(mr.t, err)
+		_, err = w.Write(data)
+		assert.NoError(mr.t, err)
+		return
+	}
+
+	n := urlFragments.Get("n")
+	last := urlFragments.Get("last")
+	isNext, lastIndex, result, errPagination := mr.preparePaginationResult(tags, n, last)
+	require.NoError(mr.t, errPagination)
+	rel := ` rel="next"`
+	if !isNext {
+		rel = ""
+		result = mr.repositories.List[lastIndex:]
+
+	}
+
+	data, err := json.Marshal(ImageTags{Name: repoName[1], Tags: result})
+	assert.NoError(mr.t, err)
+
+	nextLinkUrl := fmt.Sprintf("/v2/_catalog?last=%s&n=%s; %s", mr.repositories.List[lastIndex], n, rel)
+	w.Header().Set("link", nextLinkUrl)
+	_, err = w.Write(data)
+	assert.NoError(mr.t, err)
+
+}
+
+func (mr *MockRegistry) preparePaginationResult(items []string, n, last string) (isNext bool, lastIndex int, result []string, err error) {
 	// search last index
-	lastIndex := 0
+	pages, err := strconv.Atoi(n)
+	if err != nil {
+		return false, lastIndex, nil, err
+	}
+
 	if last != "" {
-		for i, v := range mr.repositories.List {
+		for i, v := range items {
 			if v == last {
 				lastIndex = i
+				break
 			}
 		}
 	}
 
-	result := mr.repositories.List[lastIndex:]
 	next := lastIndex + pages
-	if (lastIndex + pages) < len(mr.repositories.List) {
-		result = mr.repositories.List[lastIndex:next]
+
+	if next < len(items) {
+		result = items[lastIndex:next]
+		isNext = true
+		lastIndex = next
 	}
 
-	data, err := json.Marshal(result)
-	assert.NoError(mr.t, err)
-
-	lastRepo := mr.repositories.List[lastIndex]
-	rel := ` rel="next"`
-	if lastIndex == len(mr.repositories.List)-1 {
-		rel = ""
+	if !isNext {
+		result = items[lastIndex:]
+		lastIndex = len(items) - 1
+		// lastIndex = mr.repositories.List[lastIndex]
 	}
-	nextLinkUrl := fmt.Sprintf("/v2/_catalog?last=%s&n=%d; %s", lastRepo, pages, rel)
-	w.Header().Set(http.CanonicalHeaderKey("Link"), nextLinkUrl)
-	_, err = w.Write(data)
-	assert.NoError(mr.t, err)
-
+	return isNext, lastIndex, result, err
 }

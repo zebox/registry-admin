@@ -2,11 +2,13 @@ package registry
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"math/rand"
 	"net"
+	"net/url"
 	"os"
 	"testing"
 )
@@ -98,10 +100,58 @@ func TestRegistry_Catalog(t *testing.T) {
 	assert.Equal(t, reposNumbers, len(repos.List))
 
 	// test with pagination
-	repos, err = r.Catalog(context.Background(), "10", "")
-	assert.NoError(t, err)
-	assert.Equal(t, 10, len(repos.List))
+	var (
+		total   int
+		n, last string
+	)
+	n = "10"
+	for total < reposNumbers {
+		repos, err = r.Catalog(context.Background(), n, last)
+		require.NoError(t, err)
+		assert.Equal(t, 10, len(repos.List))
+		total += len(repos.List)
+		n, last, err = parseUrlForNextLink(repos.NextLink)
+		require.NoError(t, err)
+	}
+	assert.Equal(t, reposNumbers, total)
+}
 
+func TestRegistry_ListingImageTags(t *testing.T) {
+	testPort := chooseRandomUnusedPort()
+	reposNumbers := 100
+	tagsNumbers := 50
+	testRegistry := NewMockRegistry(t, "127.0.0.1", testPort, reposNumbers, tagsNumbers)
+	defer testRegistry.Close()
+
+	r := Registry{settings: Settings{
+		Host: "http://127.0.0.1",
+		Port: testPort,
+	}}
+
+	for _, repoName := range testRegistry.repositories.List {
+		tags, err := r.ListingImageTags(context.Background(), repoName, "", "")
+		assert.NoError(t, err)
+		assert.Equal(t, tagsNumbers, len(tags.Tags))
+	}
+	// test with pagination
+	var (
+		tags    ImageTags
+		total   int
+		n, last string
+		err     error
+	)
+	n = "10"
+	for _, repoName := range testRegistry.repositories.List {
+		for total < reposNumbers*tagsNumbers {
+			tags, err = r.ListingImageTags(context.Background(), repoName, n, last)
+			require.NoError(t, err)
+			assert.Equal(t, 10, len(tags.Tags))
+			total += len(tags.Tags)
+			n, last, err = parseUrlForNextLink(tags.NextLink)
+			require.NoError(t, err)
+		}
+	}
+	assert.Equal(t, reposNumbers*tagsNumbers, total)
 }
 
 func chooseRandomUnusedPort() (port int) {
@@ -115,6 +165,15 @@ func chooseRandomUnusedPort() (port int) {
 	return port
 }
 
-func parseUrlForNextLink(nextLink string) {
-
+func parseUrlForNextLink(nextLink string) (string, string, error) {
+	result, err := url.ParseQuery(nextLink)
+	if err != nil {
+		return "", "", err
+	}
+	n := result.Get("n")
+	last := result.Get("last")
+	if n == "" && last == "" {
+		return "", "", errors.New("page index is undefined in url params")
+	}
+	return n, last, nil
 }
