@@ -48,10 +48,10 @@ func (mr *MockRegistry) RegisterHandler(path string, h handlerFn) {
 }
 
 // NewMockRegistry creates a registry mock
-func NewMockRegistry(t testing.TB, host string, port int) *MockRegistry {
+func NewMockRegistry(t testing.TB, host string, port int, repoNumber, tagNumber int) *MockRegistry {
 	t.Helper()
 	testRegistry := &MockRegistry{handlers: make(map[string]handlerFn)}
-	testRegistry.prepareRepositoriesData(100)
+	testRegistry.prepareRepositoriesData(repoNumber, tagNumber)
 	testRegistry.prepareRegistryMockEndpoints()
 	mux := http.NewServeMux()
 
@@ -93,19 +93,24 @@ func (mr *MockRegistry) prepareRegistryMockEndpoints() {
 	mr.handlers["/v2/_catalog"] = mr.getCatalog
 }
 
-func (mr *MockRegistry) prepareRepositoriesData(numberItems int) {
-	if numberItems < 1 {
-		numberItems = 100
+func (mr *MockRegistry) prepareRepositoriesData(repoNumbers, tagNumbers int) {
+	if repoNumbers < 1 {
+		repoNumbers = 50
 	}
+
+	if tagNumbers < 1 {
+		tagNumbers = 50
+	}
+
 	var testRepos []string
 	// filling repository list
-	for i := 0; i < numberItems; i++ {
+	for i := 0; i < repoNumbers; i++ {
 		var testTags []string
 		testRepoName := fmt.Sprintf("test_repo_%d", i)
 		testRepos = append(testRepos, testRepoName)
 
 		// filling tag list
-		for j := 0; j < numberItems; j++ {
+		for j := 0; j < tagNumbers; j++ {
 			testTagName := fmt.Sprintf("test_tag_%d", j)
 			testTags = append(testTags, testTagName)
 		}
@@ -115,6 +120,7 @@ func (mr *MockRegistry) prepareRepositoriesData(numberItems int) {
 			Tags: testTags,
 		})
 	}
+	mr.repositories.List = testRepos
 }
 
 func (mr *MockRegistry) apiVersionCheck(w http.ResponseWriter, r *http.Request) {
@@ -127,9 +133,9 @@ func (mr *MockRegistry) apiVersionCheck(w http.ResponseWriter, r *http.Request) 
 func (mr *MockRegistry) getCatalog(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("content-type", "application/json; charset=utf-8")
 	w.Header().Set("docker-distribution-api-version", "registry/2.0")
-	urlFraments, err := url.ParseQuery(r.URL.Fragment)
+	urlFragments, err := url.ParseQuery(r.URL.Fragment)
 	assert.NoError(mr.t, err)
-	if urlFraments.Get("n") == "" {
+	if urlFragments.Get("n") == "" {
 		data, err := json.Marshal(mr.repositories)
 		assert.NoError(mr.t, err)
 		_, err = w.Write(data)
@@ -137,8 +143,8 @@ func (mr *MockRegistry) getCatalog(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	n := urlFraments.Get("n")
-	last := urlFraments.Get("last")
+	n := urlFragments.Get("n")
+	last := urlFragments.Get("last")
 	pages, err := strconv.Atoi(n)
 	require.NoError(mr.t, err)
 
@@ -152,7 +158,12 @@ func (mr *MockRegistry) getCatalog(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	result := mr.repositories.List[lastIndex:pages]
+	result := mr.repositories.List[lastIndex:]
+	next := lastIndex + pages
+	if (lastIndex + pages) < len(mr.repositories.List) {
+		result = mr.repositories.List[lastIndex:next]
+	}
+
 	data, err := json.Marshal(result)
 	assert.NoError(mr.t, err)
 

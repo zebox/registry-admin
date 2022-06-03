@@ -93,8 +93,13 @@ type ApiError struct {
 }
 
 type ApiResponse struct {
-	Total int64         `json:"total"`
-	Data  []interface{} `json:"data"`
+	Total int64       `json:"total"`
+	Data  interface{} `json:"data"`
+}
+
+type Repositories struct {
+	List     []string `json:"repositories"`
+	NextLink string   // if catalog list request with pagination response will contain next page link
 }
 
 // NewRegistry is main constructor for create registry access API instance
@@ -172,13 +177,18 @@ func (r *Registry) ApiVersionCheck(ctx context.Context) (ApiError, error) {
 	return apiError, nil
 }
 
-func (r *Registry) Catalog(ctx context.Context) (ApiResponse, error) {
-	var apiError ApiError
-	url := fmt.Sprintf("%s:%d/v2/_catalog", r.settings.Host, r.settings.Port)
-	resp, err := r.newHttpRequest(ctx, url, "GET", nil)
+func (r *Registry) Catalog(ctx context.Context, n, last string) (Repositories, error) {
+	var repos Repositories
+
+	baseUrl := fmt.Sprintf("%s:%d/v2/_catalog", r.settings.Host, r.settings.Port)
+
+	if n != "" {
+		baseUrl = fmt.Sprintf("%s:%d/v2/_catalog?n=%s&last=%s", r.settings.Host, r.settings.Port, n, last)
+	}
+
+	resp, err := r.newHttpRequest(ctx, baseUrl, "GET", nil)
 	if err != nil {
-		apiError.Message = fmt.Sprintf("failed to request to registry host")
-		return apiError, err
+		return repos, err
 	}
 	if resp != nil {
 		defer func() {
@@ -186,18 +196,24 @@ func (r *Registry) Catalog(ctx context.Context) (ApiResponse, error) {
 		}()
 	}
 
-	type repositories struct {
-		Repositories []string `json:"repositories"`
+	if resp.StatusCode >= 400 {
+		return repos, fmt.Errorf("api return error code: %d", resp.StatusCode)
 	}
-	var repos repositories
+
 	err = json.NewDecoder(resp.Body).Decode(&repos)
 	if err != nil {
-		r
+		return repos, err
 	}
-	if resp.StatusCode >= 400 {
-		apiError.Message = fmt.Sprintf("api return error code: %d", resp.StatusCode)
+
+	if n != "" {
+		nextLink, err := getPaginationNextLink(resp)
+		if err != nil {
+			return repos, fmt.Errorf("failed parse next link baseUrl: %v", err)
+		}
+		repos.NextLink = nextLink
 	}
-	return apiError, nil
+
+	return repos, nil
 }
 
 // newHttpRequest prepare http client and execute a request to docker registry api

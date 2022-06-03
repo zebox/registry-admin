@@ -68,7 +68,7 @@ func TestNewRegistry(t *testing.T) {
 
 func TestRegistry_ApiCheck(t *testing.T) {
 	testPort := chooseRandomUnusedPort()
-	testRegistry := NewMockRegistry(t, "127.0.0.1", testPort)
+	testRegistry := NewMockRegistry(t, "127.0.0.1", testPort, 0, 0)
 	defer testRegistry.Close()
 
 	r := Registry{settings: Settings{
@@ -81,6 +81,29 @@ func TestRegistry_ApiCheck(t *testing.T) {
 	assert.Equal(t, "", apiError.Message)
 }
 
+func TestRegistry_Catalog(t *testing.T) {
+	testPort := chooseRandomUnusedPort()
+	reposNumbers := 100
+	tagsNumbers := 50
+	testRegistry := NewMockRegistry(t, "127.0.0.1", testPort, reposNumbers, tagsNumbers)
+	defer testRegistry.Close()
+
+	r := Registry{settings: Settings{
+		Host: "http://127.0.0.1",
+		Port: testPort,
+	}}
+
+	repos, err := r.Catalog(context.Background(), "", "")
+	assert.NoError(t, err)
+	assert.Equal(t, reposNumbers, len(repos.List))
+
+	// test with pagination
+	repos, err = r.Catalog(context.Background(), "10", "")
+	assert.NoError(t, err)
+	assert.Equal(t, 10, len(repos.List))
+
+}
+
 func chooseRandomUnusedPort() (port int) {
 	for i := 0; i < 10; i++ {
 		port = 40000 + int(rand.Int31n(10000)) //nolint:gosec
@@ -90,4 +113,8 @@ func chooseRandomUnusedPort() (port int) {
 		}
 	}
 	return port
+}
+
+func parseUrlForNextLink(nextLink string) {
+
 }
