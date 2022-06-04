@@ -151,8 +151,6 @@ func (mr *MockRegistry) getCatalog(w http.ResponseWriter, r *http.Request) {
 	rel := ` rel="next"`
 	if !isNext {
 		rel = ""
-		result = mr.repositories.List[lastIndex:]
-
 	}
 
 	data, err := json.Marshal(Repositories{List: result})
@@ -179,12 +177,14 @@ func (mr *MockRegistry) getImageTags(w http.ResponseWriter, r *http.Request) {
 	var (
 		tags        []string
 		isRepoFound bool
+		repoIndex   int
 	)
 
-	for _, v := range mr.tagList {
+	for i, v := range mr.tagList {
 		if v.Name == repoName[1] {
 			tags = v.Tags
 			isRepoFound = true
+			repoIndex = i
 			break
 		}
 
@@ -218,14 +218,12 @@ func (mr *MockRegistry) getImageTags(w http.ResponseWriter, r *http.Request) {
 	rel := ` rel="next"`
 	if !isNext {
 		rel = ""
-		result = mr.repositories.List[lastIndex:]
-
 	}
 
 	data, err := json.Marshal(ImageTags{Name: repoName[1], Tags: result})
 	assert.NoError(mr.t, err)
 
-	nextLinkUrl := fmt.Sprintf("/v2/_catalog?last=%s&n=%s; %s", mr.repositories.List[lastIndex], n, rel)
+	nextLinkUrl := fmt.Sprintf("/v2/_catalog?last=%s&n=%s; %s", mr.tagList[repoIndex].Tags[lastIndex], n, rel)
 	w.Header().Set("link", nextLinkUrl)
 	_, err = w.Write(data)
 	assert.NoError(mr.t, err)
@@ -259,7 +257,6 @@ func (mr *MockRegistry) preparePaginationResult(items []string, n, last string) 
 	if !isNext {
 		result = items[lastIndex:]
 		lastIndex = len(items) - 1
-		// lastIndex = mr.repositories.List[lastIndex]
 	}
 	return isNext, lastIndex, result, err
 }

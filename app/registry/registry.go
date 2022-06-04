@@ -217,7 +217,7 @@ func (r *Registry) Catalog(ctx context.Context, n, last string) (Repositories, e
 	if n != "" {
 		nextLink, err := getPaginationNextLink(resp)
 		if err != nil {
-			return repos, fmt.Errorf("failed parse next link baseUrl: %v", err)
+			return repos, err
 		}
 		repos.NextLink = nextLink
 	}
@@ -257,7 +257,7 @@ func (r *Registry) ListingImageTags(ctx context.Context, repoName, n, last strin
 	if n != "" {
 		nextLink, err := getPaginationNextLink(resp)
 		if err != nil {
-			return tags, fmt.Errorf("failed parse next link baseUrl: %v", err)
+			return tags, err
 		}
 		tags.NextLink = nextLink
 	}

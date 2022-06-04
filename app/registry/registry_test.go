@@ -105,13 +105,21 @@ func TestRegistry_Catalog(t *testing.T) {
 		n, last string
 	)
 	n = "10"
-	for total < reposNumbers {
+	for {
 		repos, err = r.Catalog(context.Background(), n, last)
+		total += len(repos.List)
+
+		if errors.Is(err, ErrNoMorePages) {
+			break
+		}
 		require.NoError(t, err)
 		assert.Equal(t, 10, len(repos.List))
-		total += len(repos.List)
 		n, last, err = parseUrlForNextLink(repos.NextLink)
 		require.NoError(t, err)
+		if total > reposNumbers {
+			require.Fail(t, "out of bound of repositories index ")
+			break
+		}
 	}
 	assert.Equal(t, reposNumbers, total)
 }
@@ -140,15 +148,24 @@ func TestRegistry_ListingImageTags(t *testing.T) {
 		n, last string
 		err     error
 	)
-	n = "10"
+
 	for _, repoName := range testRegistry.repositories.List {
-		for total < reposNumbers*tagsNumbers {
+		n = "10"
+		last = ""
+		for {
 			tags, err = r.ListingImageTags(context.Background(), repoName, n, last)
+			total += len(tags.Tags)
+			if errors.Is(err, ErrNoMorePages) {
+				break
+			}
 			require.NoError(t, err)
 			assert.Equal(t, 10, len(tags.Tags))
-			total += len(tags.Tags)
 			n, last, err = parseUrlForNextLink(tags.NextLink)
 			require.NoError(t, err)
+			if total > tagsNumbers*reposNumbers {
+				require.Fail(t, "out of bound of tags index ")
+				break
+			}
 		}
 	}
 	assert.Equal(t, reposNumbers*tagsNumbers, total)
@@ -166,7 +183,12 @@ func chooseRandomUnusedPort() (port int) {
 }
 
 func parseUrlForNextLink(nextLink string) (string, string, error) {
-	result, err := url.ParseQuery(nextLink)
+	urlQuery, err := url.Parse(nextLink)
+	if err != nil {
+		return "", "", err
+	}
+	result, err := url.ParseQuery(urlQuery.RawQuery)
+
 	if err != nil {
 		return "", "", err
 	}
