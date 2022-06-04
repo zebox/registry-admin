@@ -193,7 +193,7 @@ func (mr *MockRegistry) getImageTags(w http.ResponseWriter, r *http.Request) {
 			Code:    "NAME_UNKNOWN",
 			Message: "repository name not known to registry",
 		}
-		apiError.Detail["name"] = repoName[1]
+		apiError.Detail = map[string]string{"name": repoName[1]}
 		w.WriteHeader(http.StatusNotFound)
 		rest.RenderJSON(w, apiError)
 		return
