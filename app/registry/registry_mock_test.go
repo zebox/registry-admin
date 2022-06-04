@@ -90,7 +90,7 @@ func (mr *MockRegistry) prepareRegistryMockEndpoints() {
 	// bind tests docker registry api endpoints
 	mr.handlers[regexp.MustCompile(`/v2/$`)] = http.HandlerFunc(mr.apiVersionCheck)
 	mr.handlers[regexp.MustCompile(`/v2/_catalog`)] = http.HandlerFunc(mr.getCatalog)
-	mr.handlers[regexp.MustCompile(`\/v2\/(.*)\/tags\/+`)] = http.HandlerFunc(mr.getImageTags)
+	mr.handlers[regexp.MustCompile(`/v2/(.*)/tags/+`)] = http.HandlerFunc(mr.getImageTags)
 
 }
 
@@ -124,7 +124,7 @@ func (mr *MockRegistry) prepareRepositoriesData(repoNumbers, tagNumbers int) {
 	mr.repositories.List = testRepos
 }
 
-func (mr *MockRegistry) apiVersionCheck(w http.ResponseWriter, r *http.Request) {
+func (mr *MockRegistry) apiVersionCheck(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("content-type", "application/json; charset=utf-8")
 	w.Header().Set("docker-distribution-api-version", "registry/2.0")
 	_, err := w.Write([]byte("{}"))
@@ -168,7 +168,7 @@ func (mr *MockRegistry) getImageTags(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("docker-distribution-api-version", "registry/2.0")
 
 	// extractRepoName
-	var repoNameRE = regexp.MustCompile(`(?m)\/v2\/(.*)\/tags\/`)
+	var repoNameRE = regexp.MustCompile(`(?m)/v2/(.*)/tags/`)
 	repoName := repoNameRE.FindStringSubmatch(r.URL.Path)
 	if len(repoName) == 0 {
 		w.WriteHeader(http.StatusBadRequest)
