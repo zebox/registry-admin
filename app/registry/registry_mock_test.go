@@ -14,7 +14,6 @@ import (
 	"net/url"
 	"regexp"
 	"strconv"
-	"sync"
 	"testing"
 )
 
@@ -37,7 +36,6 @@ type MockRegistry struct {
 
 	t   testing.TB
 	mux *http.ServeMux
-	mu  sync.Mutex
 }
 
 // NewMockRegistry creates a registry mock

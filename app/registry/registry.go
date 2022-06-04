@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/opencontainers/go-digest"
 	"net/http"
 	"reflect"
 	"regexp"
@@ -17,6 +18,12 @@ import (
 // This is package implement features for interacts with instances of the docker registry,
 // which is a service to manage information about docker images and enable their distribution using HTTP API V2 protocol
 // detailed protocol description: https://docs.docker.com/registry/spec/api
+
+const (
+	// scheme version of manifest file
+	// for details about scheme version goto https://docs.docker.com/registry/spec/manifest-v2-2/
+	manifestSchemeV2 = "application/vnd.docker.distribution.manifest.v2+json"
+)
 
 // authType define auth mechanism for accessing to docker registry using a docker HTTP API protocol
 type authType int8
@@ -76,6 +83,9 @@ type Settings struct {
 	// If CertificatesPaths has all fields are empty, registryToken will create keys by default, with default path.
 	// If CertificatesPaths has all fields are empty, but certificates files exist registryToken try to load existed keys and CA file.
 	CertificatesPaths Certs
+
+	// InsecureRequest define option secure for make a https request to docker registry host, false by default
+	InsecureRequest bool
 }
 
 // Registry is main instance for manipulation access of self-hosted docker registry
@@ -87,9 +97,9 @@ type Registry struct {
 // ApiError contain detail in their relevant sections,
 // are reported as part of 4xx responses, in a json response body.
 type ApiError struct {
-	Code    string                 `json:"code"`
-	Message string                 `json:"message"`
-	Detail  map[string]interface{} `json:"detail"`
+	Code    string      `json:"code"`
+	Message string      `json:"message"`
+	Detail  interface{} `json:"detail"`
 }
 
 type ApiResponse struct {
@@ -108,6 +118,22 @@ type ImageTags struct {
 	Name     string   `json:"name"`
 	Tags     []string `json:"tags"`
 	NextLink string   // if catalog list request with pagination response will contain next page link
+}
+
+// ManifestSchemaV2 is V2 format schema for docker image manifest file which contain information about docker image, such as layers, size, and digest
+// https://docs.docker.com/registry/spec/manifest-v2-2/#image-manifest-field-descriptions
+type ManifestSchemaV2 struct {
+	SchemaVersion     int                 `json:"schemaVersion"`
+	MediaType         string              `json:"mediaType"`
+	ConfigDescriptor  Schema2Descriptor   `json:"config"`
+	LayersDescriptors []Schema2Descriptor `json:"layers"`
+}
+
+type Schema2Descriptor struct {
+	MediaType string        `json:"mediaType"`
+	Size      int64         `json:"size"`
+	Digest    digest.Digest `json:"digest"`
+	URLs      []string      `json:"urls,omitempty"`
 }
 
 // NewRegistry is main constructor for create registry access API instance
@@ -265,6 +291,41 @@ func (r *Registry) ListingImageTags(ctx context.Context, repoName, n, last strin
 	return tags, nil
 }
 
+func (r *Registry) Manifest(ctx context.Context, repoName, tag string) (ManifestSchemaV2, ApiError) {
+	var manifest ManifestSchemaV2
+	var apiError ApiError
+	baseUrl := fmt.Sprintf("%s:%d/v2/%s/manifests/%s", r.settings.Host, r.settings.Port, repoName, tag)
+
+	resp, err := r.newHttpRequest(ctx, baseUrl, "GET", nil)
+	if err != nil {
+		return manifest, makeApiError("failed to make request for docker registry manifest", err.Error())
+	}
+
+	if resp != nil {
+		defer func() {
+			_ = resp.Body.Close()
+		}()
+	}
+
+	if resp.StatusCode >= 400 {
+		if resp != nil {
+			err = json.NewDecoder(resp.Body).Decode(&apiError)
+			if err != nil {
+				return manifest, makeApiError("failed to parse request body with manifest fetch error", err.Error())
+			}
+
+		}
+		return manifest, apiError
+	}
+
+	err = json.NewDecoder(resp.Body).Decode(&manifest)
+	if err != nil {
+		return manifest, makeApiError("failed to parse request body with manifest data", err.Error())
+	}
+
+	return manifest, apiError
+}
+
 // newHttpRequest prepare http client and execute a request to docker registry api
 func (r Registry) newHttpRequest(ctx context.Context, url, method string, body []byte) (*http.Response, error) {
 
@@ -272,7 +333,7 @@ func (r Registry) newHttpRequest(ctx context.Context, url, method string, body [
 
 	// it's need for self-hosted docker registry with self-signed certificates
 	if strings.HasPrefix(url, "https:") {
-		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: r.settings.InsecureRequest}
 	}
 	client := &http.Client{
 		Transport: transport,
@@ -283,7 +344,7 @@ func (r Registry) newHttpRequest(ctx context.Context, url, method string, body [
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Add("Accept", "application/json")
+	req.Header.Add("Accept", manifestSchemeV2)
 	req.SetBasicAuth(r.settings.credentials.login, r.settings.credentials.password)
 
 	return client.Do(req)
@@ -308,4 +369,12 @@ func getPaginationNextLink(resp *http.Response) (string, error) {
 		}
 	}
 	return "", ErrNoMorePages
+}
+
+func makeApiError(msg, detail string) ApiError {
+	return ApiError{
+		Code:    "-1",
+		Message: msg,
+		Detail:  map[string]string{"error": detail},
+	}
 }
