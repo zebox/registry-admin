@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/opencontainers/go-digest"
 	"net/http"
 	"reflect"
 	"regexp"
@@ -23,6 +22,9 @@ const (
 	// scheme version of manifest file
 	// for details about scheme version goto https://docs.docker.com/registry/spec/manifest-v2-2/
 	manifestSchemeV2 = "application/vnd.docker.distribution.manifest.v2+json"
+
+	//  It uniquely identifies content by taking a collision-resistant hash of the bytes.
+	contentDigestHeader = "docker-content-digest"
 )
 
 // authType define auth mechanism for accessing to docker registry using a docker HTTP API protocol
@@ -127,13 +129,17 @@ type ManifestSchemaV2 struct {
 	MediaType         string              `json:"mediaType"`
 	ConfigDescriptor  Schema2Descriptor   `json:"config"`
 	LayersDescriptors []Schema2Descriptor `json:"layers"`
+
+	// additional fields which not include in schema specification and need for this service only
+	TotalSize     int64  `json:"total_size"`     // total compressed size of image data
+	ContentDigest string `json:"content_digest"` // a main content digest using for delete image from registry
 }
 
 type Schema2Descriptor struct {
-	MediaType string        `json:"mediaType"`
-	Size      int64         `json:"size"`
-	Digest    digest.Digest `json:"digest"`
-	URLs      []string      `json:"urls,omitempty"`
+	MediaType string   `json:"mediaType"`
+	Size      int64    `json:"size"`
+	Digest    string   `json:"digest"`
+	URLs      []string `json:"urls,omitempty"`
 }
 
 // NewRegistry is main constructor for create registry access API instance
@@ -313,7 +319,9 @@ func (r *Registry) Manifest(ctx context.Context, repoName, tag string) (Manifest
 			if err != nil {
 				return manifest, makeApiError("failed to parse request body with manifest fetch error", err.Error())
 			}
-
+		}
+		if resp.StatusCode == http.StatusNotFound {
+			return manifest, makeApiError("resource not found", "")
 		}
 		return manifest, apiError
 	}
@@ -322,6 +330,9 @@ func (r *Registry) Manifest(ctx context.Context, repoName, tag string) (Manifest
 	if err != nil {
 		return manifest, makeApiError("failed to parse request body with manifest data", err.Error())
 	}
+
+	manifest.calculateCompressedImageSize()
+	manifest.ContentDigest = resp.Header.Get(contentDigestHeader)
 
 	return manifest, apiError
 }
@@ -369,6 +380,14 @@ func getPaginationNextLink(resp *http.Response) (string, error) {
 		}
 	}
 	return "", ErrNoMorePages
+}
+
+// calculateCompressedImageSize will iterate with image layers in fetched manifest file and append size of each layers to TotalSize field
+func (m *ManifestSchemaV2) calculateCompressedImageSize() {
+
+	for _, v := range m.LayersDescriptors {
+		m.TotalSize += v.Size
+	}
 }
 
 func makeApiError(msg, detail string) ApiError {
