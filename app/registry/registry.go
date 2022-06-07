@@ -84,6 +84,14 @@ type Registry struct {
 	registryToken *registryToken
 }
 
+// ApiError contain detail in their relevant sections,
+// are reported as part of 4xx responses, in a json response body.
+type ApiError struct {
+	Code    string                 `json:"code"`
+	Message string                 `json:"message"`
+	Detail  map[string]interface{} `json:"detail"`
+}
+
 type ApiResponse struct {
 	Total int64       `json:"total"`
 	Data  interface{} `json:"data"`
@@ -162,19 +170,19 @@ func NewRegistry(login, password, secret string, settings Settings) (*Registry, 
 
 // ApiVersionCheck a minimal endpoint, mounted at /v2/ will provide version support information based on its response statuses.
 // more details by link https://docs.docker.com/registry/spec/api/#api-version-check
-func (r *Registry) ApiVersionCheck(ctx context.Context) error {
-	var apiError *ApiError
+func (r *Registry) ApiVersionCheck(ctx context.Context) (ApiError, error) {
+	var apiError ApiError
 	url := fmt.Sprintf("%s:%d/v2/", r.settings.Host, r.settings.Port)
 	resp, err := r.newHttpRequest(ctx, url, "GET", nil)
 	if err != nil {
 		apiError.Message = fmt.Sprintf("failed to request to registry host %s", r.settings.Host)
-		return apiError
+		return apiError, err
 	}
 	_ = resp.Body.Close()
 	if resp.StatusCode >= 400 {
 		apiError.Message = fmt.Sprintf("api return error code: %d", resp.StatusCode)
 	}
-	return apiError
+	return apiError, nil
 }
 
 func (r *Registry) Catalog(ctx context.Context, n, last string) (Repositories, error) {
@@ -300,17 +308,4 @@ func getPaginationNextLink(resp *http.Response) (string, error) {
 		}
 	}
 	return "", ErrNoMorePages
-}
-
-// ApiError contain detail in their relevant sections,
-// are reported as part of 4xx responses, in a json response body.
-type ApiError struct {
-	Code    string                 `json:"code"`
-	Message string                 `json:"message"`
-	Detail  map[string]interface{} `json:"detail"`
-}
-
-// Error implement error type interface
-func (ae *ApiError) Error() string {
-	return fmt.Sprintf("%s: %s %v", ae.Code, ae.Message, ae.Detail)
 }

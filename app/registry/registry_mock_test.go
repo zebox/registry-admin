@@ -14,7 +14,6 @@ import (
 	"net/url"
 	"regexp"
 	"strconv"
-	"sync"
 	"testing"
 )
 
@@ -37,7 +36,6 @@ type MockRegistry struct {
 
 	t   testing.TB
 	mux *http.ServeMux
-	mu  sync.Mutex
 }
 
 // NewMockRegistry creates a registry mock
@@ -89,8 +87,9 @@ func (mr *MockRegistry) prepareRegistryMockEndpoints() {
 
 	// bind tests docker registry api endpoints
 	mr.handlers[regexp.MustCompile(`/v2/$`)] = http.HandlerFunc(mr.apiVersionCheck)
-	mr.handlers[regexp.MustCompile(`/v2/_catalog`)] = http.HandlerFunc(mr.getCatalog)
+	mr.handlers[regexp.MustCompile(`/v2/_catalog+`)] = http.HandlerFunc(mr.getCatalog)
 	mr.handlers[regexp.MustCompile(`/v2/(.*)/tags/+`)] = http.HandlerFunc(mr.getImageTags)
+	mr.handlers[regexp.MustCompile(`/v2/(.*)/manifests/(.*)`)] = http.HandlerFunc(mr.getManifest)
 
 }
 
@@ -195,7 +194,7 @@ func (mr *MockRegistry) getImageTags(w http.ResponseWriter, r *http.Request) {
 			Code:    "NAME_UNKNOWN",
 			Message: "repository name not known to registry",
 		}
-		apiError.Detail["name"] = repoName[1]
+		apiError.Detail = map[string]string{"name": repoName[1]}
 		w.WriteHeader(http.StatusNotFound)
 		rest.RenderJSON(w, apiError)
 		return
@@ -228,6 +227,114 @@ func (mr *MockRegistry) getImageTags(w http.ResponseWriter, r *http.Request) {
 	_, err = w.Write(data)
 	assert.NoError(mr.t, err)
 
+}
+
+func (mr *MockRegistry) getManifest(w http.ResponseWriter, r *http.Request) {
+	testManifest := `{
+    "schemaVersion": 2,
+    "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
+    "config": {
+        "mediaType": "application/vnd.docker.container.image.v1+json",
+        "size": 4120,
+        "digest": "sha256:f03b14782dfdb2d0e1331c19161fac0f09e7dcd294116e06dd2c50acd041f1db"
+    },
+    "layers": [
+        {
+            "mediaType": "application/vnd.docker.image.rootfs.diff.tar.gzip",
+            "size": 2811478,
+            "digest": "sha256:5843afab387455b37944e709ee8c78d7520df80f8d01cf7f861aae63beeddb6b"
+        },
+        {
+            "mediaType": "application/vnd.docker.image.rootfs.diff.tar.gzip",
+            "size": 92,
+            "digest": "sha256:1d9a043fcb62927e88cb939d7776a0f776d127c390177343b621023a549e4eff"
+        },
+        {
+            "mediaType": "application/vnd.docker.image.rootfs.diff.tar.gzip",
+            "size": 10142128,
+            "digest": "sha256:0bcf3b0e371981104ecf6ce7e17c52775e18e7897d9193b52550a48772bc0047"
+        },
+        {
+            "mediaType": "application/vnd.docker.image.rootfs.diff.tar.gzip",
+            "size": 10142152,
+            "digest": "sha256:560beb475c9a630a4cbb206d115a9b387ceda4348cd8d6cd3c386afae01d8775"
+        },
+        {
+            "mediaType": "application/vnd.docker.image.rootfs.diff.tar.gzip",
+            "size": 1236,
+            "digest": "sha256:74c6258afffc26bf57a056dee76077bd300ae64bdd6e8745d6dc41b78e3c5152"
+        },
+        {
+            "mediaType": "application/vnd.docker.image.rootfs.diff.tar.gzip",
+            "size": 12340918,
+            "digest": "sha256:51d2eca1d7720849b7f120514745529a31140683964be2f66bec72df4c430a81"
+        },
+        {
+            "mediaType": "application/vnd.docker.image.rootfs.diff.tar.gzip",
+            "size": 115,
+            "digest": "sha256:5b06090241844dbdb6a1e76387301a77657cbbc09dc1dbe5152046377d9c7c4e"
+        },
+        {
+            "mediaType": "application/vnd.docker.image.rootfs.diff.tar.gzip",
+            "size": 114,
+            "digest": "sha256:756d41630d29aa89226b5aecb4012836dd3ed4933dec45580eb04e2ce4ea228a"
+        },
+        {
+            "mediaType": "application/vnd.docker.image.rootfs.diff.tar.gzip",
+            "size": 115,
+            "digest": "sha256:c759b8c5c3b21b188bb1ad5c1e7bd4d63b73b73f85dca622f4d415422c283196"
+        }
+    ]
+}
+`
+	// extractRepoName
+	var repoNameRE = regexp.MustCompile(`/v2/(.*)/manifests/(.*)`)
+	requestData := repoNameRE.FindStringSubmatch(r.URL.Path)
+	if len(requestData) == 0 {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	// search for repo and tags
+	var (
+		isRepoFound bool
+		isTagFound  bool
+	)
+	for _, v := range mr.tagList {
+		if v.Name == requestData[1] {
+			isRepoFound = true
+			for _, tag := range v.Tags {
+				if tag == requestData[2] {
+					isTagFound = true
+				}
+			}
+			break
+		}
+	}
+
+	if !isRepoFound || !isTagFound {
+		apiError := ApiError{
+			Code:    "NAME_UNKNOWN",
+			Message: "either repository name or tag not not found in registry",
+		}
+		detail := map[string]string{}
+		if !isRepoFound {
+			detail["repository"] = requestData[1]
+		}
+		if !isRepoFound {
+			detail["tag"] = requestData[2]
+		}
+		apiError.Detail = detail
+		w.WriteHeader(http.StatusNotFound)
+		rest.RenderJSON(w, apiError)
+		return
+	}
+
+	w.Header().Set("content-type", "application/vnd.docker.distribution.manifest.v2+json")
+	w.Header().Set("docker-distribution-api-version", "registry/2.0")
+	w.Header().Set("docker-content-digest", "sha256:5c3b3ba876c7e23bdf06f5657a57774420c38b290b9ffa5635cc70f7d68cb117")
+	_, err := w.Write([]byte(testManifest))
+	assert.NoError(mr.t, err)
 }
 
 func (mr *MockRegistry) preparePaginationResult(items []string, n, last string) (isNext bool, lastIndex int, result []string, err error) {
