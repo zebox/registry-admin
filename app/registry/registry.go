@@ -96,14 +96,6 @@ type Registry struct {
 	registryToken *registryToken
 }
 
-// ApiError contain detail in their relevant sections,
-// are reported as part of 4xx responses, in a json response body.
-type ApiError struct {
-	Code    string      `json:"code"`
-	Message string      `json:"message"`
-	Detail  interface{} `json:"detail"`
-}
-
 type ApiResponse struct {
 	Total int64       `json:"total"`
 	Data  interface{} `json:"data"`
@@ -202,19 +194,22 @@ func NewRegistry(login, password, secret string, settings Settings) (*Registry, 
 
 // ApiVersionCheck a minimal endpoint, mounted at /v2/ will provide version support information based on its response statuses.
 // more details by link https://docs.docker.com/registry/spec/api/#api-version-check
-func (r *Registry) ApiVersionCheck(ctx context.Context) (ApiError, error) {
+func (r *Registry) ApiVersionCheck(ctx context.Context) error {
 	var apiError ApiError
 	url := fmt.Sprintf("%s:%d/v2/", r.settings.Host, r.settings.Port)
+
 	resp, err := r.newHttpRequest(ctx, url, "GET", nil)
 	if err != nil {
 		apiError.Message = fmt.Sprintf("failed to request to registry host %s", r.settings.Host)
-		return apiError, err
+		return err
 	}
+
 	_ = resp.Body.Close()
 	if resp.StatusCode >= 400 {
 		apiError.Message = fmt.Sprintf("api return error code: %d", resp.StatusCode)
 	}
-	return apiError, nil
+
+	return nil
 }
 
 func (r *Registry) Catalog(ctx context.Context, n, last string) (Repositories, error) {
@@ -297,9 +292,9 @@ func (r *Registry) ListingImageTags(ctx context.Context, repoName, n, last strin
 	return tags, nil
 }
 
-func (r *Registry) Manifest(ctx context.Context, repoName, tag string) (ManifestSchemaV2, ApiError) {
+func (r *Registry) Manifest(ctx context.Context, repoName, tag string) (ManifestSchemaV2, error) {
 	var manifest ManifestSchemaV2
-	var apiError ApiError
+	var apiError *ApiError
 	baseUrl := fmt.Sprintf("%s:%d/v2/%s/manifests/%s", r.settings.Host, r.settings.Port, repoName, tag)
 
 	resp, err := r.newHttpRequest(ctx, baseUrl, "GET", nil)
@@ -334,7 +329,7 @@ func (r *Registry) Manifest(ctx context.Context, repoName, tag string) (Manifest
 	manifest.calculateCompressedImageSize()
 	manifest.ContentDigest = resp.Header.Get(contentDigestHeader)
 
-	return manifest, apiError
+	return manifest, nil
 }
 
 // newHttpRequest prepare http client and execute a request to docker registry api
@@ -390,10 +385,23 @@ func (m *ManifestSchemaV2) calculateCompressedImageSize() {
 	}
 }
 
-func makeApiError(msg, detail string) ApiError {
-	return ApiError{
+func makeApiError(msg, detail string) *ApiError {
+	return &ApiError{
 		Code:    "-1",
 		Message: msg,
 		Detail:  map[string]string{"error": detail},
 	}
+}
+
+// ApiError contain detail in their relevant sections,
+// are reported as part of 4xx responses, in a json response body.
+type ApiError struct {
+	Code    string      `json:"code"`
+	Message string      `json:"message"`
+	Detail  interface{} `json:"detail"`
+}
+
+// Error implement error type interface
+func (ae *ApiError) Error() string {
+	return fmt.Sprintf("%s: %s: %v", ae.Code, ae.Message, ae.Detail)
 }

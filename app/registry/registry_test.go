@@ -78,9 +78,8 @@ func TestRegistry_ApiCheck(t *testing.T) {
 		Port: testPort,
 	}}
 
-	apiError, err := r.ApiVersionCheck(context.Background())
+	err := r.ApiVersionCheck(context.Background())
 	assert.NoError(t, err)
-	assert.Equal(t, "", apiError.Message)
 }
 
 func TestRegistry_Catalog(t *testing.T) {
@@ -185,13 +184,13 @@ func TestRegistry_Manifest(t *testing.T) {
 	}}
 
 	manifest, err := r.Manifest(context.Background(), "test_repo_1", "test_tag_10")
-	require.Equal(t, "", err.Code)
+	require.NoError(t, err)
 	assert.Equal(t, int64(35438348), manifest.TotalSize)
 	assert.Equal(t, "sha256:5c3b3ba876c7e23bdf06f5657a57774420c38b290b9ffa5635cc70f7d68cb117", manifest.ContentDigest)
 
 	_, err = r.Manifest(context.Background(), "test_repo_00", "test_tag_10")
-	assert.Equal(t, "-1", err.Code)
-	assert.Equal(t, "resource not found", err.Message)
+	assert.Error(t, err)
+	assert.Equal(t, "resource not found", err.(*ApiError).Message)
 
 }
 
