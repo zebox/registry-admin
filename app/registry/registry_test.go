@@ -78,9 +78,9 @@ func TestRegistry_ApiCheck(t *testing.T) {
 		Port: testPort,
 	}}
 
-	apiError, err := r.ApiVersionCheck(context.Background())
-	assert.NoError(t, err)
-	assert.Equal(t, "", apiError.Message)
+	apiError := r.ApiVersionCheck(context.Background())
+	assert.NoError(t, apiError)
+
 }
 
 func TestRegistry_Catalog(t *testing.T) {
