@@ -3,6 +3,8 @@ package registry
 // This is mock implementation of docker registry V2 api for use in unit tests
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"github.com/go-pkgz/rest"
@@ -49,6 +51,12 @@ func NewMockRegistry(t testing.TB, host string, port int, repoNumber, tagNumber 
 	testRegistry.mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		for k, v := range testRegistry.handlers {
 			if k.MatchString(r.URL.Path) {
+
+				// Delete method has only one handler
+				if r.Method == "DELETE" {
+					http.HandlerFunc(testRegistry.deleteManifest).ServeHTTP(w, r)
+					return
+				}
 				v.ServeHTTP(w, r)
 				return
 			}
@@ -230,6 +238,12 @@ func (mr *MockRegistry) getImageTags(w http.ResponseWriter, r *http.Request) {
 }
 
 func (mr *MockRegistry) getManifest(w http.ResponseWriter, r *http.Request) {
+
+	if r.Method != "GET" {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
 	testManifest := `{
     "schemaVersion": 2,
     "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
@@ -296,10 +310,8 @@ func (mr *MockRegistry) getManifest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// search for repo and tags
-	var (
-		isRepoFound bool
-		isTagFound  bool
-	)
+	var isRepoFound, isTagFound bool
+
 	for _, v := range mr.tagList {
 		if v.Name == requestData[1] {
 			isRepoFound = true
@@ -332,9 +344,57 @@ func (mr *MockRegistry) getManifest(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("content-type", "application/vnd.docker.distribution.manifest.v2+json")
 	w.Header().Set("docker-distribution-api-version", "registry/2.0")
-	w.Header().Set("docker-content-digest", "sha256:5c3b3ba876c7e23bdf06f5657a57774420c38b290b9ffa5635cc70f7d68cb117")
+
+	w.Header().Set("docker-content-digest", "sha256:"+makeDigest(requestData[2]))
 	_, err := w.Write([]byte(testManifest))
 	assert.NoError(mr.t, err)
+}
+
+func (mr *MockRegistry) deleteManifest(w http.ResponseWriter, r *http.Request) {
+
+	var repoNameRE = regexp.MustCompile(`/v2/(.*)/manifests/(.*)`)
+	requestData := repoNameRE.FindStringSubmatch(r.URL.Path)
+	if len(requestData) == 0 {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	var isTagFound, isRepoFound bool
+
+	for i, v := range mr.tagList {
+		if v.Name == requestData[1] {
+			isRepoFound = true
+			for j, tag := range v.Tags {
+				digest := makeDigest(tag)
+				if digest == requestData[2] {
+					isTagFound = true
+					updatedTags := append(v.Tags[:j], v.Tags[j+1:]...)
+					mr.tagList[i].Tags = updatedTags
+					break
+				}
+			}
+			break
+		}
+	}
+
+	if !isRepoFound || !isTagFound {
+		apiError := ApiError{
+			Code:    "NAME_UNKNOWN",
+			Message: "either repository name or tag not not found in registry",
+		}
+		detail := map[string]string{}
+		if !isRepoFound {
+			detail["repository"] = requestData[1]
+		}
+		if !isRepoFound {
+			detail["tag"] = requestData[2]
+		}
+		apiError.Detail = detail
+		w.WriteHeader(http.StatusNotFound)
+		rest.RenderJSON(w, apiError)
+		return
+	}
+
 }
 
 func (mr *MockRegistry) preparePaginationResult(items []string, n, last string) (isNext bool, lastIndex int, result []string, err error) {
@@ -366,4 +426,10 @@ func (mr *MockRegistry) preparePaginationResult(items []string, n, last string) 
 		lastIndex = len(items) - 1
 	}
 	return isNext, lastIndex, result, err
+}
+
+func makeDigest(data string) string {
+	hasher := sha256.New()
+	hasher.Write([]byte(data))
+	return hex.EncodeToString(hasher.Sum(nil))
 }

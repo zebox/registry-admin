@@ -80,6 +80,11 @@ func TestRegistry_ApiCheck(t *testing.T) {
 
 	err := r.ApiVersionCheck(context.Background())
 	assert.NoError(t, err)
+
+	r.settings.Host = ""
+	err = r.ApiVersionCheck(context.Background())
+	assert.Error(t, err)
+	assert.Equal(t, fmt.Sprintf(`parse ":%d/v2/": missing protocol scheme`, testPort), err.Error())
 }
 
 func TestRegistry_Catalog(t *testing.T) {
@@ -186,12 +191,52 @@ func TestRegistry_Manifest(t *testing.T) {
 	manifest, err := r.Manifest(context.Background(), "test_repo_1", "test_tag_10")
 	require.NoError(t, err)
 	assert.Equal(t, int64(35438348), manifest.TotalSize)
-	assert.Equal(t, "sha256:5c3b3ba876c7e23bdf06f5657a57774420c38b290b9ffa5635cc70f7d68cb117", manifest.ContentDigest)
+	assert.Equal(t, "sha256:5325b1bf44924fa4a267fcbcc86ac1f74cc2e2e90a38b10e0c45f4ef40db5804", manifest.ContentDigest)
 
 	_, err = r.Manifest(context.Background(), "test_repo_00", "test_tag_10")
 	assert.Error(t, err)
 	assert.Equal(t, "resource not found", err.(*ApiError).Message)
 
+	r.settings.Host = ""
+	_, err = r.Manifest(context.Background(), "test_repo_00", "test_tag_10")
+	assert.Error(t, err)
+}
+
+func TestRegistry_DeleteTag(t *testing.T) {
+	testPort := chooseRandomUnusedPort()
+	reposNumbers := 100
+	tagsNumbers := 50
+	testRegistry := NewMockRegistry(t, "127.0.0.1", testPort, reposNumbers, tagsNumbers)
+	defer testRegistry.Close()
+
+	r := Registry{settings: Settings{
+		Host: "http://127.0.0.1",
+		Port: testPort,
+	}}
+
+	digest := makeDigest("test_tag_10")
+	err := r.DeleteTag(context.Background(), "test_repo_1", digest)
+	require.NoError(t, err)
+	assert.Equal(t, len(testRegistry.tagList[1].Tags), tagsNumbers-1)
+
+	err = r.DeleteTag(context.Background(), "test_repo_1", "fake_digest")
+	assert.Error(t, err)
+	assert.Equal(t, "resource not found", err.(*ApiError).Message)
+
+	r.settings.Host = ""
+	err = r.DeleteTag(context.Background(), "test_repo_00", "test_tag_10")
+	assert.Error(t, err)
+}
+
+func TestApiError_Error(t *testing.T) {
+	apiError := ApiError{
+		Code:    "test",
+		Message: "test",
+		Detail:  map[string]interface{}{"test": "test"},
+	}
+
+	strError := apiError.Error()
+	assert.Equal(t, "test: test: map[test:test]", strError)
 }
 
 func chooseRandomUnusedPort() (port int) {

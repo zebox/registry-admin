@@ -332,6 +332,39 @@ func (r *Registry) Manifest(ctx context.Context, repoName, tag string) (Manifest
 	return manifest, nil
 }
 
+// DeleteTag will delete the manifest identified by name and reference. Note that a manifest can only be deleted by digest.
+// A digest can be fetched from manifest get response header 'docker-content-digest'
+func (r *Registry) DeleteTag(ctx context.Context, repoName, digest string) error {
+	var apiError *ApiError
+	baseUrl := fmt.Sprintf("%s:%d/v2/%s/manifests/%s", r.settings.Host, r.settings.Port, repoName, digest)
+
+	resp, err := r.newHttpRequest(ctx, baseUrl, "DELETE", nil)
+	if err != nil {
+		return makeApiError("failed to make request for delete docker registry manifest", err.Error())
+	}
+
+	if resp != nil {
+		defer func() {
+			_ = resp.Body.Close()
+		}()
+	}
+
+	if resp.StatusCode >= 400 {
+		if resp != nil {
+			err = json.NewDecoder(resp.Body).Decode(&apiError)
+			if err != nil {
+				return makeApiError("failed to parse request body when manifest delete", err.Error())
+			}
+		}
+		if resp.StatusCode == http.StatusNotFound {
+			return makeApiError("resource not found", repoName)
+		}
+		return apiError
+	}
+
+	return nil
+}
+
 // newHttpRequest prepare http client and execute a request to docker registry api
 func (r Registry) newHttpRequest(ctx context.Context, url, method string, body []byte) (*http.Response, error) {
 
