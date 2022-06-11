@@ -6,10 +6,10 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"github.com/go-pkgz/rest"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	"github.com/docker/libtrust"
+	"github.com/golang-jwt/jwt"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -17,6 +17,10 @@ import (
 	"regexp"
 	"strconv"
 	"testing"
+
+	"github.com/go-pkgz/rest"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type repositories struct {
@@ -36,19 +40,59 @@ type MockRegistry struct {
 	repositories
 	tagList []tags
 
+	auth             authType
+	basicCredentials struct {
+		username string
+		password string
+	}
+	publicKey libtrust.PublicKey
+
 	t   testing.TB
 	mux *http.ServeMux
 }
 
+type MockRegistryOptions func(option *MockRegistry)
+
+func AuthType(auth authType) MockRegistryOptions {
+	return func(mr *MockRegistry) {
+		mr.auth = auth
+	}
+}
+
+func BasicCredentials(username, password string) MockRegistryOptions {
+	return func(mr *MockRegistry) {
+		mr.basicCredentials.username = username
+		mr.basicCredentials.password = password
+	}
+}
+
+func PublicKey(publicKey libtrust.PublicKey) MockRegistryOptions {
+	return func(mr *MockRegistry) {
+		mr.publicKey = publicKey
+	}
+}
+
 // NewMockRegistry creates a registry mock
-func NewMockRegistry(t testing.TB, host string, port int, repoNumber, tagNumber int) *MockRegistry {
+func NewMockRegistry(t testing.TB, host string, port int, repoNumber, tagNumber int, opts ...MockRegistryOptions) *MockRegistry {
 	t.Helper()
 	testRegistry := &MockRegistry{handlers: make(map[*regexp.Regexp]http.Handler)}
 	testRegistry.prepareRepositoriesData(repoNumber, tagNumber)
 	testRegistry.prepareRegistryMockEndpoints()
 	testRegistry.mux = http.NewServeMux()
 
+	// set default credentials for basic auth
+	testRegistry.basicCredentials.username = "test_admin"
+	testRegistry.basicCredentials.username = "test_password"
+
+	for _, opt := range opts {
+		opt(testRegistry)
+	}
+
 	testRegistry.mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if !testRegistry.authCheck(r) {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
 		for k, v := range testRegistry.handlers {
 			if k.MatchString(r.URL.Path) {
 
@@ -131,6 +175,36 @@ func (mr *MockRegistry) prepareRepositoriesData(repoNumbers, tagNumbers int) {
 	mr.repositories.List = testRepos
 }
 
+func (mr *MockRegistry) authCheck(req *http.Request) bool {
+	switch mr.auth {
+	case Basic:
+		if username, passwd, ok := req.BasicAuth(); ok {
+			return username == mr.basicCredentials.username && passwd == mr.basicCredentials.password
+		}
+	case SelfToken:
+
+		_, _, err := mr.parseHeaderForJwt(req)
+		if err != nil {
+			return false
+		}
+		return true
+	}
+
+	return false
+}
+
+func (mr *MockRegistry) parseHeaderForJwt(req *http.Request) (*jwt.Token, jwt.MapClaims, error) {
+	authHeader := req.Header.Get("Authorization")
+	claims := jwt.MapClaims{}
+	token, err := jwt.ParseWithClaims(authHeader, claims, func(token *jwt.Token) (interface{}, error) {
+		if mr.publicKey == nil {
+			return nil, errors.New("wrong public key")
+		}
+		return mr.publicKey, nil
+	})
+	return token, claims, err
+
+}
 func (mr *MockRegistry) apiVersionCheck(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("content-type", "application/json; charset=utf-8")
 	w.Header().Set("docker-distribution-api-version", "registry/2.0")

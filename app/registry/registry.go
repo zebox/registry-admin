@@ -192,6 +192,11 @@ func NewRegistry(login, password, secret string, settings Settings) (*Registry, 
 	return r, nil
 }
 
+func (r *Registry) Token(req *http.Request) (string, error) {
+
+	return "", nil
+}
+
 // ApiVersionCheck a minimal endpoint, mounted at /v2/ will provide version support information based on its response statuses.
 // more details by link https://docs.docker.com/registry/spec/api/#api-version-check
 func (r *Registry) ApiVersionCheck(ctx context.Context) error {
@@ -410,19 +415,41 @@ func getPaginationNextLink(resp *http.Response) (string, error) {
 	return "", ErrNoMorePages
 }
 
+// parseAuthenticateHeader will parse 'Www-Authenticate' header for extract token authorization data.
+// Header value should be like this: Bearer realm="https://auth.docker.io/token",service="registry.docker.io",scope="repository:samalba/my-app:pull,push"
+func parseAuthenticateHeader(headerValue string) (authRequest AuthorizationRequest, err error) {
+	// realm="https://auth.docker.io/token",service="registry.docker.io",scope="repository:samalba/my-app:pull,push"
+	var re = regexp.MustCompile(`(?m)(\w+)=("[^"]*")`)
+	for _, match := range re.FindAllString(headerValue, -1) {
+		keyValue := strings.Split(match, "=")
+		if len(keyValue) == 2 {
+			key := keyValue[0]
+			value := keyValue[1]
+			switch key {
+			case "realm":
+				// authRequest.Service = value
+			case "service":
+				authRequest.Service = value
+			case "scope":
+				scope := strings.Split(value, ":")
+				if len(scope) != 3 {
+					return authRequest, fmt.Errorf("failed to parse scope value: %s", value)
+				}
+				authRequest.Type = scope[0]
+				authRequest.Name = scope[1]
+				authRequest.Actions = strings.Split(scope[2], ",")
+			}
+		}
+
+	}
+	return authRequest, err
+}
+
 // calculateCompressedImageSize will iterate with image layers in fetched manifest file and append size of each layers to TotalSize field
 func (m *ManifestSchemaV2) calculateCompressedImageSize() {
 
 	for _, v := range m.LayersDescriptors {
 		m.TotalSize += v.Size
-	}
-}
-
-func makeApiError(msg, detail string) *ApiError {
-	return &ApiError{
-		Code:    "-1",
-		Message: msg,
-		Detail:  map[string]string{"error": detail},
 	}
 }
 
@@ -437,4 +464,12 @@ type ApiError struct {
 // Error implement error type interface
 func (ae *ApiError) Error() string {
 	return fmt.Sprintf("%s: %s: %v", ae.Code, ae.Message, ae.Detail)
+}
+
+func makeApiError(msg, detail string) *ApiError {
+	return &ApiError{
+		Code:    "-1",
+		Message: msg,
+		Detail:  map[string]string{"error": detail},
+	}
 }
