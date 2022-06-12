@@ -192,9 +192,30 @@ func NewRegistry(login, password, secret string, settings Settings) (*Registry, 
 	return r, nil
 }
 
-func (r *Registry) Token(req *http.Request) (string, error) {
+// Token create jwt token with claims for send as response to docker registry service
+// This method should call after credentials check at a high level api
+func (r *Registry) Token(username, headerValue string) (string, error) {
 
-	return "", nil
+	if username == "" {
+		return "", errors.New("empty username not allowed for token generation")
+	}
+
+	authRequest, err := parseAuthenticateHeader(headerValue)
+	if err != nil {
+		return "", err
+	}
+
+	authRequest.Account = username
+	clientToken, errToken := r.registryToken.Generate(&authRequest)
+	if errToken != nil {
+		return "", err
+	}
+
+	tokenBytes, err := json.Marshal(clientToken)
+	if err != nil {
+		return "", err
+	}
+	return string(tokenBytes), nil
 }
 
 // ApiVersionCheck a minimal endpoint, mounted at /v2/ will provide version support information based on its response statuses.
@@ -375,10 +396,11 @@ func (r Registry) newHttpRequest(ctx context.Context, url, method string, body [
 
 	transport := &http.Transport{}
 
-	// it's need for self-hosted docker registry with self-signed certificates
+	// it's need for self-hosted docker registry auth service with self-signed certificates
 	if strings.HasPrefix(url, "https:") {
-		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: r.settings.InsecureRequest}
+		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: r.settings.InsecureRequest} //nolint:gosec
 	}
+
 	client := &http.Client{
 		Transport: transport,
 		Timeout:   5 * time.Second,
@@ -419,28 +441,37 @@ func getPaginationNextLink(resp *http.Response) (string, error) {
 // Header value should be like this: Bearer realm="https://auth.docker.io/token",service="registry.docker.io",scope="repository:samalba/my-app:pull,push"
 func parseAuthenticateHeader(headerValue string) (authRequest AuthorizationRequest, err error) {
 	// realm="https://auth.docker.io/token",service="registry.docker.io",scope="repository:samalba/my-app:pull,push"
-	var re = regexp.MustCompile(`(?m)(\w+)=("[^"]*")`)
+	var re = regexp.MustCompile(`(\w+)=("[^"]*")`)
+	var isMatched bool
 	for _, match := range re.FindAllString(headerValue, -1) {
 		keyValue := strings.Split(match, "=")
-		if len(keyValue) == 2 {
-			key := keyValue[0]
-			value := keyValue[1]
-			switch key {
-			case "realm":
-				// authRequest.Service = value
-			case "service":
-				authRequest.Service = value
-			case "scope":
-				scope := strings.Split(value, ":")
-				if len(scope) != 3 {
-					return authRequest, fmt.Errorf("failed to parse scope value: %s", value)
-				}
-				authRequest.Type = scope[0]
-				authRequest.Name = scope[1]
-				authRequest.Actions = strings.Split(scope[2], ",")
-			}
+		if len(keyValue) != 2 {
+			return authRequest, fmt.Errorf("failed to parse key/value: %v", keyValue)
 		}
+		key := keyValue[0]
+		value := keyValue[1]
+		value = strings.Trim(value, `"`)
+		switch key {
 
+		// case "realm":
+		// not implemented yet.
+		// on this step should match this service auth service with realm auth url
+
+		case "service":
+			authRequest.Service = value
+		case "scope":
+			scope := strings.Split(value, ":")
+			if len(scope) != 3 {
+				return authRequest, fmt.Errorf("failed to parse scope value: %s", value)
+			}
+			authRequest.Type = scope[0]
+			authRequest.Name = scope[1]
+			authRequest.Actions = strings.Split(scope[2], ",")
+		}
+		isMatched = true
+	}
+	if !isMatched {
+		return authRequest, fmt.Errorf("no found parsed params for token request : %s", headerValue)
 	}
 	return authRequest, err
 }

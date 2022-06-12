@@ -2,8 +2,10 @@ package registry
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/golang-jwt/jwt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"math/rand"
@@ -227,7 +229,69 @@ func TestRegistry_DeleteTag(t *testing.T) {
 	err = r.DeleteTag(context.Background(), "test_repo_00", "test_tag_10")
 	assert.Error(t, err)
 }
+func TestRegistry_Token(t *testing.T) {
+	tmpDir, errDir := os.MkdirTemp("", "test_token")
+	require.NoError(t, errDir)
 
+	defer func() {
+		assert.NoError(t, os.RemoveAll(tmpDir))
+	}()
+
+	testSetting := Settings{
+		AuthType: SelfToken,
+		CertificatesPaths: Certs{
+			RootPath:      tmpDir + "/" + certsDirName,
+			KeyPath:       tmpDir + "/" + privateKeyName,
+			PublicKeyPath: tmpDir + "/" + publicKeyName,
+			CARootPath:    tmpDir + "/" + CAName,
+		},
+	}
+
+	testRegistry, err := NewRegistry("test_login", "test_password", "test_secret", testSetting)
+	require.NoError(t, err)
+
+	testRequestHeaderValue := `Bearer realm="https://auth.docker.io/token",service="registry.docker.io",scope="repository:samalba/my-app:pull,push"`
+
+	tokenString, err := testRegistry.Token("test_login", testRequestHeaderValue)
+	require.NoError(t, err)
+	assert.NotEqual(t, "", tokenString)
+
+	var clientToken clientToken
+
+	err = json.Unmarshal([]byte(tokenString), &clientToken)
+	require.NoError(t, err)
+
+	jwtClaims := jwt.MapClaims{}
+	token, errToken := jwt.ParseWithClaims(clientToken.Token, jwtClaims, func(token *jwt.Token) (interface{}, error) {
+		return testRegistry.registryToken.publicKey.CryptoPublicKey(), nil
+	})
+	require.NoError(t, errToken)
+	assert.NotNil(t, token)
+	assert.Equal(t, "test_login", jwtClaims["sub"])
+	assert.Equal(t, "registry.docker.io", jwtClaims["aud"])
+	assert.Equal(t, "127.0.0.1", jwtClaims["iss"])
+
+	// test with wildcard action value
+	testRequestHeaderValue = `Bearer realm="https://auth.docker.io/token",service="registry.docker.io",scope="repository:samalba/my-app:*"`
+	_, err = testRegistry.Token("test_login", testRequestHeaderValue)
+	assert.NoError(t, err)
+
+	// test with error
+	_, err = testRegistry.Token("", testRequestHeaderValue)
+	assert.Error(t, err)
+
+	testRequestHeaderValue = "fake_params"
+	_, err = testRegistry.Token("test_login", testRequestHeaderValue)
+	assert.Error(t, err)
+
+	testRequestHeaderValue = `"fake="params="`
+	_, err = testRegistry.Token("test_login", testRequestHeaderValue)
+	assert.Error(t, err)
+
+	testRequestHeaderValue = `Bearer realm="https://auth.docker.io/token",service="registry.docker.io",scope="repository:sama:lba/my-app:pull,push"`
+	_, err = testRegistry.Token("test_login", testRequestHeaderValue)
+	assert.Error(t, err)
+}
 func TestApiError_Error(t *testing.T) {
 	apiError := ApiError{
 		Code:    "test",

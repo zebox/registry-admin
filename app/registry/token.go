@@ -91,6 +91,9 @@ func TokenExpiration(expirationTime int64) TokenOption {
 
 // TokenIssuer option define token issuer, typically the fqdn of the authorization server
 func TokenIssuer(issuer string) TokenOption {
+	if issuer == "" {
+		issuer = defaultTokenIssuer
+	}
 	return func(rt *registryToken) {
 		rt.tokenIssuer = issuer
 	}
