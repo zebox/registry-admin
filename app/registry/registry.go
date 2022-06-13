@@ -233,6 +233,7 @@ func (r *Registry) ApiVersionCheck(ctx context.Context) error {
 	_ = resp.Body.Close()
 	if resp.StatusCode >= 400 {
 		apiError.Message = fmt.Sprintf("api return error code: %d", resp.StatusCode)
+		return apiError
 	}
 
 	return nil
@@ -320,7 +321,7 @@ func (r *Registry) ListingImageTags(ctx context.Context, repoName, n, last strin
 
 func (r *Registry) Manifest(ctx context.Context, repoName, tag string) (ManifestSchemaV2, error) {
 	var manifest ManifestSchemaV2
-	var apiError *ApiError
+	var apiError ApiError
 	baseUrl := fmt.Sprintf("%s:%d/v2/%s/manifests/%s", r.settings.Host, r.settings.Port, repoName, tag)
 
 	resp, err := r.newHttpRequest(ctx, baseUrl, "GET", nil)
@@ -361,7 +362,7 @@ func (r *Registry) Manifest(ctx context.Context, repoName, tag string) (Manifest
 // DeleteTag will delete the manifest identified by name and reference. Note that a manifest can only be deleted by digest.
 // A digest can be fetched from manifest get response header 'docker-content-digest'
 func (r *Registry) DeleteTag(ctx context.Context, repoName, digest string) error {
-	var apiError *ApiError
+	var apiError ApiError
 	baseUrl := fmt.Sprintf("%s:%d/v2/%s/manifests/%s", r.settings.Host, r.settings.Port, repoName, digest)
 
 	resp, err := r.newHttpRequest(ctx, baseUrl, "DELETE", nil)
@@ -493,7 +494,7 @@ type ApiError struct {
 }
 
 // Error implement error type interface
-func (ae *ApiError) Error() string {
+func (ae ApiError) Error() string {
 	return fmt.Sprintf("%s: %s: %v", ae.Code, ae.Message, ae.Detail)
 }
 

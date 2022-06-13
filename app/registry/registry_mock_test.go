@@ -23,6 +23,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	defaultMockUsername = "test_admin"
+	defaultMockPassword = "test_password"
+)
+
 type repositories struct {
 	List []string `json:"repositories"`
 }
@@ -60,6 +65,9 @@ func AuthType(auth authType) MockRegistryOptions {
 }
 
 func BasicCredentials(username, password string) MockRegistryOptions {
+	if username == "" {
+		username = defaultMockUsername
+	}
 	return func(mr *MockRegistry) {
 		mr.basicCredentials.username = username
 		mr.basicCredentials.password = password
@@ -81,8 +89,8 @@ func NewMockRegistry(t testing.TB, host string, port int, repoNumber, tagNumber 
 	testRegistry.mux = http.NewServeMux()
 
 	// set default credentials for basic auth
-	testRegistry.basicCredentials.username = "test_admin"
-	testRegistry.basicCredentials.username = "test_password"
+	testRegistry.basicCredentials.username = defaultMockUsername
+	testRegistry.basicCredentials.password = defaultMockPassword
 
 	for _, opt := range opts {
 		opt(testRegistry)

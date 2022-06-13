@@ -80,7 +80,14 @@ func TestRegistry_ApiCheck(t *testing.T) {
 		Port: testPort,
 	}}
 
+	// test with auth error
 	err := r.ApiVersionCheck(context.Background())
+	assert.Error(t, err)
+
+	r.settings.credentials.login = defaultMockUsername
+	r.settings.credentials.password = defaultMockPassword
+
+	err = r.ApiVersionCheck(context.Background())
 	assert.NoError(t, err)
 
 	r.settings.Host = ""
@@ -100,6 +107,9 @@ func TestRegistry_Catalog(t *testing.T) {
 		Host: "http://127.0.0.1",
 		Port: testPort,
 	}}
+
+	r.settings.credentials.login = defaultMockUsername
+	r.settings.credentials.password = defaultMockPassword
 
 	repos, err := r.Catalog(context.Background(), "", "")
 	assert.NoError(t, err)
@@ -142,11 +152,15 @@ func TestRegistry_ListingImageTags(t *testing.T) {
 		Port: testPort,
 	}}
 
+	r.settings.credentials.login = defaultMockUsername
+	r.settings.credentials.password = defaultMockPassword
+
 	for _, repoName := range testRegistry.repositories.List {
 		tags, err := r.ListingImageTags(context.Background(), repoName, "", "")
 		assert.NoError(t, err)
 		assert.Equal(t, tagsNumbers, len(tags.Tags))
 	}
+
 	// test with pagination
 	var (
 		tags    ImageTags
@@ -190,6 +204,9 @@ func TestRegistry_Manifest(t *testing.T) {
 		Port: testPort,
 	}}
 
+	r.settings.credentials.login = defaultMockUsername
+	r.settings.credentials.password = defaultMockPassword
+
 	manifest, err := r.Manifest(context.Background(), "test_repo_1", "test_tag_10")
 	require.NoError(t, err)
 	assert.Equal(t, int64(35438348), manifest.TotalSize)
@@ -215,6 +232,9 @@ func TestRegistry_DeleteTag(t *testing.T) {
 		Host: "http://127.0.0.1",
 		Port: testPort,
 	}}
+
+	r.settings.credentials.login = defaultMockUsername
+	r.settings.credentials.password = defaultMockPassword
 
 	digest := makeDigest("test_tag_10")
 	err := r.DeleteTag(context.Background(), "test_repo_1", digest)
