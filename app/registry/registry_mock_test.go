@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"github.com/docker/libtrust"
 	"github.com/golang-jwt/jwt"
+	"github.com/zebox/registry-admin/app/store"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -29,7 +30,7 @@ const (
 )
 
 // tokenAuthFn is function for request jwt token with credentials for get access to registry resources based on token claims data
-type tokenAuthFn func(username, headerValue string) (string, error)
+type tokenAuthFn func(username, headerValue string, access store.Access) (string, error)
 
 type repositories struct {
 	List []string `json:"repositories"`
@@ -52,6 +53,7 @@ type MockRegistry struct {
 	credentials struct {
 		username string
 		password string
+		access   store.Access
 	}
 	tokenAuthFn tokenAuthFn
 	publicKey   libtrust.PublicKey
@@ -69,13 +71,14 @@ func TokenAuth(tokenFn tokenAuthFn) MockRegistryOptions {
 	}
 }
 
-func BasicCredentials(username, password string) MockRegistryOptions {
+func Credentials(username, password string, access store.Access) MockRegistryOptions {
 	if username == "" {
 		username = defaultMockUsername
 	}
 	return func(mr *MockRegistry) {
 		mr.credentials.username = username
 		mr.credentials.password = password
+		mr.credentials.access = access
 	}
 }
 
@@ -204,14 +207,15 @@ func (mr *MockRegistry) authCheck(req *http.Request) bool {
 			return false
 		}
 
-		var repoNameRE = regexp.MustCompile(`(?m)/v2/(.*)/`)
+		var repoNameRE = regexp.MustCompile(`/v2/(.*)/tags`)
 		repoName := repoNameRE.FindStringSubmatch(req.URL.Path)
 		if len(repoName) == 0 {
 			return false
 		}
 
-		headerValue := fmt.Sprintf(`Bearer realm="http://127.0.0.1/token",service="127.0.0.1",scope="repository:%s:*"`, repoName)
-		token, err := mr.tokenAuthFn(username, headerValue)
+		headerValue := fmt.Sprintf(`Bearer realm="http://127.0.0.1/token",service="127.0.0.1",scope="repository:%s:*"`, repoName[1])
+
+		token, err := mr.tokenAuthFn(username, headerValue, mr.credentials.access)
 		require.NoError(mr.t, err)
 
 		var authToken clientToken
@@ -222,8 +226,20 @@ func (mr *MockRegistry) authCheck(req *http.Request) bool {
 		if err != nil {
 			return false
 		}
+		accessData := claims["access"].([]interface{})
+		accessClaims := accessData[0].(map[string]interface{})
+		name := accessClaims["name"].(string)
+		resourceType := accessClaims["type"].(string)
+		actions := accessClaims["actions"].([]interface{})
 
-		return claims["name"] == repoName[1] && claims["type"] == "registry"
+		return name == repoName[1] && resourceType == "repository" && func(actions []interface{}) bool {
+			for _, a := range actions {
+				if a.(string) == "*" {
+					return true
+				}
+			}
+			return false
+		}(actions)
 	}
 
 	return false

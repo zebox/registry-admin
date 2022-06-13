@@ -194,21 +194,11 @@ func NewRegistry(login, password, secret string, settings Settings) (*Registry, 
 
 // Token create jwt token with claims for send as response to docker registry service
 // This method should call after credentials check at a high level api
-func (r *Registry) Token(username, headerValue string) (string, error) {
+func (r *Registry) Token(authRequest AuthorizationRequest) (string, error) {
 
-	if username == "" {
-		return "", errors.New("empty username not allowed for token generation")
-	}
-
-	authRequest, err := parseAuthenticateHeader(headerValue)
-	if err != nil {
-		return "", err
-	}
-
-	authRequest.Account = username
 	clientToken, errToken := r.registryToken.Generate(&authRequest)
 	if errToken != nil {
-		return "", err
+		return "", errToken
 	}
 
 	tokenBytes, err := json.Marshal(clientToken)
@@ -438,9 +428,10 @@ func getPaginationNextLink(resp *http.Response) (string, error) {
 	return "", ErrNoMorePages
 }
 
-// parseAuthenticateHeader will parse 'Www-Authenticate' header for extract token authorization data.
+// ParseAuthenticateHeaderRequest will parse 'Www-Authenticate' header for extract token authorization data.
 // Header value should be like this: Bearer realm="https://auth.docker.io/token",service="registry.docker.io",scope="repository:samalba/my-app:pull,push"
-func parseAuthenticateHeader(headerValue string) (authRequest AuthorizationRequest, err error) {
+// Input parameter 'access' contain data of access to resource for a user
+func ParseAuthenticateHeaderRequest(headerValue string) (authRequest AuthorizationRequest, err error) {
 	// realm="https://auth.docker.io/token",service="registry.docker.io",scope="repository:samalba/my-app:pull,push"
 	var re = regexp.MustCompile(`(\w+)=("[^"]*")`)
 	var isMatched bool
@@ -465,11 +456,13 @@ func parseAuthenticateHeader(headerValue string) (authRequest AuthorizationReque
 			if len(scope) != 3 {
 				return authRequest, fmt.Errorf("failed to parse scope value: %s", value)
 			}
+
 			authRequest.Type = scope[0]
 			authRequest.Name = scope[1]
 			authRequest.Actions = strings.Split(scope[2], ",")
+			isMatched = true
 		}
-		isMatched = true
+
 	}
 	if !isMatched {
 		return authRequest, fmt.Errorf("no found parsed params for token request : %s", headerValue)
