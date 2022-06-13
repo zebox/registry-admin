@@ -190,12 +190,17 @@ func (mr *MockRegistry) authCheck(req *http.Request) bool {
 			return username == mr.basicCredentials.username && passwd == mr.basicCredentials.password
 		}
 	case SelfToken:
-
-		_, _, err := mr.parseHeaderForJwt(req)
+		_, claims, err := mr.parseHeaderForJwt(req)
 		if err != nil {
 			return false
 		}
-		return true
+
+		var repoNameRE = regexp.MustCompile(`(?m)/v2/(.*)/`)
+		repoName := repoNameRE.FindStringSubmatch(req.URL.Path)
+		if len(repoName) == 0 {
+			return false
+		}
+		return claims["name"] == repoName[1] && claims["type"] == "registry"
 	}
 
 	return false
@@ -208,7 +213,7 @@ func (mr *MockRegistry) parseHeaderForJwt(req *http.Request) (*jwt.Token, jwt.Ma
 		if mr.publicKey == nil {
 			return nil, errors.New("wrong public key")
 		}
-		return mr.publicKey, nil
+		return mr.publicKey.CryptoPublicKey(), nil
 	})
 	return token, claims, err
 

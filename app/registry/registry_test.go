@@ -312,6 +312,50 @@ func TestRegistry_Token(t *testing.T) {
 	_, err = testRegistry.Token("test_login", testRequestHeaderValue)
 	assert.Error(t, err)
 }
+
+func Test_WithTokenAuth(t *testing.T) {
+	tmpDir, errDir := os.MkdirTemp("", "test_token")
+	require.NoError(t, errDir)
+
+	testPort := chooseRandomUnusedPort()
+	testSetting := Settings{
+		AuthType: SelfToken,
+		Host:     "http://127.0.0.1",
+		Port:     testPort,
+		CertificatesPaths: Certs{
+			RootPath:      tmpDir + "/" + certsDirName,
+			KeyPath:       tmpDir + "/" + privateKeyName,
+			PublicKeyPath: tmpDir + "/" + publicKeyName,
+			CARootPath:    tmpDir + "/" + CAName,
+		},
+	}
+
+	testRegistry, err := NewRegistry("test_login", "test_password", "test_secret", testSetting)
+	require.NoError(t, err)
+
+	// create registry mock after public key created
+	reposNumbers := 100
+	tagsNumbers := 50
+	testMockRegistry := NewMockRegistry(t,
+		"127.0.0.1", testPort, reposNumbers, tagsNumbers,
+		AuthType(SelfToken),
+		BasicCredentials("test_login", "test_password"),
+		PublicKey(testRegistry.registryToken.publicKey))
+
+	defer func() {
+		assert.NoError(t, os.RemoveAll(tmpDir))
+		testMockRegistry.Close()
+	}()
+
+	testRequestHeaderValue := `Bearer realm="https://auth.docker.io/token",service="registry.docker.io",scope="repository:samalba/my-app:*"`
+	tokenString, err := testRegistry.Token("test_login", testRequestHeaderValue)
+	require.NoError(t, err)
+	assert.NotEqual(t, "", tokenString)
+
+	tagList, err := testRegistry.ListingImageTags(context.Background(), "test_repo_2", "", "")
+	require.NoError(t, err)
+	assert.Equal(t, 50, len(tagList.Tags))
+}
 func TestApiError_Error(t *testing.T) {
 	apiError := ApiError{
 		Code:    "test",
