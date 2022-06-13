@@ -338,7 +338,7 @@ func Test_WithTokenAuth(t *testing.T) {
 	tagsNumbers := 50
 	testMockRegistry := NewMockRegistry(t,
 		"127.0.0.1", testPort, reposNumbers, tagsNumbers,
-		AuthType(SelfToken),
+		TokenAuth(testRegistry.Token),
 		BasicCredentials("test_login", "test_password"),
 		PublicKey(testRegistry.registryToken.publicKey))
 

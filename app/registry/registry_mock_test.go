@@ -28,6 +28,9 @@ const (
 	defaultMockPassword = "test_password"
 )
 
+// tokenAuthFn is function for request jwt token with credentials for get access to registry resources based on token claims data
+type tokenAuthFn func(username, headerValue string) (string, error)
+
 type repositories struct {
 	List []string `json:"repositories"`
 }
@@ -45,12 +48,13 @@ type MockRegistry struct {
 	repositories
 	tagList []tags
 
-	auth             authType
-	basicCredentials struct {
+	auth        authType
+	credentials struct {
 		username string
 		password string
 	}
-	publicKey libtrust.PublicKey
+	tokenAuthFn tokenAuthFn
+	publicKey   libtrust.PublicKey
 
 	t   testing.TB
 	mux *http.ServeMux
@@ -58,9 +62,10 @@ type MockRegistry struct {
 
 type MockRegistryOptions func(option *MockRegistry)
 
-func AuthType(auth authType) MockRegistryOptions {
+func TokenAuth(tokenFn tokenAuthFn) MockRegistryOptions {
 	return func(mr *MockRegistry) {
-		mr.auth = auth
+		mr.auth = SelfToken
+		mr.tokenAuthFn = tokenFn
 	}
 }
 
@@ -69,8 +74,8 @@ func BasicCredentials(username, password string) MockRegistryOptions {
 		username = defaultMockUsername
 	}
 	return func(mr *MockRegistry) {
-		mr.basicCredentials.username = username
-		mr.basicCredentials.password = password
+		mr.credentials.username = username
+		mr.credentials.password = password
 	}
 }
 
@@ -89,8 +94,8 @@ func NewMockRegistry(t testing.TB, host string, port int, repoNumber, tagNumber 
 	testRegistry.mux = http.NewServeMux()
 
 	// set default credentials for basic auth
-	testRegistry.basicCredentials.username = defaultMockUsername
-	testRegistry.basicCredentials.password = defaultMockPassword
+	testRegistry.credentials.username = defaultMockUsername
+	testRegistry.credentials.password = defaultMockPassword
 
 	for _, opt := range opts {
 		opt(testRegistry)
@@ -187,11 +192,15 @@ func (mr *MockRegistry) authCheck(req *http.Request) bool {
 	switch mr.auth {
 	case Basic:
 		if username, passwd, ok := req.BasicAuth(); ok {
-			return username == mr.basicCredentials.username && passwd == mr.basicCredentials.password
+			return username == mr.credentials.username && passwd == mr.credentials.password
 		}
 	case SelfToken:
-		_, claims, err := mr.parseHeaderForJwt(req)
-		if err != nil {
+
+		username, passwd, ok := req.BasicAuth()
+		if !ok {
+			return ok
+		}
+		if mr.credentials.username != username || mr.credentials.password != passwd {
 			return false
 		}
 
@@ -200,16 +209,30 @@ func (mr *MockRegistry) authCheck(req *http.Request) bool {
 		if len(repoName) == 0 {
 			return false
 		}
+
+		headerValue := fmt.Sprintf(`Bearer realm="http://127.0.0.1/token",service="127.0.0.1",scope="repository:%s:*"`, repoName)
+		token, err := mr.tokenAuthFn(username, headerValue)
+		require.NoError(mr.t, err)
+
+		var authToken clientToken
+		err = json.Unmarshal([]byte(token), &authToken)
+		require.NoError(mr.t, err)
+
+		_, claims, err := mr.parseHeaderForJwt(authToken.Token)
+		if err != nil {
+			return false
+		}
+
 		return claims["name"] == repoName[1] && claims["type"] == "registry"
 	}
 
 	return false
 }
 
-func (mr *MockRegistry) parseHeaderForJwt(req *http.Request) (*jwt.Token, jwt.MapClaims, error) {
-	authHeader := req.Header.Get("Authorization")
+func (mr *MockRegistry) parseHeaderForJwt(authToken string) (*jwt.Token, jwt.MapClaims, error) {
+
 	claims := jwt.MapClaims{}
-	token, err := jwt.ParseWithClaims(authHeader, claims, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(authToken, claims, func(token *jwt.Token) (interface{}, error) {
 		if mr.publicKey == nil {
 			return nil, errors.New("wrong public key")
 		}
