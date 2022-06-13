@@ -52,8 +52,8 @@ type Certs struct {
 
 // clientToken is Bearer registryToken representing authorized access for a client
 type clientToken struct {
-	// An opaque Bearer registryToken that clients should supply to subsequent requests in the Authorization header.
-	Token string `json:"registryToken"`
+	// An opaque Bearer token that clients should supply to subsequent requests in the Authorization header.
+	Token string `json:"token"`
 
 	// For compatibility with OAuth 2.0, we will also accept registryToken under the name access_token.
 	// At least one of these fields must be specified, but both may also appear (for compatibility with older clients).

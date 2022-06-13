@@ -431,7 +431,7 @@ func getPaginationNextLink(resp *http.Response) (string, error) {
 // ParseAuthenticateHeaderRequest will parse 'Www-Authenticate' header for extract token authorization data.
 // Header value should be like this: Bearer realm="https://auth.docker.io/token",service="registry.docker.io",scope="repository:samalba/my-app:pull,push"
 // Input parameter 'access' contain data of access to resource for a user
-func ParseAuthenticateHeaderRequest(headerValue string) (authRequest AuthorizationRequest, err error) {
+func (r Registry) ParseAuthenticateHeaderRequest(headerValue string) (authRequest AuthorizationRequest, err error) {
 	// realm="https://auth.docker.io/token",service="registry.docker.io",scope="repository:samalba/my-app:pull,push"
 	var re = regexp.MustCompile(`(\w+)=("[^"]*")`)
 	var isMatched bool

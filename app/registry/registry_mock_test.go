@@ -29,8 +29,11 @@ const (
 	defaultMockPassword = "test_password"
 )
 
-// tokenAuthFn is function for request jwt token with credentials for get access to registry resources based on token claims data
-type tokenAuthFn func(username, headerValue string, access store.Access) (string, error)
+// tokenProcessing is functions for  parse www-authenticate header and request jwt token with credentials for get access to registry resources based on token claims data
+type tokenProcessing interface {
+	Token(request AuthorizationRequest) (string, error)
+	ParseAuthenticateHeaderRequest(wwwRequest string) (AuthorizationRequest, error)
+}
 
 type repositories struct {
 	List []string `json:"repositories"`
@@ -55,8 +58,9 @@ type MockRegistry struct {
 		password string
 		access   store.Access
 	}
-	tokenAuthFn tokenAuthFn
-	publicKey   libtrust.PublicKey
+
+	tokenFn   tokenProcessing
+	publicKey libtrust.PublicKey
 
 	t   testing.TB
 	mux *http.ServeMux
@@ -64,10 +68,10 @@ type MockRegistry struct {
 
 type MockRegistryOptions func(option *MockRegistry)
 
-func TokenAuth(tokenFn tokenAuthFn) MockRegistryOptions {
+func TokenAuth(tokenFn tokenProcessing) MockRegistryOptions {
 	return func(mr *MockRegistry) {
 		mr.auth = SelfToken
-		mr.tokenAuthFn = tokenFn
+		mr.tokenFn = tokenFn
 	}
 }
 
@@ -214,8 +218,14 @@ func (mr *MockRegistry) authCheck(req *http.Request) bool {
 		}
 
 		headerValue := fmt.Sprintf(`Bearer realm="http://127.0.0.1/token",service="127.0.0.1",scope="repository:%s:*"`, repoName[1])
+		authRequest, errAuth := mr.tokenFn.ParseAuthenticateHeaderRequest(headerValue)
+		require.NoError(mr.t, errAuth)
 
-		token, err := mr.tokenAuthFn(username, headerValue, mr.credentials.access)
+		if mr.credentials.access.ResourceName != authRequest.Name || mr.credentials.access.Disabled {
+			return false
+		}
+
+		token, err := mr.tokenFn.Token(authRequest)
 		require.NoError(mr.t, err)
 
 		var authToken clientToken
