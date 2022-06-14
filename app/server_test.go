@@ -144,6 +144,7 @@ func Test_createRegistryConnection(t *testing.T) {
 			Secret:   "test_secret",
 			Login:    "test_login",
 			Password: "test_password",
+			Htpasswd: ".test_htpasswd",
 			Certs: struct {
 				Path      string `long:"path" env:"REGISTRY_CERT_PATH" description:"A path where will be stored new self-signed cert,keys and CA files, when 'self-token' auth type is used" json:"certs_path"`
 				Key       string `long:"key" env:"REGISTRY_KEY_PATH" description:"A path where will be stored new self-signed private key file, when 'self-token' auth type is used" json:"key"`
@@ -166,6 +167,10 @@ func Test_createRegistryConnection(t *testing.T) {
 	rc, err = createRegistryConnection(opts.Registry)
 	assert.NoError(t, err)
 	assert.NotNil(t, rc)
+
+	opts.Registry.Htpasswd = ""
+	rc, err = createRegistryConnection(opts.Registry)
+	assert.Error(t, err)
 
 	// test for error
 	opts.Registry.AuthType = "unknown"
