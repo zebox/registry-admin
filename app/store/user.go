@@ -37,7 +37,7 @@ type Group struct {
 
 // HashAndSalt encrypted user password
 func (u *User) HashAndSalt() error {
-	hash, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.MinCost)
+	hash, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return multierror.Append(err, errors.New("failed to crypt user password"))
 	}

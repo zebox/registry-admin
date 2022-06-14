@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/zebox/registry-admin/app/store"
 	"net/http"
 	"reflect"
 	"regexp"
@@ -76,6 +77,9 @@ type Settings struct {
 	// define authenticate type for access to docker registry api
 	AuthType authType
 
+	// use with basic auth only for dynamic update .htpasswd file
+	HtpasswdPath string
+
 	// credentials define user and login pair for auth in docker registry, when auth type set as basic
 	credentials struct {
 		login, password string
@@ -92,7 +96,12 @@ type Settings struct {
 
 // Registry is main instance for manipulation access of self-hosted docker registry
 type Registry struct {
-	settings      Settings
+	settings Settings
+
+	// use with basic auth only for dynamic update .htpasswd file
+	htpasswd *htpasswd
+
+	// use when auth with token is set
 	registryToken *registryToken
 }
 
@@ -147,11 +156,13 @@ func NewRegistry(login, password, secret string, settings Settings) (*Registry, 
 
 	r.settings.credentials.login = login
 	r.settings.credentials.password = password
+	r.htpasswd = &htpasswd{path: settings.HtpasswdPath}
 
 	if r.settings.AuthType == SelfToken {
 		if len(secret) == 0 {
 			return nil, errors.New("token secret must be defined for 'self_token' auth type")
 		}
+		r.htpasswd = nil
 
 		// checking for at least one field of certs path is filled, other fields must require filled too
 		v := reflect.ValueOf(settings.CertificatesPaths)
@@ -206,6 +217,16 @@ func (r *Registry) Token(authRequest AuthorizationRequest) (string, error) {
 		return "", err
 	}
 	return string(tokenBytes), nil
+}
+
+// UpdateHtpasswd update user access list every time when user add/update/delete
+func (r *Registry) UpdateHtpasswd(users []store.User) error {
+
+	// skip update a .htpasswd file if selfToken auth using
+	if r.htpasswd == nil {
+		return nil
+	}
+	return r.htpasswd.update(users)
 }
 
 // ApiVersionCheck a minimal endpoint, mounted at /v2/ will provide version support information based on its response statuses.
