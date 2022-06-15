@@ -26,6 +26,9 @@ const (
 
 	//  It uniquely identifies content by taking a collision-resistant hash of the bytes.
 	contentDigestHeader = "docker-content-digest"
+
+	// a header field which contain auth request data
+	authenticateHeaderName = "Www-Authenticate"
 )
 
 // authType define auth mechanism for accessing to docker registry using a docker HTTP API protocol
@@ -205,9 +208,21 @@ func NewRegistry(login, password, secret string, settings Settings) (*Registry, 
 
 // Token create jwt token with claims for send as response to docker registry service
 // This method should call after credentials check at a high level api
-func (r *Registry) Token(authRequest AuthorizationRequest) (string, error) {
+func (r *Registry) Token(authRequest *http.Request) (string, error) {
 
-	clientToken, errToken := r.registryToken.Generate(&authRequest)
+	wwwAuthenticateHeader := authRequest.Header.Get(authenticateHeaderName)
+
+	parsedValues, err := r.ParseAuthenticateHeaderRequest(wwwAuthenticateHeader)
+	if err != nil {
+		return "", err
+	}
+	username, _, ok := authRequest.BasicAuth()
+	if !ok {
+		return "", errors.New("empty username not allowed")
+	}
+	parsedValues.Account = username
+
+	clientToken, errToken := r.registryToken.Generate(&parsedValues)
 	if errToken != nil {
 		return "", errToken
 	}
@@ -451,7 +466,8 @@ func getPaginationNextLink(resp *http.Response) (string, error) {
 
 // ParseAuthenticateHeaderRequest will parse 'Www-Authenticate' header for extract token authorization data.
 // Header value should be like this: Bearer realm="https://auth.docker.io/token",service="registry.docker.io",scope="repository:samalba/my-app:pull,push"
-// Input parameter 'access' contain data of access to resource for a user
+// Input parameter 'access' contain data of access to resource for a user.
+// Method has public access for use in tests where registry mock interface use it.
 func (r Registry) ParseAuthenticateHeaderRequest(headerValue string) (authRequest AuthorizationRequest, err error) {
 	// realm="https://auth.docker.io/token",service="registry.docker.io",scope="repository:samalba/my-app:pull,push"
 	var re = regexp.MustCompile(`(\w+)=("[^"]*")`)
@@ -486,7 +502,7 @@ func (r Registry) ParseAuthenticateHeaderRequest(headerValue string) (authReques
 
 	}
 	if !isMatched {
-		return authRequest, fmt.Errorf("no found parsed params for token request : %s", headerValue)
+		return authRequest, fmt.Errorf("not found header for parse token request : %s", headerValue)
 	}
 	return authRequest, err
 }

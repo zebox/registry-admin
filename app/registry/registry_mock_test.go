@@ -31,7 +31,7 @@ const (
 
 // tokenProcessing is functions for  parse www-authenticate header and request jwt token with credentials for get access to registry resources based on token claims data
 type tokenProcessing interface {
-	Token(request AuthorizationRequest) (string, error)
+	Token(request *http.Request) (string, error)
 	ParseAuthenticateHeaderRequest(wwwRequest string) (AuthorizationRequest, error)
 }
 
@@ -96,6 +96,7 @@ func PublicKey(publicKey libtrust.PublicKey) MockRegistryOptions {
 func NewMockRegistry(t testing.TB, host string, port int, repoNumber, tagNumber int, opts ...MockRegistryOptions) *MockRegistry {
 	t.Helper()
 	testRegistry := &MockRegistry{handlers: make(map[*regexp.Regexp]http.Handler)}
+	testRegistry.t = t
 	testRegistry.prepareRepositoriesData(repoNumber, tagNumber)
 	testRegistry.prepareRegistryMockEndpoints()
 	testRegistry.mux = http.NewServeMux()
@@ -220,12 +221,12 @@ func (mr *MockRegistry) authCheck(req *http.Request) bool {
 		headerValue := fmt.Sprintf(`Bearer realm="http://127.0.0.1/token",service="127.0.0.1",scope="repository:%s:*"`, repoName[1])
 		authRequest, errAuth := mr.tokenFn.ParseAuthenticateHeaderRequest(headerValue)
 		require.NoError(mr.t, errAuth)
-
+		req.Header.Set(authenticateHeaderName, headerValue)
 		if mr.credentials.access.ResourceName != authRequest.Name || mr.credentials.access.Disabled {
 			return false
 		}
 
-		token, err := mr.tokenFn.Token(authRequest)
+		token, err := mr.tokenFn.Token(req)
 		require.NoError(mr.t, err)
 
 		var authToken clientToken

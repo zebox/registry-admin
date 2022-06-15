@@ -49,6 +49,14 @@ type endpointsHandler struct {
 	l             log.L
 }
 
+// registryInterfaces implement method for access data of a registry instance
+type registryInterfaces interface {
+	Token(authRequest *http.Request) (string, error)
+	UpdateHtpasswd(users []store.User) error
+	ApiVersionCheck(ctx context.Context) error
+	// Catalog(ctx context.Context, n, last string) (Repositories, error)
+}
+
 // responseMessage is the uniform response message pattern for various frontend framework like react-admin and other
 type responseMessage struct {
 	Error   bool        `json:"error"`
@@ -225,7 +233,7 @@ func (s *Server) routes() chi.Router {
 				routeGroup.Get("/{id}", gh.groupInfoCtrl)
 				routeGroup.Get("/", gh.groupFindCtrl)
 
-				// operation create/update/delete with Group items allow for admin only
+				// operation create/update/delete with Group items allow for admins only
 				routeGroup.Group(func(routeAdminGroup chi.Router) {
 					routeAdminGroup.Use(authMiddleware.RBAC("admin"))
 
@@ -244,7 +252,7 @@ func (s *Server) routes() chi.Router {
 				routeAccess.Get("/{id}", ah.accessInfoCtrl)
 				routeAccess.Get("/", ah.accessFindCtrl)
 
-				// operation create/update/delete with Access items allow for admin only
+				// operation create/update/delete with Access items allow for admins only
 				routeAccess.Group(func(routeAdminAccess chi.Router) {
 					routeAdminAccess.Use(authMiddleware.RBAC("admin"))
 
@@ -253,6 +261,25 @@ func (s *Server) routes() chi.Router {
 					routeAdminAccess.Delete("/", ah.accessDeleteCtrl)
 				})
 			})
+
+			// this route expose api for manipulation with Registry entries
+			/*rh := accessHandlers{eh}
+			rootRoute.Route("/access", func(routeAccess chi.Router) {
+				routeAccess.Use(authMiddleware.Auth, middleware.NoCache)
+				routeAccess.Use(authMiddleware.RBAC("admin", "manager"))
+
+				routeAccess.Get("/{id}", ah.accessInfoCtrl)
+				routeAccess.Get("/", ah.accessFindCtrl)
+
+				// operation create/update/delete with Access items allow for admins only
+				routeAccess.Group(func(routeAdminAccess chi.Router) {
+					routeAdminAccess.Use(authMiddleware.RBAC("admin"))
+
+					routeAdminAccess.Post("/{id}", ah.accessAddCtrl)
+					routeAdminAccess.Put("/{id}", ah.accessUpdateCtrl)
+					routeAdminAccess.Delete("/", ah.accessDeleteCtrl)
+				})
+			})*/
 
 		})
 	})
