@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"context"
 	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/zebox/registry-admin/app/store"
+	"io/ioutil"
 	"net/http"
 	"reflect"
 	"regexp"
@@ -26,9 +28,6 @@ const (
 
 	//  It uniquely identifies content by taking a collision-resistant hash of the bytes.
 	contentDigestHeader = "docker-content-digest"
-
-	// a header field which contain auth request data
-	authenticateHeaderName = "Www-Authenticate"
 )
 
 // authType define auth mechanism for accessing to docker registry using a docker HTTP API protocol
@@ -92,9 +91,6 @@ type Settings struct {
 	// If CertificatesPaths has all fields are empty, registryToken will create keys by default, with default path.
 	// If CertificatesPaths has all fields are empty, but certificates files exist registryToken try to load existed keys and CA file.
 	CertificatesPaths Certs
-
-	// InsecureRequest define option secure for make a https request to docker registry host, false by default
-	InsecureRequest bool
 }
 
 // Registry is main instance for manipulation access of self-hosted docker registry
@@ -106,6 +102,8 @@ type Registry struct {
 
 	// use when auth with token is set
 	registryToken *registryToken
+
+	httpClient *http.Client
 }
 
 type ApiResponse struct {
@@ -161,34 +159,48 @@ func NewRegistry(login, password, secret string, settings Settings) (*Registry, 
 	r.settings.credentials.password = password
 	r.htpasswd = &htpasswd{path: settings.HtpasswdPath}
 
-	if r.settings.AuthType == SelfToken {
-		if len(secret) == 0 {
-			return nil, errors.New("token secret must be defined for 'self_token' auth type")
+	r.httpClient = &http.Client{
+		Timeout: 10 * time.Second,
+	}
+
+	// it's need for self-hosted docker registry auth service with self-signed certificates
+	if strings.HasPrefix(r.settings.Host, "https:") {
+
+		transport := &http.Transport{}
+		transport.TLSClientConfig = &tls.Config{
+			InsecureSkipVerify: true, // it's need  for self-signed certificate which use for https
 		}
-		r.htpasswd = nil
+		r.httpClient.Transport = transport
+	}
 
-		// checking for at least one field of certs path is filled, other fields must require filled too
-		v := reflect.ValueOf(settings.CertificatesPaths)
-		var certsPathIsFilled bool
-		for i := 0; i < v.NumField(); i++ {
-			field := v.Field(i).Interface()
-			switch val := field.(type) {
-			case string:
-				if val == "" && certsPathIsFilled {
-					return nil, errors.New("all fields of certificate path value required if at least on is defined")
-				}
+	if len(secret) == 0 {
+		return nil, errors.New("token secret must be defined for 'self_token' auth type")
+	}
 
-				// if filled only last field of list, but previously fields not filled
-				if i == v.NumField()-1 && val != "" && !certsPathIsFilled {
-					return nil, errors.New("all fields of certificate path value required if at least on is defined")
-				}
-				if val != "" {
-					certsPathIsFilled = true
-				}
-
+	// checking for at least one field of certs path is filled, other fields must require filled too
+	v := reflect.ValueOf(settings.CertificatesPaths)
+	var certsPathIsFilled bool
+	for i := 0; i < v.NumField(); i++ {
+		field := v.Field(i).Interface()
+		switch val := field.(type) {
+		case string:
+			if val == "" && certsPathIsFilled {
+				return nil, errors.New("all fields of certificate path value required if at least on is defined")
 			}
-		}
 
+			// if filled only last field of list, but previously fields not filled
+			if i == v.NumField()-1 && val != "" && !certsPathIsFilled {
+				return nil, errors.New("all fields of certificate path value required if at least on is defined")
+			}
+			if val != "" {
+				certsPathIsFilled = true
+			}
+
+		}
+	}
+
+	if r.settings.AuthType == SelfToken {
+		r.htpasswd = nil // not needed for self-token auth
 		var err error
 		if certsPathIsFilled {
 			r.registryToken, err = NewRegistryToken(secret, TokenIssuer(settings.Host), CertsName(settings.CertificatesPaths))
@@ -201,6 +213,16 @@ func NewRegistry(login, password, secret string, settings Settings) (*Registry, 
 				return nil, err
 			}
 		}
+	}
+
+	// try to create secure http client transport with defined certificates path
+	// call this after token creation attempt, because it will create a new certificate if it doesn't exist and self-token auth defined
+	if certsPathIsFilled {
+		transport, err := createHttpsTransport(settings.CertificatesPaths)
+		if err != nil {
+			return nil, err
+		}
+		r.httpClient.Transport = transport
 	}
 
 	return r, nil
@@ -406,20 +428,25 @@ func (r *Registry) DeleteTag(ctx context.Context, repoName, digest string) error
 	return nil
 }
 
-// newHttpRequest prepare http client and execute a request to docker registry api
-func (r Registry) newHttpRequest(ctx context.Context, url, method string, body []byte) (*http.Response, error) {
+func createHttpsTransport(certs Certs) (*http.Transport, error) {
+	certData, err := ioutil.ReadFile(certs.CARootPath)
+	if err != nil {
+		return nil, err
+	}
+	var caCertPool *x509.CertPool
+
+	caCertPool = x509.NewCertPool()
+	caCertPool.AppendCertsFromPEM(certData)
 
 	transport := &http.Transport{}
-
-	// it's need for self-hosted docker registry auth service with self-signed certificates
-	if strings.HasPrefix(url, "https:") {
-		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: r.settings.InsecureRequest} //nolint:gosec
+	transport.TLSClientConfig = &tls.Config{
+		RootCAs: caCertPool,
 	}
+	return transport, nil
+}
 
-	client := &http.Client{
-		Transport: transport,
-		Timeout:   5 * time.Second,
-	}
+// newHttpRequest prepare http client and execute a request to docker registry api
+func (r *Registry) newHttpRequest(ctx context.Context, url, method string, body []byte) (*http.Response, error) {
 
 	req, err := http.NewRequestWithContext(ctx, method, url, bytes.NewBuffer(body))
 	if err != nil {
@@ -428,7 +455,7 @@ func (r Registry) newHttpRequest(ctx context.Context, url, method string, body [
 	req.Header.Add("Accept", manifestSchemeV2)
 	req.SetBasicAuth(r.settings.credentials.login, r.settings.credentials.password)
 
-	return client.Do(req)
+	return r.httpClient.Do(req)
 
 }
 
