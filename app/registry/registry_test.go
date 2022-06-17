@@ -11,7 +11,6 @@ import (
 	"github.com/zebox/registry-admin/app/store"
 	"math/rand"
 	"net"
-	"net/http"
 	"net/url"
 	"os"
 	"testing"
@@ -309,17 +308,12 @@ func TestRegistry_Token(t *testing.T) {
 	testRegistry, err := NewRegistry("test_login", "test_password", "test_secret", testSetting)
 	require.NoError(t, err)
 
-	req, errReq := http.NewRequest("GET", "/v2/auth", http.NoBody)
-	require.NoError(t, errReq)
 	testRequestHeaderValue := `Bearer realm="https://auth.docker.io/token",service="registry.docker.io",scope="repository:samalba/my-app:pull,push"`
-	req.Header.Add(authenticateHeaderName, testRequestHeaderValue)
+	authRequest, errParse := testRegistry.ParseAuthenticateHeaderRequest(testRequestHeaderValue)
+	require.NoError(t, errParse)
+	authRequest.Account = "test_login"
 
-	// test with empty credentials
-	tokenString, err := testRegistry.Token(req)
-	assert.Error(t, err)
-
-	req.SetBasicAuth("test_login", "test_password")
-	tokenString, err = testRegistry.Token(req)
+	tokenString, err := testRegistry.Token(authRequest)
 	require.NoError(t, err)
 	assert.NotEqual(t, "", tokenString)
 

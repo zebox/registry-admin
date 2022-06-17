@@ -208,21 +208,9 @@ func NewRegistry(login, password, secret string, settings Settings) (*Registry, 
 
 // Token create jwt token with claims for send as response to docker registry service
 // This method should call after credentials check at a high level api
-func (r *Registry) Token(authRequest *http.Request) (string, error) {
+func (r *Registry) Token(authRequest AuthorizationRequest) (string, error) {
 
-	wwwAuthenticateHeader := authRequest.Header.Get(authenticateHeaderName)
-
-	parsedValues, err := r.ParseAuthenticateHeaderRequest(wwwAuthenticateHeader)
-	if err != nil {
-		return "", err
-	}
-	username, _, ok := authRequest.BasicAuth()
-	if !ok {
-		return "", errors.New("empty username not allowed")
-	}
-	parsedValues.Account = username
-
-	clientToken, errToken := r.registryToken.Generate(&parsedValues)
+	clientToken, errToken := r.registryToken.Generate(&authRequest)
 	if errToken != nil {
 		return "", errToken
 	}

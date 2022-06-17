@@ -31,7 +31,7 @@ const (
 
 // tokenProcessing is functions for  parse www-authenticate header and request jwt token with credentials for get access to registry resources based on token claims data
 type tokenProcessing interface {
-	Token(request *http.Request) (string, error)
+	Token(request AuthorizationRequest) (string, error)
 	ParseAuthenticateHeaderRequest(wwwRequest string) (AuthorizationRequest, error)
 }
 
@@ -221,12 +221,12 @@ func (mr *MockRegistry) authCheck(req *http.Request) bool {
 		headerValue := fmt.Sprintf(`Bearer realm="http://127.0.0.1/token",service="127.0.0.1",scope="repository:%s:*"`, repoName[1])
 		authRequest, errAuth := mr.tokenFn.ParseAuthenticateHeaderRequest(headerValue)
 		require.NoError(mr.t, errAuth)
-		req.Header.Set(authenticateHeaderName, headerValue)
+
 		if mr.credentials.access.ResourceName != authRequest.Name || mr.credentials.access.Disabled {
 			return false
 		}
 
-		token, err := mr.tokenFn.Token(req)
+		token, err := mr.tokenFn.Token(authRequest)
 		require.NoError(mr.t, err)
 
 		var authToken clientToken
