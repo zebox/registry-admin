@@ -76,13 +76,16 @@ func TestRegistry_ApiCheck(t *testing.T) {
 	testRegistry := NewMockRegistry(t, "127.0.0.1", testPort, 0, 0)
 	defer testRegistry.Close()
 
-	r := Registry{settings: Settings{
+	testSetting := Settings{
 		Host: "http://127.0.0.1",
 		Port: testPort,
-	}}
+	}
+	r, err := NewRegistry("test_login", "test_password", "test_secret", testSetting)
+	require.NoError(t, err)
+	require.NotNil(t, r)
 
 	// test with auth error
-	err := r.ApiVersionCheck(context.Background())
+	err = r.ApiVersionCheck(context.Background())
 	assert.Error(t, err)
 
 	r.settings.credentials.login = defaultMockUsername
@@ -104,13 +107,12 @@ func TestRegistry_Catalog(t *testing.T) {
 	testRegistry := NewMockRegistry(t, "127.0.0.1", testPort, reposNumbers, tagsNumbers)
 	defer testRegistry.Close()
 
-	r := Registry{settings: Settings{
+	testSetting := Settings{
 		Host: "http://127.0.0.1",
 		Port: testPort,
-	}}
-
-	r.settings.credentials.login = defaultMockUsername
-	r.settings.credentials.password = defaultMockPassword
+	}
+	r, err := NewRegistry(defaultMockUsername, defaultMockPassword, "test_secret", testSetting)
+	require.NoError(t, err)
 
 	repos, err := r.Catalog(context.Background(), "", "")
 	assert.NoError(t, err)
@@ -148,13 +150,12 @@ func TestRegistry_ListingImageTags(t *testing.T) {
 	testRegistry := NewMockRegistry(t, "127.0.0.1", testPort, reposNumbers, tagsNumbers)
 	defer testRegistry.Close()
 
-	r := Registry{settings: Settings{
+	testSetting := Settings{
 		Host: "http://127.0.0.1",
 		Port: testPort,
-	}}
-
-	r.settings.credentials.login = defaultMockUsername
-	r.settings.credentials.password = defaultMockPassword
+	}
+	r, errRegistry := NewRegistry(defaultMockUsername, defaultMockPassword, "test_secret", testSetting)
+	require.NoError(t, errRegistry)
 
 	for _, repoName := range testRegistry.repositories.List {
 		tags, err := r.ListingImageTags(context.Background(), repoName, "", "")
@@ -200,13 +201,12 @@ func TestRegistry_Manifest(t *testing.T) {
 	testRegistry := NewMockRegistry(t, "127.0.0.1", testPort, reposNumbers, tagsNumbers)
 	defer testRegistry.Close()
 
-	r := Registry{settings: Settings{
+	testSetting := Settings{
 		Host: "http://127.0.0.1",
 		Port: testPort,
-	}}
-
-	r.settings.credentials.login = defaultMockUsername
-	r.settings.credentials.password = defaultMockPassword
+	}
+	r, errRegistry := NewRegistry(defaultMockUsername, defaultMockPassword, "test_secret", testSetting)
+	require.NoError(t, errRegistry)
 
 	manifest, err := r.Manifest(context.Background(), "test_repo_1", "test_tag_10")
 	require.NoError(t, err)
@@ -229,13 +229,12 @@ func TestRegistry_DeleteTag(t *testing.T) {
 	testRegistry := NewMockRegistry(t, "127.0.0.1", testPort, reposNumbers, tagsNumbers)
 	defer testRegistry.Close()
 
-	r := Registry{settings: Settings{
+	testSetting := Settings{
 		Host: "http://127.0.0.1",
 		Port: testPort,
-	}}
-
-	r.settings.credentials.login = defaultMockUsername
-	r.settings.credentials.password = defaultMockPassword
+	}
+	r, errRegistry := NewRegistry(defaultMockUsername, defaultMockPassword, "test_secret", testSetting)
+	require.NoError(t, errRegistry)
 
 	digest := makeDigest("test_tag_10")
 	err := r.DeleteTag(context.Background(), "test_repo_1", digest)

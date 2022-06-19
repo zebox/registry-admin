@@ -6,6 +6,7 @@ import (
 	"github.com/didip/tollbooth/v6"
 	"github.com/go-chi/chi/v5"
 	"github.com/gorilla/handlers"
+	"github.com/zebox/registry-admin/app/registry"
 	"io"
 	"net/http"
 	"strconv"
@@ -27,14 +28,15 @@ import (
 
 // Server the main service instance
 type Server struct {
-	Hostname      string
-	Listen        string // listen on host:port scope
-	Port          int    // main service port, default 80 on
-	SSLConfig     SSLConfig
-	Authenticator *auth.Service    // portal access authenticator
-	AccessLog     io.Writer        // access logger
-	L             log.L            // system logger
-	Storage       engine.Interface // main storage instance interface
+	Hostname        string
+	Listen          string // listen on host:port scope
+	Port            int    // main service port, default 80 on
+	SSLConfig       SSLConfig
+	Authenticator   *auth.Service     // portal access authenticator
+	AccessLog       io.Writer         // access logger
+	L               log.L             // system logger
+	Storage         engine.Interface  // main storage instance interface
+	RegistryService registryInterface // main instance for connection to registry service
 
 	ctx         context.Context
 	httpsServer *http.Server
@@ -49,12 +51,31 @@ type endpointsHandler struct {
 	l             log.L
 }
 
-// registryInterfaces implement method for access data of a registry instance
-type registryInterfaces interface {
-	Token(authRequest *http.Request) (string, error)
+// registryInterface implement method for access data of a registry instance
+type registryInterface interface {
+	// Token will create jwt for make a request to registry service when auth token is using
+	Token(authRequest registry.AuthorizationRequest) (string, error)
+
+	// ParseAuthenticateHeaderRequest will parse 'Www-Authenticate' header for extract token authorization data.
+	ParseAuthenticateHeaderRequest(headerValue string) (authRequest registry.AuthorizationRequest, err error)
+
+	// UpdateHtpasswd update user access list in .htpasswd file every time when users entries add/update/delete
 	UpdateHtpasswd(users []store.User) error
+
+	// ApiVersionCheck a minimal endpoint, mounted at /v2/ will provide version support information based on its response statuses.
 	ApiVersionCheck(ctx context.Context) error
-	// Catalog(ctx context.Context, n, last string) (Repositories, error)
+
+	// Catalog return list a set of available repositories in the local registry cluster.
+	Catalog(ctx context.Context, n, last string) (registry.Repositories, error)
+
+	// ListingImageTags retrieve information about tags.
+	ListingImageTags(ctx context.Context, repoName, n, last string) (registry.ImageTags, error)
+
+	// Manifest will fetch the manifest identified by 'name' and 'reference' where 'reference' can be a tag or digest.
+	Manifest(ctx context.Context, repoName, tag string) (registry.ManifestSchemaV2, error)
+
+	// DeleteTag will delete the manifest identified by name and reference. Note that a manifest can only be deleted by digest.
+	DeleteTag(ctx context.Context, repoName, digest string) error
 }
 
 // responseMessage is the uniform response message pattern for various frontend framework like react-admin and other
@@ -71,6 +92,10 @@ func (s *Server) Run(ctx context.Context) error {
 
 	if s.Listen == "*" {
 		s.Listen = ""
+	}
+
+	if s.RegistryService == nil {
+		return errors.New("a registry service define required ")
 	}
 
 	switch s.SSLConfig.SSLMode {
@@ -262,24 +287,19 @@ func (s *Server) routes() chi.Router {
 				})
 			})
 
-			// this route expose api for manipulation with Registry entries
-			/*rh := accessHandlers{eh}
-			rootRoute.Route("/access", func(routeAccess chi.Router) {
-				routeAccess.Use(authMiddleware.Auth, middleware.NoCache)
-				routeAccess.Use(authMiddleware.RBAC("admin", "manager"))
+			// this route expose api for manipulation with Registry service entries
+			rh := registryHandlers{eh, s.RegistryService}
+			rootRoute.Route("/registry", func(routeRegistry chi.Router) {
 
-				routeAccess.Get("/{id}", ah.accessInfoCtrl)
-				routeAccess.Get("/", ah.accessFindCtrl)
+				routeRegistry.Get("/auth", rh.tokenAuth)
 
 				// operation create/update/delete with Access items allow for admins only
-				routeAccess.Group(func(routeAdminAccess chi.Router) {
-					routeAdminAccess.Use(authMiddleware.RBAC("admin"))
+				routeRegistry.Group(func(routeAdminAccess chi.Router) {
+					routeRegistry.Use(authMiddleware.Auth, middleware.NoCache)
+					routeRegistry.Use(authMiddleware.RBAC("admin", "manager"))
 
-					routeAdminAccess.Post("/{id}", ah.accessAddCtrl)
-					routeAdminAccess.Put("/{id}", ah.accessUpdateCtrl)
-					routeAdminAccess.Delete("/", ah.accessDeleteCtrl)
 				})
-			})*/
+			})
 
 		})
 	})

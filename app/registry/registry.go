@@ -91,6 +91,9 @@ type Settings struct {
 	// If CertificatesPaths has all fields are empty, registryToken will create keys by default, with default path.
 	// If CertificatesPaths has all fields are empty, but certificates files exist registryToken try to load existed keys and CA file.
 	CertificatesPaths Certs
+
+	// InsecureRequest define option secure for make a https request to docker registry host, false by default
+	InsecureRequest bool
 }
 
 // Registry is main instance for manipulation access of self-hosted docker registry
@@ -168,7 +171,7 @@ func NewRegistry(login, password, secret string, settings Settings) (*Registry, 
 
 		transport := &http.Transport{}
 		transport.TLSClientConfig = &tls.Config{
-			InsecureSkipVerify: true, // it's need  for self-signed certificate which use for https
+			InsecureSkipVerify: r.settings.InsecureRequest, // it's need  for self-signed certificate which use for https
 		}
 		r.httpClient.Transport = transport
 	}
@@ -275,6 +278,7 @@ func (r *Registry) ApiVersionCheck(ctx context.Context) error {
 	return nil
 }
 
+// Catalog return list a set of available repositories in the local registry cluster.
 func (r *Registry) Catalog(ctx context.Context, n, last string) (Repositories, error) {
 	var repos Repositories
 
@@ -315,6 +319,7 @@ func (r *Registry) Catalog(ctx context.Context, n, last string) (Repositories, e
 	return repos, nil
 }
 
+// ListingImageTags retrieve information about tags.
 func (r *Registry) ListingImageTags(ctx context.Context, repoName, n, last string) (ImageTags, error) {
 	var tags ImageTags
 
@@ -355,6 +360,7 @@ func (r *Registry) ListingImageTags(ctx context.Context, repoName, n, last strin
 	return tags, nil
 }
 
+// Fetch the manifest identified by 'name' and 'reference' where 'reference' can be a tag or digest.
 func (r *Registry) Manifest(ctx context.Context, repoName, tag string) (ManifestSchemaV2, error) {
 	var manifest ManifestSchemaV2
 	var apiError ApiError
@@ -433,14 +439,14 @@ func createHttpsTransport(certs Certs) (*http.Transport, error) {
 	if err != nil {
 		return nil, err
 	}
-	var caCertPool *x509.CertPool
 
-	caCertPool = x509.NewCertPool()
+	caCertPool := x509.NewCertPool()
 	caCertPool.AppendCertsFromPEM(certData)
 
 	transport := &http.Transport{}
 	transport.TLSClientConfig = &tls.Config{
-		RootCAs: caCertPool,
+		MinVersion: tls.VersionTLS12,
+		RootCAs:    caCertPool,
 	}
 	return transport, nil
 }

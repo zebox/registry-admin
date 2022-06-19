@@ -26,8 +26,7 @@ func main() {
 	opts, err = parseArgs()
 
 	if err != nil {
-		log.Printf("failed to parse config err: %v", err)
-		os.Exit(2)
+		log.Fatalf("failed to parse config parameters: %v", err)
 	}
 	setupLog(opts.Debug)
 

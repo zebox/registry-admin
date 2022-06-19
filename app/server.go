@@ -55,8 +55,13 @@ func run() error {
 	if sslErr != nil {
 		return fmt.Errorf("failed to make config of ssl server params: %w", sslErr)
 	}
-	ctx, cancel := context.WithCancel(context.Background())
 
+	registryService, errRegistry := createRegistryConnection(opts.Registry)
+	if errRegistry != nil {
+		return errRegistry
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
 	dataStore, storeErr := makeDataStore(ctx, opts.Store)
 	if storeErr != nil {
 		cancel()
@@ -64,13 +69,14 @@ func run() error {
 	}
 
 	srv := server.Server{
-		Hostname:  opts.Auth.HostName,
-		Listen:    opts.Listen,
-		Port:      opts.Port,
-		AccessLog: accessLogger,
-		L:         log.Default(),
-		SSLConfig: sslConfig,
-		Storage:   dataStore,
+		Hostname:        opts.Auth.HostName,
+		Listen:          opts.Listen,
+		Port:            opts.Port,
+		AccessLog:       accessLogger,
+		L:               log.Default(),
+		SSLConfig:       sslConfig,
+		Storage:         dataStore,
+		RegistryService: registryService,
 	}
 
 	authOptions := auth.Opts{
