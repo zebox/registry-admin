@@ -70,7 +70,7 @@ type StoreGroup struct {
 
 type RegistryGroup struct {
 	Host               string `long:"host" env:"REGISTRY_HOST" required:"true" description:"Main host or address to docker registry service" json:"host"`
-	Port               uint   `long:"registry-port" env:"REGISTRY_PORT" description:"Port which registry accept requests. Default:5000" default:"5000" json:"port"`
+	Port               uint   `long:"port" env:"REGISTRY_PORT" description:"Port which registry accept requests. Default:5000" default:"5000" json:"port"`
 	AuthType           string `long:"auth-type" env:"REGISTRY_AUTH_TYPE" description:"Type for auth to docker registry service. Available 'basic' and 'self_token'. Default 'basic'" choice:"basic" choice:"self-token" default:"basic" json:"auth_type"`
 	Secret             string `long:"token-secret" env:"REGISTRY_TOKEN_SECRET" description:"Token secret for sign token when using 'self-token' auth type"  json:"token_secret"`
 	Login              string `long:"login" env:"REGISTRY_LOGIN" description:"Username is a credential for access to registry service using basic auth type" json:"login"`
@@ -102,9 +102,9 @@ func parseArgs() (*Options, error) {
 	if options.ConfigPath != "" {
 		ext := filepath.Ext(options.ConfigPath)
 		switch ext {
-		case "json":
+		case ".json":
 			options.configReader = new(jsonConfigParser)
-			if err := options.ReadConfigFromFile(options.ConfigPath, &options); err != nil {
+			if errReadCfg := options.ReadConfigFromFile(options.ConfigPath, &options); errReadCfg != nil {
 				return nil, err
 			}
 		default:

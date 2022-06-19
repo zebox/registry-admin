@@ -291,12 +291,12 @@ func (s *Server) routes() chi.Router {
 			rh := registryHandlers{eh, s.RegistryService}
 			rootRoute.Route("/registry", func(routeRegistry chi.Router) {
 
-				routeRegistry.Get("/auth", rh.tokenAuth)
+				routeRegistry.HandleFunc("/auth", rh.tokenAuth)
 
 				// operation create/update/delete with Access items allow for admins only
-				routeRegistry.Group(func(routeAdminAccess chi.Router) {
-					routeRegistry.Use(authMiddleware.Auth, middleware.NoCache)
-					routeRegistry.Use(authMiddleware.RBAC("admin", "manager"))
+				routeRegistry.Group(func(registryApiAccess chi.Router) {
+					registryApiAccess.Use(authMiddleware.Auth, middleware.NoCache)
+					registryApiAccess.Use(authMiddleware.RBAC("admin", "manager"))
 
 				})
 			})
