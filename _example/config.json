@@ -1,0 +1,36 @@
+{
+  "host_name": "127.0.0.1",
+  "port": 8088,
+  "token_secret": "123123test",
+  "debug": true,
+  "registry": {
+    "host": "127.0.0.1",
+    "port": 50555,
+    "auth_type": "self_token",
+    "token_secret": "testTokenSecret",
+    "login": "admin",
+    "password": "password",
+    "htpasswd": "../testdata/.htpasswd",
+    "token_issuer":"registry_token_issuer",
+    "https_insecure": false,
+    "certs": {
+      "certs_path": "bin/certs",
+      "key": "bin/certs/cert.key",
+      "public_key": "bin/certs/cert.pub",
+      "ca_root": "bin/certs/cert.crt"
+    }
+  },
+  "ssl": {
+    "type": "none",
+    "enabled": false,
+    "port": 8443,
+    "cert": "bin/certs/cert.crt",
+    "key": "bin/certs/cert.key"
+  },
+  "store": {
+    "type": "embed",
+    "embed": {
+      "path": "bin/store.db"
+    }
+  }
+}
