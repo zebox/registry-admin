@@ -13,6 +13,7 @@
     "htpasswd": "../testdata/.htpasswd",
     "token_issuer":"registry_token_issuer",
     "https_insecure": false,
+    "service": "container_registry",
     "certs": {
       "certs_path": "bin/certs",
       "key": "bin/certs/cert.key",

@@ -87,6 +87,12 @@ type Settings struct {
 		login, password string
 	}
 
+	// The name of the service which hosts the resource.
+	Service string
+
+	// The name of the token issuer which hosts the resource.
+	Issuer string
+
 	// CertificatesPaths define a path to private, public keys and CA certificate.
 	// If CertificatesPaths has all fields are empty, registryToken will create keys by default, with default path.
 	// If CertificatesPaths has all fields are empty, but certificates files exist registryToken try to load existed keys and CA file.
@@ -206,7 +212,7 @@ func NewRegistry(login, password, secret string, settings Settings) (*Registry, 
 		r.htpasswd = nil // not needed for self-token auth
 		var err error
 		if certsPathIsFilled {
-			r.registryToken, err = NewRegistryToken(secret, TokenIssuer(settings.Host), CertsName(settings.CertificatesPaths))
+			r.registryToken, err = NewRegistryToken(secret, TokenIssuer(settings.Issuer), CertsName(settings.CertificatesPaths))
 			if err != nil {
 				return nil, err
 			}
@@ -229,6 +235,14 @@ func NewRegistry(login, password, secret string, settings Settings) (*Registry, 
 	}
 
 	return r, nil
+}
+
+func (r *Registry) Login(user store.User) (string, error) {
+	authRequest := AuthorizationRequest{
+		Account: user.Login,
+		Service: r.settings.Service,
+	}
+	return r.Token(authRequest)
 }
 
 // Token create jwt token with claims for send as response to docker registry service

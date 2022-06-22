@@ -168,6 +168,8 @@ func createRegistryConnection(opts RegistryGroup) (*registry.Registry, error) {
 			return nil, errors.New("htpasswd file path required for basic auth type")
 		}
 	case "self_token":
+		registrySettings.Service = opts.Service
+		registrySettings.Issuer = opts.Issuer
 		registrySettings.AuthType = registry.SelfToken
 	default:
 		return nil, errors.Errorf("registry auth type '%s' not support", opts.AuthType)

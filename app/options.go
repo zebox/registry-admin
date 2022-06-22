@@ -69,19 +69,21 @@ type StoreGroup struct {
 }
 
 type RegistryGroup struct {
-	Host               string `long:"host" env:"REGISTRY_HOST" required:"true" description:"Main host or address to docker registry service" json:"host"`
-	Port               uint   `long:"port" env:"REGISTRY_PORT" description:"Port which registry accept requests. Default:5000" default:"5000" json:"port"`
-	AuthType           string `long:"auth-type" env:"REGISTRY_AUTH_TYPE" description:"Type for auth to docker registry service. Available 'basic' and 'self_token'. Default 'basic'" choice:"basic" choice:"self-token" default:"basic" json:"auth_type"`
-	Secret             string `long:"token-secret" env:"REGISTRY_TOKEN_SECRET" description:"Token secret for sign token when using 'self-token' auth type"  json:"token_secret"`
-	Login              string `long:"login" env:"REGISTRY_LOGIN" description:"Username is a credential for access to registry service using basic auth type" json:"login"`
-	Password           string `long:"password" env:"REGISTRY_PASSWORD" description:"Password is a credential for access to registry service using basic auth type" json:"password"`
-	Htpasswd           string `long:"htpasswd" env:"REGISTRY_HTPASSWD" description:"Path to htpasswd file when basic auth type selected" json:"htpasswd"`
-	InsecureConnection bool   `long:"https-insecure" env:"REGISTRY_HTTPS_INSECURE" description:"Set https connection to registry insecure" json:"https_insecure"`
+	Host               string `long:"host" env:"RA_REGISTRY_HOST" required:"true" description:"Main host or address to docker registry service" json:"host"`
+	Port               uint   `long:"port" env:"RA_REGISTRY_PORT" description:"Port which registry accept requests. Default:5000" default:"5000" json:"port"`
+	AuthType           string `long:"auth-type" env:"RA_REGISTRY_AUTH_TYPE" description:"Type for auth to docker registry service. Available 'basic' and 'self_token'. Default 'basic'" choice:"basic" choice:"self-token" default:"basic" json:"auth_type"`
+	Secret             string `long:"token-secret" env:"RA_REGISTRY_TOKEN_SECRET" description:"Token secret for sign token when using 'self-token' auth type"  json:"token_secret"`
+	Login              string `long:"login" env:"RA_REGISTRY_LOGIN" description:"Username is a credential for access to registry service using basic auth type" json:"login"`
+	Password           string `long:"password" env:"RA_REGISTRY_PASSWORD" description:"Password is a credential for access to registry service using basic auth type" json:"password"`
+	Htpasswd           string `long:"htpasswd" env:"RA_REGISTRY_HTPASSWD" description:"Path to htpasswd file when basic auth type selected" json:"htpasswd"`
+	InsecureConnection bool   `long:"https-insecure" env:"RA_REGISTRY_HTTPS_INSECURE" description:"Set https connection to registry insecure" json:"https_insecure"`
+	Service            string `long:"service" env:"RA_REGISTRY_SERVICE" description:"A service name which defined in registry settings" json:"service"`
+	Issuer             string `long:"issuer" env:"RA_REGISTRY_TOKEN_ISSUER" description:"A token issuer name which defined in registry settings" json:"token_issuer"`
 	Certs              struct {
-		Path      string `long:"path" env:"REGISTRY_CERT_PATH" description:"A path where will be stored new self-signed cert,keys and CA files, when 'self-token' auth type is used" json:"certs_path"`
-		Key       string `long:"key" env:"REGISTRY_KEY_PATH" description:"A path where will be stored new self-signed private key file, when 'self-token' auth type is used" json:"key"`
-		PublicKey string `long:"public-key" env:"REGISTRY_PUBLIC_KEY_PATH" description:"A path where will be stored new self-signed public key file, when 'self-token' auth type is used" json:"public_key"`
-		CARoot    string `long:"ca-root" env:"REGISTRY_CA_ROOT_PATH" description:"A path where will be stored new CA bundles file, when 'self-token' auth type is used" json:"ca_root"`
+		Path      string `long:"path" env:"RA_REGISTRY_CERT_PATH" description:"A path where will be stored new self-signed cert,keys and CA files, when 'self-token' auth type is used" json:"certs_path"`
+		Key       string `long:"key" env:"RA_REGISTRY_KEY_PATH" description:"A path where will be stored new self-signed private key file, when 'self-token' auth type is used" json:"key"`
+		PublicKey string `long:"public-key" env:"RA_REGISTRY_PUBLIC_KEY_PATH" description:"A path where will be stored new self-signed public key file, when 'self-token' auth type is used" json:"public_key"`
+		CARoot    string `long:"ca-root" env:"RA_REGISTRY_CA_ROOT_PATH" description:"A path where will be stored new CA bundles file, when 'self-token' auth type is used" json:"ca_root"`
 	} `group:"certs" namespace:"certs" env-namespace:"certs" json:"certs"`
 }
 

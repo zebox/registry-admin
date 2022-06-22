@@ -53,6 +53,10 @@ type endpointsHandler struct {
 
 // registryInterface implement method for access data of a registry instance
 type registryInterface interface {
+
+	// Login is initials login step when docker login command call
+	Login(user store.User) (string, error)
+
 	// Token will create jwt for make a request to registry service when auth token is using
 	Token(authRequest registry.AuthorizationRequest) (string, error)
 
