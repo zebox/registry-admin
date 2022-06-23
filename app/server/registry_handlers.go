@@ -1,6 +1,8 @@
 package server
 
 import (
+	"github.com/go-pkgz/auth/token"
+	"github.com/go-pkgz/rest"
 	"github.com/zebox/registry-admin/app/store"
 	"net/http"
 )
@@ -41,6 +43,18 @@ func (rh *registryHandlers) tokenAuth(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-
 	rh.l.Logf("%s %s", username, password)
+}
+
+func (rh *registryHandlers) Ping(w http.ResponseWriter, r *http.Request) {
+	_, err := token.GetUserInfo(r)
+	if err != nil {
+		SendErrorJSON(w, r, rh.l, http.StatusInternalServerError, err, "failed to get user data from token")
+		return
+	}
+	if err = rh.registryService.ApiVersionCheck(r.Context()); err != nil {
+		SendErrorJSON(w, r, rh.l, http.StatusInternalServerError, err, "registry service request failed")
+		return
+	}
+	rest.RenderJSON(w, responseMessage{Message: "ok"})
 }

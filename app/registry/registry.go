@@ -74,7 +74,7 @@ type Settings struct {
 	Host string
 
 	// Port which registry accept requests
-	Port int
+	Port uint
 
 	// define authenticate type for access to docker registry api
 	AuthType authType
