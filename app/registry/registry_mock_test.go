@@ -245,40 +245,6 @@ func (mr *MockRegistry) authCheck(req *http.Request) bool {
 			return true
 		}
 	}
-	/*		headerValue := fmt.Sprintf(`Bearer realm="http://127.0.0.1/token",service="127.0.0.1",scope="repository:%s:*"`, repoName[1])
-			authRequest, errAuth := mr.tokenFn.ParseAuthenticateHeaderRequest(headerValue)
-			require.NoError(mr.t, errAuth)
-
-			if mr.credentials.access.ResourceName != authRequest.Name || mr.credentials.access.Disabled {
-				return false
-			}
-
-			token, err := mr.tokenFn.Token(authRequest)
-			require.NoError(mr.t, err)
-
-			var authToken clientToken
-			err = json.Unmarshal([]byte(token), &authToken)
-			require.NoError(mr.t, err)
-
-			_, claims, err := mr.parseHeaderForJwt(authToken.Token)
-			if err != nil {
-				return false
-			}
-			accessData := claims["access"].([]interface{})
-			accessClaims := accessData[0].(map[string]interface{})
-			name := accessClaims["name"].(string)
-			resourceType := accessClaims["type"].(string)
-			actions := accessClaims["actions"].([]interface{})
-
-			return name == repoName[1] && resourceType == "repository" && func(actions []interface{}) bool {
-				for _, a := range actions {
-					if a.(string) == "*" {
-						return true
-					}
-				}
-				return false
-			}(actions)
-		}*/
 
 	return false
 }
