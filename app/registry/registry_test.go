@@ -2,7 +2,6 @@ package registry
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/golang-jwt/jwt"
@@ -26,6 +25,7 @@ func TestNewRegistry(t *testing.T) {
 	}()
 
 	testSetting := Settings{
+		Host:     "https://127.0.0.1",
 		AuthType: SelfToken,
 		CertificatesPaths: Certs{
 			RootPath:      tmpDir + "/" + certsDirName,
@@ -286,6 +286,33 @@ func TestParseAuthenticateHeaderRequest(t *testing.T) {
 
 }
 
+func TestRegistry_Login(t *testing.T) {
+	tmpDir, errDir := os.MkdirTemp("", "test_token")
+	require.NoError(t, errDir)
+
+	defer func() {
+		assert.NoError(t, os.RemoveAll(tmpDir))
+	}()
+	testSetting := Settings{
+		AuthType: SelfToken,
+		Service:  "test_registry_service",
+		CertificatesPaths: Certs{
+			RootPath:      tmpDir + "/" + certsDirName,
+			KeyPath:       tmpDir + "/" + privateKeyName,
+			PublicKeyPath: tmpDir + "/" + publicKeyName,
+			CARootPath:    tmpDir + "/" + CAName,
+		},
+	}
+
+	testRegistry, err := NewRegistry("test_login", "test_password", "test_secret", testSetting)
+	require.NoError(t, err)
+	u := store.User{Login: "test_login"}
+	tokenString, errLogin := testRegistry.Login(u)
+	assert.NoError(t, errLogin)
+
+	assert.NoError(t, err)
+	assert.Greater(t, len(tokenString), 0)
+}
 func TestRegistry_Token(t *testing.T) {
 	tmpDir, errDir := os.MkdirTemp("", "test_token")
 	require.NoError(t, errDir)
@@ -316,9 +343,7 @@ func TestRegistry_Token(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotEqual(t, "", tokenString)
 
-	var clientToken clientToken
-
-	err = json.Unmarshal([]byte(tokenString), &clientToken)
+	clientToken, err := testRegistry.registryToken.parseToken(tokenString)
 	require.NoError(t, err)
 
 	jwtClaims := jwt.MapClaims{}
@@ -376,7 +401,7 @@ func Test_WithTokenAuth(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, 50, len(tagList.Tags))
 
-	tagList, err = testRegistry.ListingImageTags(context.Background(), "test_repo_3", "", "")
+	tagList, err = testRegistry.ListingImageTags(context.Background(), "test_repo_N", "", "")
 	assert.Error(t, err)
 
 }
@@ -392,9 +417,9 @@ func TestApiError_Error(t *testing.T) {
 	assert.Equal(t, "test: test: map[test:test]", strError)
 }
 
-func chooseRandomUnusedPort() (port int) {
+func chooseRandomUnusedPort() (port uint) {
 	for i := 0; i < 10; i++ {
-		port = 40000 + int(rand.Int31n(10000)) //nolint:gosec
+		port = 40000 + uint(rand.Int31n(10000)) //nolint:gosec
 		if ln, err := net.Listen("tcp", fmt.Sprintf(":%d", port)); err == nil {
 			_ = ln.Close()
 			break

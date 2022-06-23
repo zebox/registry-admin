@@ -17,6 +17,7 @@ import (
 	"net/url"
 	"regexp"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/go-pkgz/rest"
@@ -93,7 +94,7 @@ func PublicKey(publicKey libtrust.PublicKey) MockRegistryOptions {
 }
 
 // NewMockRegistry creates a registry mock
-func NewMockRegistry(t testing.TB, host string, port int, repoNumber, tagNumber int, opts ...MockRegistryOptions) *MockRegistry {
+func NewMockRegistry(t testing.TB, host string, port uint, repoNumber, tagNumber int, opts ...MockRegistryOptions) *MockRegistry {
 	t.Helper()
 	testRegistry := &MockRegistry{handlers: make(map[*regexp.Regexp]http.Handler)}
 	testRegistry.t = t
@@ -111,6 +112,11 @@ func NewMockRegistry(t testing.TB, host string, port int, repoNumber, tagNumber 
 
 	testRegistry.mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if !testRegistry.authCheck(r) {
+			path := strings.Split(r.URL.Path, "/")
+			if len(path) >= 3 {
+				w.Header().Set("Www-Authenticate", fmt.Sprintf(`Bearer realm="https://auth.docker.io/token",service="%s",scope="repository:%s:pull,push"`, r.URL.Path, path[2]))
+			}
+
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
@@ -204,54 +210,75 @@ func (mr *MockRegistry) authCheck(req *http.Request) bool {
 		}
 	case SelfToken:
 
-		username, passwd, ok := req.BasicAuth()
-		if !ok {
-			return ok
-		}
-		if mr.credentials.username != username || mr.credentials.password != passwd {
+		auth := strings.Split(req.Header.Get("Authorization"), " ")
+
+		if len(auth) < 2 {
 			return false
 		}
-
 		var repoNameRE = regexp.MustCompile(`/v2/(.*)/tags`)
 		repoName := repoNameRE.FindStringSubmatch(req.URL.Path)
 		if len(repoName) == 0 {
 			return false
 		}
 
-		headerValue := fmt.Sprintf(`Bearer realm="http://127.0.0.1/token",service="127.0.0.1",scope="repository:%s:*"`, repoName[1])
-		authRequest, errAuth := mr.tokenFn.ParseAuthenticateHeaderRequest(headerValue)
-		require.NoError(mr.t, errAuth)
-
-		if mr.credentials.access.ResourceName != authRequest.Name || mr.credentials.access.Disabled {
-			return false
-		}
-
-		token, err := mr.tokenFn.Token(authRequest)
-		require.NoError(mr.t, err)
-
-		var authToken clientToken
-		err = json.Unmarshal([]byte(token), &authToken)
-		require.NoError(mr.t, err)
-
-		_, claims, err := mr.parseHeaderForJwt(authToken.Token)
-		if err != nil {
-			return false
-		}
-		accessData := claims["access"].([]interface{})
-		accessClaims := accessData[0].(map[string]interface{})
-		name := accessClaims["name"].(string)
-		resourceType := accessClaims["type"].(string)
-		actions := accessClaims["actions"].([]interface{})
-
-		return name == repoName[1] && resourceType == "repository" && func(actions []interface{}) bool {
-			for _, a := range actions {
-				if a.(string) == "*" {
-					return true
-				}
+		repoNotFound := true
+		for _, rep := range mr.repositories.List {
+			if rep == repoName[1] {
+				repoNotFound = false
+				break
 			}
+		}
+
+		if repoNotFound {
 			return false
-		}(actions)
+		}
+
+		jwtClaims := jwt.MapClaims{}
+		_, errToken := jwt.ParseWithClaims(auth[1], jwtClaims, func(token *jwt.Token) (interface{}, error) {
+			return mr.publicKey.CryptoPublicKey(), nil
+		})
+		require.NoError(mr.t, errToken)
+		access := jwtClaims["access"].([]interface{})
+		accessData := access[0].(map[string]interface{})
+
+		if val, ok := accessData["name"]; ok && val.(string) == repoName[1] {
+			return true
+		}
 	}
+	/*		headerValue := fmt.Sprintf(`Bearer realm="http://127.0.0.1/token",service="127.0.0.1",scope="repository:%s:*"`, repoName[1])
+			authRequest, errAuth := mr.tokenFn.ParseAuthenticateHeaderRequest(headerValue)
+			require.NoError(mr.t, errAuth)
+
+			if mr.credentials.access.ResourceName != authRequest.Name || mr.credentials.access.Disabled {
+				return false
+			}
+
+			token, err := mr.tokenFn.Token(authRequest)
+			require.NoError(mr.t, err)
+
+			var authToken clientToken
+			err = json.Unmarshal([]byte(token), &authToken)
+			require.NoError(mr.t, err)
+
+			_, claims, err := mr.parseHeaderForJwt(authToken.Token)
+			if err != nil {
+				return false
+			}
+			accessData := claims["access"].([]interface{})
+			accessClaims := accessData[0].(map[string]interface{})
+			name := accessClaims["name"].(string)
+			resourceType := accessClaims["type"].(string)
+			actions := accessClaims["actions"].([]interface{})
+
+			return name == repoName[1] && resourceType == "repository" && func(actions []interface{}) bool {
+				for _, a := range actions {
+					if a.(string) == "*" {
+						return true
+					}
+				}
+				return false
+			}(actions)
+		}*/
 
 	return false
 }
@@ -278,6 +305,7 @@ func (mr *MockRegistry) apiVersionCheck(w http.ResponseWriter, _ *http.Request) 
 func (mr *MockRegistry) getCatalog(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("content-type", "application/json; charset=utf-8")
 	w.Header().Set("docker-distribution-api-version", "registry/2.0")
+
 	urlFragments, err := url.ParseQuery(r.URL.RawQuery)
 	assert.NoError(mr.t, err)
 	if urlFragments.Get("n") == "" {

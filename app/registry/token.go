@@ -8,6 +8,7 @@ package registry
 
 import (
 	"bytes"
+	crand "crypto/rand"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
@@ -17,6 +18,7 @@ import (
 	"github.com/pkg/errors"
 	"io/ioutil"
 	"math/rand"
+	"net"
 	"os"
 	"path/filepath"
 	"strings"
@@ -246,6 +248,8 @@ func (rt *registryToken) createCerts() (err error) {
 		return err
 	}
 
+	rt.appendSnToCertificate()
+
 	return rt.saveKeys()
 }
 
@@ -307,10 +311,17 @@ func (rt registryToken) saveKeys() error {
 		return errors.Wrap(err, "failed to save public key to file")
 	}
 
+	// a .Raw field hasn't Subject Alternative Name for requested IP and Domain when creating with libtrust
+	// and that should add this values after certificate created and extracting raw bytes after that
+	caBytes, err := x509.CreateCertificate(crand.Reader, rt.caRoot, rt.caRoot, rt.publicKey.CryptoPublicKey(), rt.privateKey.CryptoPrivateKey())
+	if err != nil {
+		return errors.Wrap(err, "failed to create certificate")
+	}
+
 	certPEM := new(bytes.Buffer)
-	err := pem.Encode(certPEM, &pem.Block{
+	err = pem.Encode(certPEM, &pem.Block{
 		Type:  "CERTIFICATE",
-		Bytes: rt.caRoot.Raw,
+		Bytes: caBytes,
 	})
 
 	if err != nil {
@@ -322,4 +333,18 @@ func (rt registryToken) saveKeys() error {
 		return errors.Wrap(err, "failed to save CA bundle to file")
 	}
 	return nil
+}
+
+// parseToken convert token string set to clientToken struct
+func (rt registryToken) parseToken(tokenString string) (ct clientToken, err error) {
+	if err := json.Unmarshal([]byte(tokenString), &ct); err != nil {
+		return clientToken{}, err
+	}
+	return ct, nil
+}
+
+func (rt *registryToken) appendSnToCertificate() {
+	rt.caRoot.IPAddresses = append(rt.caRoot.IPAddresses, net.ParseIP("127.0.0.1"))
+	rt.caRoot.IPAddresses = append(rt.caRoot.IPAddresses, net.ParseIP("::"))
+	rt.caRoot.DNSNames = append(rt.caRoot.DNSNames, "localhost")
 }

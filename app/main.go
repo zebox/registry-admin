@@ -4,6 +4,7 @@
 package main
 
 import (
+	"net/http"
 	"os"
 	"os/signal"
 	"runtime"
@@ -30,8 +31,11 @@ func main() {
 	}
 	setupLog(opts.Debug)
 
-	if err = run(); err != nil {
-		log.Fatalf("failed to run server: %v", err)
+	log.Print("[INFO] server starting...")
+
+	if err = run(); err != nil && err != http.ErrServerClosed {
+		log.Printf("failed to run server: %v", err)
+		os.Exit(1)
 	}
 }
 
@@ -41,6 +45,7 @@ func setupLog(dbg bool) {
 		log.Setup(log.Debug, log.CallerFile, log.CallerFunc, log.Msec, log.LevelBraces)
 		return
 	}
+
 	log.Setup(log.Msec, log.LevelBraces)
 }
 

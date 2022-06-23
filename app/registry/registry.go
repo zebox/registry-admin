@@ -374,7 +374,7 @@ func (r *Registry) ListingImageTags(ctx context.Context, repoName, n, last strin
 	return tags, nil
 }
 
-// Fetch the manifest identified by 'name' and 'reference' where 'reference' can be a tag or digest.
+// Manifest do fetch the manifest identified by 'name' and 'reference' where 'reference' can be a tag or digest.
 func (r *Registry) Manifest(ctx context.Context, repoName, tag string) (ManifestSchemaV2, error) {
 	var manifest ManifestSchemaV2
 	var apiError ApiError
@@ -473,9 +473,48 @@ func (r *Registry) newHttpRequest(ctx context.Context, url, method string, body 
 		return nil, err
 	}
 	req.Header.Add("Accept", manifestSchemeV2)
-	req.SetBasicAuth(r.settings.credentials.login, r.settings.credentials.password)
 
+	if r.settings.AuthType == SelfToken {
+		return r.newHttpRequestWithToken(req)
+	}
+
+	req.SetBasicAuth(r.settings.credentials.login, r.settings.credentials.password)
 	return r.httpClient.Do(req)
+
+}
+
+// newHttpRequestWithToken execute
+func (r *Registry) newHttpRequestWithToken(request *http.Request) (*http.Response, error) {
+
+	resp, errReq := r.httpClient.Do(request)
+	if errReq != nil {
+		return nil, errReq
+	}
+
+	if resp.StatusCode != http.StatusUnauthorized {
+		return resp, nil
+	}
+
+	authReq, errParse := r.ParseAuthenticateHeaderRequest(resp.Header.Get("Www-Authenticate"))
+	if errParse != nil {
+		return nil, errParse
+	}
+
+	tokenString, errToken := r.Token(authReq)
+	if errToken != nil {
+		return nil, errToken
+	}
+
+	token, err := r.registryToken.parseToken(tokenString)
+	if err != nil {
+		return nil, err
+	}
+	// req, err := http.NewRequestWithContext(ctx, method, url, bytes.NewBuffer(body))
+	request.Header.Add("Authorization", "Bearer "+token.Token)
+	if err != nil {
+		return nil, err
+	}
+	return r.httpClient.Do(request)
 
 }
 
@@ -523,6 +562,7 @@ func (r Registry) ParseAuthenticateHeaderRequest(headerValue string) (authReques
 
 		case "service":
 			authRequest.Service = value
+			isMatched = true
 		case "scope":
 			scope := strings.Split(value, ":")
 			if len(scope) != 3 {

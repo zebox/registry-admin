@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"regexp"
 	"strconv"
 	"strings"
 	"syscall"
@@ -155,11 +156,15 @@ func createRegistryConnection(opts RegistryGroup) (*registry.Registry, error) {
 		return nil, errors.New("wrong value of registry port")
 	}
 
-	// var re = regexp.MustCompile(`(?i)https?://`)
-	// registrySettings.Host = re.ReplaceAllString(opts.Host, ``)
+	// registry host value should be set with http(s) scheme and without port value
+	opts.Host = strings.TrimRight(opts.Host, "/")
+	var re = regexp.MustCompile(`^(https?://)(((www\.)?|www\.)([A-Za-z0-9-]+\.[a-z]+)*([?&][A-Za-z0-9-=+_]+)*(\.[a-z]+)*)$|^(https?://)((\d{1,3}\.){3}\d{1,3})$`)
+	if !re.MatchString(opts.Host) {
+		return nil, errors.New("registry host value should be set with http(s) scheme and without port value")
+	}
+
 	registrySettings.Host = opts.Host
 	registrySettings.Port = opts.Port
-	registrySettings.Host = strings.TrimRight(registrySettings.Host, "/")
 
 	// select registry auth type
 	switch opts.AuthType {
