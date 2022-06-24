@@ -64,14 +64,16 @@ type AuthorizationRequest struct {
 
 	// An array of strings which give the actions authorized on this resource.
 	Actions []string
-
-	IP string
 }
 
 type Settings struct {
 
 	// Host is a fqdn of docker registry host
+	// also it's value appends Subject Alternative Name for requested IP and Domain to certificate
 	Host string
+
+	// required for appends Subject Alternative Name for requested IP and Domain to certificate
+	IP string
 
 	// Port which registry accept requests
 	Port uint
@@ -212,7 +214,8 @@ func NewRegistry(login, password, secret string, settings Settings) (*Registry, 
 		r.htpasswd = nil // not needed for self-token auth
 		var err error
 		if certsPathIsFilled {
-			r.registryToken, err = NewRegistryToken(secret, TokenIssuer(settings.Issuer), CertsName(settings.CertificatesPaths))
+			hostName := strings.Split(r.settings.Host, "/")
+			r.registryToken, err = NewRegistryToken(secret, TokenIssuer(settings.Issuer), CertsName(settings.CertificatesPaths), ServiceIpHost(r.settings.IP, hostName[2]))
 			if err != nil {
 				return nil, err
 			}

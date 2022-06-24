@@ -158,7 +158,7 @@ func createRegistryConnection(opts RegistryGroup) (*registry.Registry, error) {
 
 	// registry host value should be set with http(s) scheme and without port value
 	opts.Host = strings.TrimRight(opts.Host, "/")
-	var re = regexp.MustCompile(`^(https?://)(((www\.)?|www\.)([A-Za-z0-9-]+\.[a-z]+)*([?&][A-Za-z0-9-=+_]+)*(\.[a-z]+)*)$|^(https?://)((\d{1,3}\.){3}\d{1,3})$`)
+	var re = regexp.MustCompile(`^(https?://)(((www\.)?|www\.)([A-Za-z0-9-]+\.[a-z]+)*([?&][A-Za-z0-9-=+_]+)*(\.[a-z]+)*)$|^(https?://)((\d{1,3}\.){3}\d{1,3})$|^(https?://)(localhost)$`)
 	if !re.MatchString(opts.Host) {
 		return nil, errors.New("registry host value should be set with http(s) scheme and without port value")
 	}
@@ -182,6 +182,9 @@ func createRegistryConnection(opts RegistryGroup) (*registry.Registry, error) {
 	}
 
 	if registrySettings.AuthType == registry.SelfToken {
+
+		// required for append to certificate extension
+		registrySettings.IP = opts.IP
 
 		// paths to private, public keys and CA certificates for token generation if 'self_token' auth type defined
 		registrySettings.CertificatesPaths.RootPath = opts.Certs.Path

@@ -138,7 +138,8 @@ func Test_createRegistryConnection(t *testing.T) {
 
 	opts := Options{
 		Registry: RegistryGroup{
-			Host:     "http://127.0.0.1/",
+			Host:     "http://localhost/",
+			IP:       "127.0.0.1",
 			Port:     5000,
 			AuthType: "self_token",
 			Secret:   "test_secret",

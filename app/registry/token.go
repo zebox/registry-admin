@@ -359,8 +359,8 @@ func (rt registryToken) parseToken(tokenString string) (ct clientToken, err erro
 	return ct, nil
 }
 
+// appendDSnToCertificate appends Subject Alternative Name for requested IP and Domain to certificate
 func (rt *registryToken) appendDSnToCertificate() {
-
 	rt.caRoot.IPAddresses = append(rt.caRoot.IPAddresses, net.ParseIP(rt.serviceIP))
 	rt.caRoot.DNSNames = append(rt.caRoot.DNSNames, rt.serviceHost)
 }
