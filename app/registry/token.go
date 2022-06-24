@@ -66,6 +66,11 @@ type clientToken struct {
 type registryToken struct {
 	Certs
 
+	// append Subject Alternative Name for requested IP and Domain to certificate
+	// it prevents untasted error with HTTPS client request
+	// https://oidref.com/2.5.29.17
+	serviceIP, serviceHost string
+
 	// registryToken claims field
 	tokenIssuer string
 
@@ -118,12 +123,23 @@ func CertsName(certs Certs) TokenOption {
 	}
 }
 
+// ServiceIpHost define service host values
+func ServiceIpHost(ip, host string) TokenOption {
+	return func(rt *registryToken) {
+		rt.serviceIP = ip
+		rt.serviceHost = host
+
+	}
+}
+
 // NewRegistryToken will construct new tokenRegistry instance with required options
 // and allow re-define default option for token generator
 func NewRegistryToken(secretPhrase string, opts ...TokenOption) (*registryToken, error) {
 
 	rt := &registryToken{
 		secret:          secretPhrase,
+		serviceIP:       defaultTokenIssuer,
+		serviceHost:     "localhost",
 		tokenExpiration: defaultTokenExpiration,
 		tokenIssuer:     defaultTokenIssuer,
 		l:               log.Default(),
@@ -248,7 +264,7 @@ func (rt *registryToken) createCerts() (err error) {
 		return err
 	}
 
-	rt.appendSnToCertificate()
+	rt.appendDSnToCertificate()
 
 	return rt.saveKeys()
 }
@@ -343,8 +359,8 @@ func (rt registryToken) parseToken(tokenString string) (ct clientToken, err erro
 	return ct, nil
 }
 
-func (rt *registryToken) appendSnToCertificate() {
-	rt.caRoot.IPAddresses = append(rt.caRoot.IPAddresses, net.ParseIP("127.0.0.1"))
-	rt.caRoot.IPAddresses = append(rt.caRoot.IPAddresses, net.ParseIP("::"))
-	rt.caRoot.DNSNames = append(rt.caRoot.DNSNames, "localhost")
+func (rt *registryToken) appendDSnToCertificate() {
+
+	rt.caRoot.IPAddresses = append(rt.caRoot.IPAddresses, net.ParseIP(rt.serviceIP))
+	rt.caRoot.DNSNames = append(rt.caRoot.DNSNames, rt.serviceHost)
 }

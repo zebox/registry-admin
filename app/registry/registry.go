@@ -217,7 +217,7 @@ func NewRegistry(login, password, secret string, settings Settings) (*Registry, 
 				return nil, err
 			}
 		} else {
-			r.registryToken, err = NewRegistryToken(secret, TokenIssuer(settings.Host))
+			r.registryToken, err = NewRegistryToken(secret, TokenIssuer(settings.Issuer))
 			if err != nil {
 				return nil, err
 			}

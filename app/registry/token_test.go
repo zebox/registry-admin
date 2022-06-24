@@ -51,6 +51,7 @@ func TestNewRegistryToken(t *testing.T) {
 			tmpDir + "/test.pub",
 			tmpDir + "/test_ca.crt",
 		}),
+		ServiceIpHost("127.0.0.2", "domain.local.test"),
 	)
 
 	require.NoError(t, err)
@@ -59,6 +60,8 @@ func TestNewRegistryToken(t *testing.T) {
 	assert.Equal(t, tmpDir+"/test.key", rt.KeyPath)
 	assert.Equal(t, tmpDir+"/test.pub", rt.PublicKeyPath)
 	assert.Equal(t, tmpDir+"/test_ca.crt", rt.CARootPath)
+	assert.Equal(t, "127.0.0.2", rt.serviceIP)
+	assert.Equal(t, "domain.local.test", rt.serviceHost)
 
 	// test with error
 	_, err = NewRegistryToken(
