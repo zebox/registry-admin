@@ -214,8 +214,14 @@ func NewRegistry(login, password, secret string, settings Settings) (*Registry, 
 		r.htpasswd = nil // not needed for self-token auth
 		var err error
 		if certsPathIsFilled {
-			hostName := strings.Split(r.settings.Host, "/")
-			r.registryToken, err = NewRegistryToken(secret, TokenIssuer(settings.Issuer), CertsName(settings.CertificatesPaths), ServiceIpHost(r.settings.IP, hostName[2]))
+			hostName := r.settings.Host
+
+			// try to extract service domain name or address
+			parts := strings.Split(r.settings.Host, "/")
+			if len(parts) == 3 {
+				hostName = parts[2]
+			}
+			r.registryToken, err = NewRegistryToken(secret, TokenIssuer(settings.Issuer), CertsName(settings.CertificatesPaths), ServiceIpHost(r.settings.IP, hostName))
 			if err != nil {
 				return nil, err
 			}

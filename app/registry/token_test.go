@@ -163,6 +163,9 @@ func TestRegistryToken_CreateCerts(t *testing.T) {
 
 	rt := registryToken{}
 
+	rt.serviceHost = "localhost"
+	rt.serviceIP = "127.0.0.2"
+
 	rt.RootPath = tmpDir
 	rt.KeyPath = tmpDir + privateKeyName
 	rt.PublicKeyPath = tmpDir + publicKeyName
