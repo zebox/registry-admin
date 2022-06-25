@@ -21,6 +21,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -361,6 +362,14 @@ func (rt registryToken) parseToken(tokenString string) (ct clientToken, err erro
 
 // appendDSnToCertificate appends Subject Alternative Name for requested IP and Domain to certificate
 func (rt *registryToken) appendDSnToCertificate() {
-	rt.caRoot.IPAddresses = append(rt.caRoot.IPAddresses, net.ParseIP(rt.serviceIP))
+	if rt.serviceIP != "" {
+		var ipAddressRegExp = regexp.MustCompile(`(?m)^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$`)
+		if ipAddressRegExp.MatchString(rt.serviceIP) {
+			rt.caRoot.IPAddresses = append(rt.caRoot.IPAddresses, net.ParseIP(rt.serviceIP))
+		} else {
+			rt.l.Logf("failed to append ip address to certificate SN, ip address is invalid")
+		}
+
+	}
 	rt.caRoot.DNSNames = append(rt.caRoot.DNSNames, rt.serviceHost)
 }

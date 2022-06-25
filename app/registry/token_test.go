@@ -215,4 +215,5 @@ func TestRegistryToken_CreateCerts(t *testing.T) {
 	rt.Certs.CARootPath = "*"
 	err = rt.createCerts()
 	assert.Error(t, err)
+
 }
