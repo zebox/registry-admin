@@ -256,7 +256,7 @@ func TestParseAuthenticateHeaderRequest(t *testing.T) {
 	authRequest, err := r.ParseAuthenticateHeaderRequest(testRequestHeaderValue)
 	require.NoError(t, err)
 
-	expectedAuthRequest := AuthorizationRequest{
+	expectedAuthRequest := TokenRequest{
 		Service: "registry.docker.io",
 		Type:    "repository",
 		Name:    "samalba/my-app",

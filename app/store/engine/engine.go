@@ -53,11 +53,16 @@ type Interface interface {
 }
 
 // QueryFilter using for query to data from storage
+
 type QueryFilter struct {
-	Range   [2]int64 // array indexes, 0 - Skip value, 1 - Limit value
-	IDs     []int64  `json:"id"`
+	Range [2]int64 // array indexes, 0 - Skip value, 1 - Limit value
+	IDs   []int64  `json:"id"`
+
+	// 'q' - key in filter use for full text search by fields which defined with parameters in filtersBuilder
+	// other filters keys/values applies as exactly condition in query (at where clause)
 	Filters map[string]interface{}
-	Sort    []string // ASC or DESC
+
+	Sort []string // ASC or DESC
 }
 
 // FilterFromUrlExtractor extracts param from URL and pass it to query which manipulation data in storage

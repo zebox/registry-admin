@@ -81,7 +81,7 @@ func TestServer_RunNoneSSL(t *testing.T) {
 	}
 	defer client.CloseIdleConnections()
 
-	resp, err := client.Get(fmt.Sprintf("http://localhost:%d/ping", srv.Port))
+	resp, err := client.Get(fmt.Sprintf("http://localhost:%d/health", srv.Port))
 	require.NoError(t, err)
 
 	defer func() { assert.NoError(t, resp.Body.Close()) }()
@@ -153,7 +153,7 @@ func TestServer_RunStaticSSL(t *testing.T) {
 	assert.Equal(t, http.StatusTemporaryRedirect, resp.StatusCode)
 	assert.Equal(t, fmt.Sprintf("https://localhost:%d/test?p=1", srv.SSLConfig.Port), resp.Header.Get("Location"))
 
-	resp, err = client.Get(fmt.Sprintf("https://localhost:%d/ping", srv.SSLConfig.Port))
+	resp, err = client.Get(fmt.Sprintf("https://localhost:%d/health", srv.SSLConfig.Port))
 	require.NoError(t, err)
 	defer func() { assert.NoError(t, resp.Body.Close()) }()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -570,10 +570,11 @@ func waitForServerStart(port int) {
 	}
 }
 
-// request is helper for testing handler request, opts can contain requested ID
+// request is helper for testing handler request
 func request(t *testing.T, method, url string, handler http.HandlerFunc, body []byte, expectedStatusCode int) *httptest.ResponseRecorder {
 
 	req, errReq := http.NewRequest(method, url, bytes.NewBuffer(body))
+	require.NoError(t, errReq)
 
 	param := strings.Split(url, "/")
 	if !strings.HasPrefix(url, "?") && len(param) > 4 {

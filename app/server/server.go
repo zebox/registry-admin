@@ -58,10 +58,10 @@ type registryInterface interface {
 	Login(user store.User) (string, error)
 
 	// Token will create jwt for make a request to registry service when auth token is using
-	Token(authRequest registry.AuthorizationRequest) (string, error)
+	Token(authRequest registry.TokenRequest) (string, error)
 
 	// ParseAuthenticateHeaderRequest will parse 'Www-Authenticate' header for extract token authorization data.
-	ParseAuthenticateHeaderRequest(headerValue string) (authRequest registry.AuthorizationRequest, err error)
+	ParseAuthenticateHeaderRequest(headerValue string) (authRequest registry.TokenRequest, err error)
 
 	// UpdateHtpasswd update user access list in .htpasswd file every time when users entries add/update/delete
 	UpdateHtpasswd(users []store.User) error
@@ -299,7 +299,7 @@ func (s *Server) routes() chi.Router {
 
 				routeRegistry.Group(func(registryApiUserAccess chi.Router) {
 					registryApiUserAccess.Use(authMiddleware.Auth, middleware.NoCache)
-					registryApiUserAccess.Get("/health", rh.Ping)
+					registryApiUserAccess.Get("/health", rh.health)
 				})
 				// operation create/update/delete with Access items allow for admins only
 				routeRegistry.Group(func(registryApiAccess chi.Router) {

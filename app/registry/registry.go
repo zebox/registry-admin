@@ -42,9 +42,9 @@ var (
 	ErrNoMorePages = errors.New("no more pages")
 )
 
-// AuthorizationRequest is the authorization request data from registry when client auth call
+// TokenRequest is the authorization request data from registry when client auth call
 // for detailed description go to https://docs.docker.com/registry/spec/auth/jwt/
-type AuthorizationRequest struct {
+type TokenRequest struct {
 
 	// Bind to 'sub' token header
 	// The subject of the token; the name or id of the client which requested it.
@@ -247,7 +247,7 @@ func NewRegistry(login, password, secret string, settings Settings) (*Registry, 
 }
 
 func (r *Registry) Login(user store.User) (string, error) {
-	authRequest := AuthorizationRequest{
+	authRequest := TokenRequest{
 		Account: user.Login,
 		Service: r.settings.Service,
 	}
@@ -256,7 +256,7 @@ func (r *Registry) Login(user store.User) (string, error) {
 
 // Token create jwt token with claims for send as response to docker registry service
 // This method should call after credentials check at a high level api
-func (r *Registry) Token(authRequest AuthorizationRequest) (string, error) {
+func (r *Registry) Token(authRequest TokenRequest) (string, error) {
 
 	clientToken, errToken := r.registryToken.Generate(&authRequest)
 	if errToken != nil {
@@ -551,7 +551,7 @@ func getPaginationNextLink(resp *http.Response) (string, error) {
 // Header value should be like this: Bearer realm="https://auth.docker.io/token",service="registry.docker.io",scope="repository:samalba/my-app:pull,push"
 // Input parameter 'access' contain data of access to resource for a user.
 // Method has public access for use in tests where registry mock interface use it.
-func (r Registry) ParseAuthenticateHeaderRequest(headerValue string) (authRequest AuthorizationRequest, err error) {
+func (r Registry) ParseAuthenticateHeaderRequest(headerValue string) (authRequest TokenRequest, err error) {
 	// realm="https://auth.docker.io/token",service="registry.docker.io",scope="repository:samalba/my-app:pull,push"
 	var re = regexp.MustCompile(`(\w+)=("[^"]*")`)
 	var isMatched bool

@@ -131,7 +131,7 @@ func TestRegistryToken_Generate(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	authReq := AuthorizationRequest{
+	authReq := TokenRequest{
 		Account: "Martian",
 		Service: "127.0.0.1",
 		Type:    "registry",

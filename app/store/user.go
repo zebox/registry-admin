@@ -13,6 +13,7 @@ var (
 	// admin - has full access for entire registry end-points
 	// manager - allow pull,push and delete for type 'repository'
 	// a repository type defined with https://docs.docker.com/registry/spec/auth/scope/
+	// NOTE: don't change order of items, it's expose values by indexes
 	roles = []string{"admin", "manager", "user"}
 )
 

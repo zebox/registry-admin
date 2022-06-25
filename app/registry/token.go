@@ -53,8 +53,8 @@ type Certs struct {
 	CARootPath    string
 }
 
-// clientToken is Bearer registryToken representing authorized access for a client
-type clientToken struct {
+// ClientToken is Bearer registryToken representing authorized access for a client
+type ClientToken struct {
 	// An opaque Bearer token that clients should supply to subsequent requests in the Authorization header.
 	Token string `json:"token"`
 
@@ -186,12 +186,12 @@ func NewRegistryToken(secretPhrase string, opts ...TokenOption) (*registryToken,
 	return rt, nil
 }
 
-func (rt *registryToken) Generate(authRequest *AuthorizationRequest) (clientToken, error) {
+func (rt *registryToken) Generate(authRequest *TokenRequest) (ClientToken, error) {
 	// sign any string to get the used signing Algorithm for the private key
 	_, algo, err := rt.privateKey.Sign(strings.NewReader(rt.secret), 0)
 
 	if err != nil {
-		return clientToken{}, err
+		return ClientToken{}, err
 	}
 
 	header := token.Header{
@@ -202,7 +202,7 @@ func (rt *registryToken) Generate(authRequest *AuthorizationRequest) (clientToke
 
 	headerJson, err := json.Marshal(header)
 	if err != nil {
-		return clientToken{}, err
+		return ClientToken{}, err
 	}
 	now := time.Now().Unix()
 	expr := now + defaultTokenExpiration
@@ -231,7 +231,7 @@ func (rt *registryToken) Generate(authRequest *AuthorizationRequest) (clientToke
 
 	claimJson, err := json.Marshal(claim)
 	if err != nil {
-		return clientToken{}, err
+		return ClientToken{}, err
 	}
 
 	encodeToBase64 := func(b []byte) string {
@@ -241,11 +241,11 @@ func (rt *registryToken) Generate(authRequest *AuthorizationRequest) (clientToke
 	payload := fmt.Sprintf("%s%s%s", encodeToBase64(headerJson), token.TokenSeparator, encodeToBase64(claimJson))
 	sig, sigAlgo, err := rt.privateKey.Sign(strings.NewReader(payload), 0)
 	if err != nil && sigAlgo != algo {
-		return clientToken{}, err
+		return ClientToken{}, err
 	}
 
 	tokenString := fmt.Sprintf("%s%s%s", payload, token.TokenSeparator, encodeToBase64(sig))
-	return clientToken{Token: tokenString, AccessToken: tokenString}, nil
+	return ClientToken{Token: tokenString, AccessToken: tokenString}, nil
 }
 
 func (rt *registryToken) createCerts() (err error) {
@@ -352,10 +352,10 @@ func (rt registryToken) saveKeys() error {
 	return nil
 }
 
-// parseToken convert token string set to clientToken struct
-func (rt registryToken) parseToken(tokenString string) (ct clientToken, err error) {
+// parseToken convert token string set to ClientToken struct
+func (rt registryToken) parseToken(tokenString string) (ct ClientToken, err error) {
 	if err := json.Unmarshal([]byte(tokenString), &ct); err != nil {
-		return clientToken{}, err
+		return ClientToken{}, err
 	}
 	return ct, nil
 }

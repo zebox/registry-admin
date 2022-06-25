@@ -32,8 +32,8 @@ const (
 
 // tokenProcessing is functions for  parse www-authenticate header and request jwt token with credentials for get access to registry resources based on token claims data
 type tokenProcessing interface {
-	Token(request AuthorizationRequest) (string, error)
-	ParseAuthenticateHeaderRequest(wwwRequest string) (AuthorizationRequest, error)
+	Token(request TokenRequest) (string, error)
+	ParseAuthenticateHeaderRequest(wwwRequest string) (TokenRequest, error)
 }
 
 type repositories struct {
