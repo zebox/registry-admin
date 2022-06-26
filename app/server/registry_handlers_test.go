@@ -35,42 +35,97 @@ func Test_tokenAuth(t *testing.T) {
 	// test without credentials
 	request(t, "GET", "/api/v1/registry/auth", testRegistryHandlers.tokenAuth, nil, http.StatusUnauthorized)
 
-	// test with empty password
-	requestWithCredentials(t, "test_login", "", "GET", "/api/v1/registry/auth", testRegistryHandlers.tokenAuth, nil, http.StatusUnauthorized)
+	tests := []struct {
+		login, password string
+		query           string
+		expectedStatus  int
+	}{
+		{
+			// test with empty password
+			login:          "test",
+			password:       "",
+			expectedStatus: http.StatusUnauthorized,
+		},
+		{
+			// test with unknown user
+			login:          "no_foo",
+			password:       "foo_password",
+			expectedStatus: http.StatusUnauthorized,
+		},
+		{
+			// test with bad user password
+			login:          "foo",
+			password:       "wrong_password",
+			expectedStatus: http.StatusForbidden,
+		},
+		{
+			// test with disabled user
+			login:          "foo",
+			password:       "password",
+			expectedStatus: http.StatusForbidden,
+		},
+		{
+			// test with no content
+			login:          "bar",
+			password:       "bar_password",
+			expectedStatus: http.StatusNoContent,
+		},
+		{
+			// test with login params
+			login:          "bar",
+			password:       "bar_password",
+			query:          "?account=bar&client_id=docker&offline_token=true&service=container_registry",
+			expectedStatus: http.StatusOK,
+		},
+		{
+			// test with login params with wrong account name
+			login:          "bar",
+			password:       "bar_password",
+			query:          "?account=test&client_id=docker&offline_token=true&service=container_registry",
+			expectedStatus: http.StatusInternalServerError,
+		},
+		{
+			// test with resource fetch params
+			login:          "bar",
+			password:       "bar_password",
+			query:          "?account=bar&scope=repository:test_resource_2:pull&service=container_registry",
+			expectedStatus: http.StatusOK,
+		},
+		{
+			// test with resource fetch params for user role
+			login:          "baz",
+			password:       "baz_password",
+			query:          "?account=baz&scope=repository:test_resource_3:pull&service=container_registry",
+			expectedStatus: http.StatusOK,
+		},
+		{
+			// test with resource fetch params for user role with restricted scope
+			login:          "baz",
+			password:       "baz_password",
+			query:          "?account=baz&scope=repository:test_resource_3:push&service=container_registry",
+			expectedStatus: http.StatusForbidden,
+		},
+		{
+			// test with resource fetch params for user role with bad scope
+			login:          "baz",
+			password:       "baz_password",
+			query:          "?account=baz&scope=repository&service=container_registry",
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
+			// test for token error with service name is unknown
+			login:          "baz",
+			password:       "baz_password",
+			query:          "?account=baz&scope=repository:test_resource_3:pull&service=unknown_registry",
+			expectedStatus: http.StatusInternalServerError,
+		},
+	}
 
-	// test with unknown user
-	requestWithCredentials(t, "no_foo", "foo_password", "GET", "/api/v1/registry/auth", testRegistryHandlers.tokenAuth, nil, http.StatusUnauthorized)
+	for _, entry := range tests {
+		t.Logf("test for entry: %v", entry)
+		requestWithCredentials(t, entry.login, entry.password, "GET", fmt.Sprintf("/api/v1/registry/auth%s", entry.query), testRegistryHandlers.tokenAuth, nil, entry.expectedStatus)
 
-	// test with bad user password
-	requestWithCredentials(t, "foo", "wrong_password", "GET", "/api/v1/registry/auth", testRegistryHandlers.tokenAuth, nil, http.StatusForbidden)
-
-	// test with disabled user
-	requestWithCredentials(t, "foo", "foo_password", "GET", "/api/v1/registry/auth", testRegistryHandlers.tokenAuth, nil, http.StatusForbidden)
-
-	// test with no content
-	requestWithCredentials(t, "bar", "bar_password", "GET", "/api/v1/registry/auth", testRegistryHandlers.tokenAuth, nil, http.StatusNoContent)
-
-	// test with login params
-	requestWithCredentials(t, "bar", "bar_password", "GET", "/api/v1/registry/auth?account=bar&client_id=docker&offline_token=true&service=container_registry", testRegistryHandlers.tokenAuth, nil, http.StatusOK)
-
-	// test with login params with wrong account name
-	requestWithCredentials(t, "bar", "bar_password", "GET", "/api/v1/registry/auth?account=test&client_id=docker&offline_token=true&service=container_registry", testRegistryHandlers.tokenAuth, nil, http.StatusInternalServerError)
-
-	// test with resource fetch params
-	requestWithCredentials(t, "bar", "bar_password", "GET", "/api/v1/registry/auth?account=bar&scope=repository:test_resource_2:pull&service=container_registry", testRegistryHandlers.tokenAuth, nil, http.StatusOK)
-
-	// test with resource fetch params for user role
-	requestWithCredentials(t, "baz", "baz_password", "GET", "/api/v1/registry/auth?account=baz&scope=repository:test_resource_3:pull&service=container_registry", testRegistryHandlers.tokenAuth, nil, http.StatusOK)
-
-	// test with resource fetch params for user role with restricted scope
-	requestWithCredentials(t, "baz", "baz_password", "GET", "/api/v1/registry/auth?account=baz&scope=repository:test_resource_3:push&service=container_registry", testRegistryHandlers.tokenAuth, nil, http.StatusForbidden)
-
-	// test with resource fetch params for user role with bad scope
-	requestWithCredentials(t, "baz", "baz_password", "GET", "/api/v1/registry/auth?account=baz&scope=repository&service=container_registry", testRegistryHandlers.tokenAuth, nil, http.StatusBadRequest)
-
-	// test for token error
-	requestWithCredentials(t, "baz", "baz_password", "GET", "/api/v1/registry/auth?account=baz&scope=repository:test_resource_3:pull&service=unknown_registry", testRegistryHandlers.tokenAuth, nil, http.StatusInternalServerError)
-
+	}
 }
 
 func filledTestEntries(t *testing.T, testRegistryHandlers *registryHandlers) {
