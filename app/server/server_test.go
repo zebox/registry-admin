@@ -55,11 +55,15 @@ func TestServer_RunNoneSSL(t *testing.T) {
 		Authenticator: auth.NewService(auth.Opts{
 			SecretReader: token.SecretFunc(func(aud string) (string, error) { return "secret", nil }),
 			AvatarStore:  avatar.NewNoOp(),
+			Logger:       log.NoOp,
 		}),
 		SSLConfig: SSLConfig{
 			SSLMode: SSLNone,
 		},
-		Storage: prepareTestStorage(t),
+		L:               log.NoOp,
+		AccessLog:       nopWriteCloser{io.Discard},
+		Storage:         prepareTestStorage(t),
+		RegistryService: prepareRegistryMock(t),
 	}
 
 	go func() {
@@ -81,7 +85,7 @@ func TestServer_RunNoneSSL(t *testing.T) {
 	}
 	defer client.CloseIdleConnections()
 
-	resp, err := client.Get(fmt.Sprintf("http://localhost:%d/health", srv.Port))
+	resp, err := client.Get(fmt.Sprintf("http://localhost:%d/ping", srv.Port))
 	require.NoError(t, err)
 
 	defer func() { assert.NoError(t, resp.Body.Close()) }()
@@ -116,7 +120,8 @@ func TestServer_RunStaticSSL(t *testing.T) {
 		Authenticator: auth.NewService(auth.Opts{
 			AvatarStore: avatar.NewNoOp(),
 		}),
-
+		L:         log.NoOp,
+		AccessLog: nopWriteCloser{io.Discard},
 		SSLConfig: SSLConfig{
 			SSLMode:       SSLStatic,
 			RedirHTTPPort: port,
@@ -124,7 +129,8 @@ func TestServer_RunStaticSSL(t *testing.T) {
 			Key:           dir + "/" + testPrivateKeyFileName,
 			Cert:          dir + "/CA_" + testPublicKeyFileName + ".crt",
 		},
-		Storage: prepareTestStorage(t),
+		Storage:         prepareTestStorage(t),
+		RegistryService: prepareRegistryMock(t),
 	}
 
 	go func() {
@@ -153,7 +159,7 @@ func TestServer_RunStaticSSL(t *testing.T) {
 	assert.Equal(t, http.StatusTemporaryRedirect, resp.StatusCode)
 	assert.Equal(t, fmt.Sprintf("https://localhost:%d/test?p=1", srv.SSLConfig.Port), resp.Header.Get("Location"))
 
-	resp, err = client.Get(fmt.Sprintf("https://localhost:%d/health", srv.SSLConfig.Port))
+	resp, err = client.Get(fmt.Sprintf("https://localhost:%d/ping", srv.SSLConfig.Port))
 	require.NoError(t, err)
 	defer func() { assert.NoError(t, resp.Body.Close()) }()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -180,7 +186,8 @@ func TestServer__RunAutoSSL(t *testing.T) {
 			RedirHTTPPort: port,
 			Port:          chooseRandomUnusedPort(),
 		},
-		Storage: prepareTestStorage(t),
+		Storage:         prepareTestStorage(t),
+		RegistryService: prepareRegistryMock(t),
 	}
 
 	go func() {
@@ -304,10 +311,11 @@ func TestServer_Validate(t *testing.T) {
 }
 func TestRest_Shutdown(t *testing.T) {
 	srv := Server{
-		Authenticator: &auth.Service{},
-		Hostname:      "127.0.0.1",
-		Port:          chooseRandomUnusedPort(),
-		Storage:       prepareTestStorage(t),
+		Authenticator:   &auth.Service{},
+		Hostname:        "127.0.0.1",
+		Port:            chooseRandomUnusedPort(),
+		Storage:         prepareTestStorage(t),
+		RegistryService: prepareRegistryMock(t),
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
 	defer cancel()
@@ -647,9 +655,10 @@ func prepareTestServer(ctx context.Context, t *testing.T, storage engine.Interfa
 		SSLConfig: SSLConfig{
 			SSLMode: SSLNone,
 		},
-		Storage:   storage,
-		AccessLog: nopWriteCloser{io.Discard},
-		L:         log.Default(),
+		Storage:         storage,
+		RegistryService: prepareRegistryMock(t),
+		AccessLog:       nopWriteCloser{io.Discard},
+		L:               log.NoOp,
 	}
 
 	testAuthenticator := auth.NewService(auth.Opts{

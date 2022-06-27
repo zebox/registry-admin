@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/go-chi/chi/v5"
 	log "github.com/go-pkgz/lgr"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
@@ -14,20 +13,22 @@ import (
 	"github.com/zebox/registry-admin/app/store/engine"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 )
 
+type ctxKeyName string
+
 var (
-	testUsers    = make(map[int64]store.User)
-	testAccesses = make(map[int64]store.Access)
+	ctxKey       ctxKeyName = "testCtxKey"
+	testUsers               = make(map[int64]store.User)
+	testAccesses            = make(map[int64]store.Access)
 )
 
-func Test_tokenAuth(t *testing.T) {
+func TestRegistryHandlers_tokenAuth(t *testing.T) {
 	testRegistryHandlers := registryHandlers{}
 	testRegistryHandlers.l = log.Default()
 
-	testRegistryHandlers.registryService = prepareRegistryMock()
+	testRegistryHandlers.registryService = prepareRegistryMock(t)
 	testRegistryHandlers.dataStore = prepareUserAccessStoreMock(t)
 
 	filledTestEntries(t, &testRegistryHandlers)
@@ -121,11 +122,28 @@ func Test_tokenAuth(t *testing.T) {
 		},
 	}
 
+	ctx := context.Background()
 	for _, entry := range tests {
 		t.Logf("test for entry: %v", entry)
-		requestWithCredentials(t, entry.login, entry.password, "GET", fmt.Sprintf("/api/v1/registry/auth%s", entry.query), testRegistryHandlers.tokenAuth, nil, entry.expectedStatus)
+		requestWithCredentials(t, ctx, entry.login, entry.password, "GET", fmt.Sprintf("/api/v1/registry/auth%s", entry.query), testRegistryHandlers.tokenAuth, nil, entry.expectedStatus)
 
 	}
+}
+
+func TestRegistryHandlers_health(t *testing.T) {
+	testRegistryHandlers := registryHandlers{}
+	testRegistryHandlers.l = log.Default()
+
+	testRegistryHandlers.registryService = prepareRegistryMock(t)
+	testRegistryHandlers.dataStore = prepareUserAccessStoreMock(t)
+	filledTestEntries(t, &testRegistryHandlers)
+
+	ctx := context.Background()
+	requestWithCredentials(t, ctx, "bar", "bar_password", "GET", "/api/v1/registry/health", testRegistryHandlers.health, nil, http.StatusOK)
+
+	// test with error
+	ctx = context.WithValue(ctx, ctxKey, false)
+	requestWithCredentials(t, ctx, "bar", "bar_password", "GET", "/api/v1/registry/health", testRegistryHandlers.health, nil, http.StatusInternalServerError)
 }
 
 func filledTestEntries(t *testing.T, testRegistryHandlers *registryHandlers) {
@@ -222,7 +240,7 @@ func filledTestEntries(t *testing.T, testRegistryHandlers *registryHandlers) {
 
 }
 
-func prepareRegistryMock() *registryInterfaceMock {
+func prepareRegistryMock(_ *testing.T) *registryInterfaceMock {
 
 	return &registryInterfaceMock{
 		LoginFunc: func(user store.User) (string, error) {
@@ -239,6 +257,17 @@ func prepareRegistryMock() *registryInterfaceMock {
 				}
 			}
 			return "", errors.New("user not allowed here")
+		},
+		ApiVersionCheckFunc: func(ctx context.Context) error {
+
+			switch val := ctx.Value(ctxKey).(type) {
+			case bool:
+				if !val {
+					return errors.New("failed to make health request")
+				}
+			}
+
+			return nil
 		},
 	}
 }
@@ -312,19 +341,12 @@ func prepareUserAccessStoreMock(t *testing.T) *engine.InterfaceMock {
 }
 
 // requestWithCredentials is helper for testing handler request
-func requestWithCredentials(t *testing.T, login, password string, method, url string, handler http.HandlerFunc, body []byte, expectedStatusCode int) *httptest.ResponseRecorder {
+func requestWithCredentials(t *testing.T, ctx context.Context, login, password string, method, url string, handler http.HandlerFunc, body []byte, expectedStatusCode int) *httptest.ResponseRecorder {
 
-	req, errReq := http.NewRequest(method, url, bytes.NewBuffer(body))
+	req, errReq := http.NewRequestWithContext(ctx, method, url, bytes.NewBuffer(body))
 	require.NoError(t, errReq)
 
 	req.SetBasicAuth(login, password)
-
-	param := strings.Split(url, "/")
-	if !strings.HasPrefix(url, "?") && len(param) > 4 {
-		rctx := chi.NewRouteContext()
-		req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
-		rctx.URLParams.Add("id", param[4])
-	}
 
 	require.NoError(t, errReq)
 	testWriter := httptest.NewRecorder()
