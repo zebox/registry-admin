@@ -64,6 +64,9 @@ type TokenRequest struct {
 
 	// An array of strings which give the actions authorized on this resource.
 	Actions []string
+
+	// Custom TTL for a new token
+	ExpireTime int64
 }
 
 type Settings struct {

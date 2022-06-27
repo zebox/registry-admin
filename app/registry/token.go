@@ -186,7 +186,7 @@ func NewRegistryToken(secretPhrase string, opts ...TokenOption) (*registryToken,
 	return rt, nil
 }
 
-func (rt *registryToken) Generate(authRequest *TokenRequest) (ClientToken, error) {
+func (rt *registryToken) Generate(tokenRequest *TokenRequest) (ClientToken, error) {
 	// sign any string to get the used signing Algorithm for the private key
 	_, algo, err := rt.privateKey.Sign(strings.NewReader(rt.secret), 0)
 
@@ -211,11 +211,16 @@ func (rt *registryToken) Generate(authRequest *TokenRequest) (ClientToken, error
 		expr = now + rt.tokenExpiration
 	}
 
+	// custom token expiration time should more or equal 60 seconds.
+	if tokenRequest.ExpireTime >= 60 {
+		expr = now + tokenRequest.ExpireTime
+	}
+
 	// init default registryToken claims
 	claim := token.ClaimSet{
 		Issuer:     rt.tokenIssuer,
-		Subject:    authRequest.Account,
-		Audience:   authRequest.Service,
+		Subject:    tokenRequest.Account,
+		Audience:   tokenRequest.Service,
 		Expiration: expr,
 		NotBefore:  now - 10,
 		IssuedAt:   now,
@@ -224,9 +229,9 @@ func (rt *registryToken) Generate(authRequest *TokenRequest) (ClientToken, error
 	}
 
 	claim.Access = append(claim.Access, &token.ResourceActions{
-		Type:    authRequest.Type,
-		Name:    authRequest.Name,
-		Actions: authRequest.Actions,
+		Type:    tokenRequest.Type,
+		Name:    tokenRequest.Name,
+		Actions: tokenRequest.Actions,
 	})
 
 	claimJson, err := json.Marshal(claim)

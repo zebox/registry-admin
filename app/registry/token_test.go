@@ -132,11 +132,12 @@ func TestRegistryToken_Generate(t *testing.T) {
 	require.NoError(t, err)
 
 	authReq := TokenRequest{
-		Account: "Martian",
-		Service: "127.0.0.1",
-		Type:    "registry",
-		Name:    "test-resource",
-		Actions: []string{"pull", "push"},
+		Account:    "Martian",
+		Service:    "127.0.0.1",
+		Type:       "registry",
+		Name:       "test-resource",
+		Actions:    []string{"pull", "push"},
+		ExpireTime: 120,
 	}
 
 	jwtToken, err := rt.Generate(&authReq)
