@@ -212,7 +212,7 @@ func (rt *registryToken) Generate(tokenRequest *TokenRequest) (ClientToken, erro
 	}
 
 	// custom token expiration time should more or equal 60 seconds.
-	if tokenRequest.ExpireTime >= 60 {
+	if tokenRequest.ExpireTime >= defaultTokenExpiration {
 		expr = now + tokenRequest.ExpireTime
 	}
 
