@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/go-chi/chi/v5"
 	R "github.com/go-pkgz/rest"
 	"github.com/zebox/registry-admin/app/store"
@@ -71,6 +72,7 @@ func (g *groupHandlers) groupFindCtrl(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Add("Content-Range", fmt.Sprintf("groups %d-%d/%d", filter.Range[0], filter.Range[1], result.Total))
 	R.RenderJSON(w, result)
 }
 

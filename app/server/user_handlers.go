@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -78,7 +79,7 @@ func (u *userHandlers) userFindCtrl(w http.ResponseWriter, r *http.Request) {
 		SendErrorJSON(w, r, u.l, http.StatusInternalServerError, err, "failed to find users")
 		return
 	}
-
+	w.Header().Add("Content-Range", fmt.Sprintf("users %d-%d/%d", filter.Range[0], filter.Range[1], result.Total))
 	R.RenderJSON(w, result)
 }
 
