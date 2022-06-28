@@ -301,10 +301,12 @@ func (s *Server) routes() chi.Router {
 					registryApiUserAccess.Use(authMiddleware.Auth, middleware.NoCache)
 					registryApiUserAccess.Get("/health", rh.health)
 				})
-				// operation create/update/delete with Access items allow for admins only
+
+				// manipulations registry entries (catalog/tags/manifest/delete)
 				routeRegistry.Group(func(registryApiAccess chi.Router) {
 					registryApiAccess.Use(authMiddleware.Auth, middleware.NoCache)
 					registryApiAccess.Use(authMiddleware.RBAC("admin", "manager"))
+					registryApiAccess.Get("/catalog", rh.catalogList)
 
 				})
 			})

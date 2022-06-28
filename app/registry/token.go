@@ -44,6 +44,33 @@ const (
 
 var ErrTemplateCertFileAlreadyExist = "cert file '%s' already exist"
 
+// TokenRequest is the authorization request data from registry when client auth call
+// for detailed description go to https://docs.docker.com/registry/spec/auth/jwt/
+type TokenRequest struct {
+
+	// Bind to 'sub' token header
+	// The subject of the token; the name or id of the client which requested it.
+	// This should be empty (`""`) if the client did not authenticate.
+	Account string
+
+	// Bind to token 'aud' header. The intended audience of the token; the name or id of the service which will verify
+	// the token to authorize the client/subject.
+	Service string
+
+	// The subject of the token; the name or id of the client which requested it.
+	// This should be empty (`""`) if the client did not authenticate.
+	Type string
+
+	// The name of the resource of the given type hosted by the service.
+	Name string
+
+	// An array of strings which give the actions authorized on this resource.
+	Actions []string
+
+	// Custom TTL for a new token
+	ExpireTime int64
+}
+
 // Certs will define a path to certs either for loading private, public and CARoot files or path to save ones when createCerts call.
 // createCerts doesn't overwrite existed files in a path, user should delete them before method call.
 type Certs struct {

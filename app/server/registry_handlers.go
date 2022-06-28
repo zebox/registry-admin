@@ -100,6 +100,16 @@ func (rh *registryHandlers) health(w http.ResponseWriter, r *http.Request) {
 	rest.RenderJSON(w, responseMessage{Message: "ok"})
 }
 
+// catalogList returns list of repositories entry
+func (rh *registryHandlers) catalogList(w http.ResponseWriter, r *http.Request) {
+	repoList, err := rh.registryService.Catalog(r.Context(), "", "")
+	if err != nil {
+		SendErrorJSON(w, r, rh.l, http.StatusInternalServerError, err, "registry service request failed")
+		return
+	}
+	rest.RenderJSON(w, responseMessage{Message: "ok", Data: repoList})
+}
+
 func (rh *registryHandlers) checkUserAccess(ctx context.Context, user store.User, tokenRequest registry.TokenRequest) (bool, error) {
 
 	if user.Role == "admin" {

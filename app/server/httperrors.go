@@ -1,7 +1,7 @@
 package server
 
-// httperrors is helper for render http errors with logging and misc parameters
-// this ide borrow from package https://github.com/go-pkgz/rest and extended for use in this project
+// httpErrors is helper for render http errors with logging and misc parameters
+// this idea borrow from package https://github.com/go-pkgz/rest and extended for use in this project
 
 import (
 	"bytes"

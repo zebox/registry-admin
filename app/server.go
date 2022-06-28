@@ -90,7 +90,7 @@ func run() error {
 		URL:              checkHostnameForURL(opts.Auth.HostName, opts.SSL.Type),
 		BasicAuthChecker: srv.BasicAuthCheckerFn,
 		AvatarStore:      avatar.NewNoOp(),
-		SecureCookies:    true,
+		SecureCookies:    opts.SSL.Type != "none",
 		DisableXSRF:      true,
 		Validator:        &srv, // call Validate func for check token claims
 		JWTQuery:         "jwt",
