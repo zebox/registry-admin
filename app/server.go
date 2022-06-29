@@ -46,7 +46,7 @@ func run() error {
 		return errTokenDuration
 	}
 
-	cookieDuration, errCookieDuration := time.ParseDuration(opts.Auth.TokenDuration)
+	cookieDuration, errCookieDuration := time.ParseDuration(opts.Auth.CookieDuration)
 	if errCookieDuration != nil {
 		return errCookieDuration
 	}

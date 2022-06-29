@@ -150,6 +150,7 @@ func (e *Embedded) FindUsers(ctx context.Context, filter engine.QueryFilter) (us
 		if err = rows.Scan(&user.ID, &user.Login, &user.Name, &user.Password, &user.Role, &user.Group, &user.Disabled, &user.Description); err != nil {
 			return users, errors.Wrap(err, "failed scan user data")
 		}
+		user.Password = "" // clear password value when user fetch
 		users.Data = append(users.Data, user)
 	}
 
@@ -159,18 +160,23 @@ func (e *Embedded) FindUsers(ctx context.Context, filter engine.QueryFilter) (us
 // UpdateUser update user records data
 func (e *Embedded) UpdateUser(ctx context.Context, user store.User) (err error) {
 
+	if !store.CheckRoleInList(user.Role) {
+		return errors.Errorf("role '%s' not allowed", user.Role)
+	}
+	var res sql.Result
 	if user.Password != "" {
 		if err = user.HashAndSalt(); err != nil {
 			return err
 		}
+		res, err = e.db.ExecContext(ctx, fmt.Sprintf("UPDATE %s SET name=?, password=?, role=?, user_group=?, disabled=?, description=? WHERE id = ?", usersTable),
+			user.Name, user.Password, user.Role, user.Group, user.Disabled, user.Description, user.ID)
+
+	} else {
+		// skip password update if updating password value is empty
+		res, err = e.db.ExecContext(ctx, fmt.Sprintf("UPDATE %s SET name=?, role=?, user_group=?, disabled=?, description=? WHERE id = ?", usersTable),
+			user.Name, user.Role, user.Group, user.Disabled, user.Description, user.ID)
 	}
 
-	if !store.CheckRoleInList(user.Role) {
-		return errors.Errorf("role '%s' not allowed", user.Role)
-	}
-
-	res, err := e.db.ExecContext(ctx, "UPDATE users SET name=?, password=?, role=?, user_group=?, disabled=?, description=? WHERE id = ?",
-		user.Name, user.Password, user.Role, user.Group, user.Disabled, user.Description, user.ID)
 	if err != nil {
 		return errors.Wrap(err, "failed to update user data")
 	}

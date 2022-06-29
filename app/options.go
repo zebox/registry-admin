@@ -31,7 +31,7 @@ type Options struct {
 		HostName       string `long:"hostname" env:"AUTH_HOST_NAME" default:"localhost" description:"Main hostname of service" json:"host_name"`
 		IssuerName     string `long:"jwt-issuer" env:"AUTH_ISSUER_NAME" required:"true" default:"zebox" description:"Token issuer signature" json:"issuer_name"`
 		TokenDuration  string `long:"jwt-ttl" env:"AUTH_JWT_TTL" default:"1h" description:"Define JWT expired timeout" json:"jwt_ttl"`
-		CookieDuration string `long:"cookie-ttl" env:"AUTH_COOKIE_TTL" default:"10d" description:"Define cookies expired timeout" json:"cookie_ttl"`
+		CookieDuration string `long:"cookie-ttl" env:"AUTH_COOKIE_TTL" default:"24h" description:"Define cookies expired timeout" json:"cookie_ttl"`
 	} `group:"auth" namespace:"auth" env-namespace:"AUTH" json:"authenticate"`
 
 	Logger struct {

@@ -274,8 +274,11 @@ func TestEmbedded_UpdateUser(t *testing.T) {
 
 	// try update without password change
 	user.Name = "updated_user_name"
+	user.Password = ""
 	assert.NoError(t, db.UpdateUser(ctx, *user))
-	assert.True(t, store.ComparePassword(user.Password, "new_user_password"))
+	userData, err = db.GetUser(ctx, user.ID)
+	assert.True(t, store.ComparePassword(userData.Password, "new_user_password"))
+	assert.Equal(t, "updated_user_name", userData.Name)
 
 	// try to update not existed user
 	user.ID = -1

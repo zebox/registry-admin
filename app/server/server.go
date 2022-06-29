@@ -249,7 +249,7 @@ func (s *Server) routes() chi.Router {
 
 					routeAdminUser.Post("/", uh.userCreateCtrl)
 					routeAdminUser.Put("/{id}", uh.userUpdateCtrl)
-					routeAdminUser.Delete("/", uh.userDeleteCtrl)
+					routeAdminUser.Delete("/{id}", uh.userDeleteCtrl)
 				})
 			})
 

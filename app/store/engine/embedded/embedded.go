@@ -237,8 +237,10 @@ func filtersBuilder(filter engine.QueryFilter, fieldsName ...string) (f queryFil
 	// search query statement and parse queryFilter value
 	for k, v := range filter.Filters {
 
+		if k == "ids" {
+			continue
+		}
 		// check sql value for sql-injection
-
 		k, v = sanitizeKeyValue(k, v)
 
 		if k == "q" {
@@ -253,11 +255,18 @@ func filtersBuilder(filter engine.QueryFilter, fieldsName ...string) (f queryFil
 			like = strings.Join(likeConndition, " OR ")
 			continue
 		}
-		if reflect.TypeOf(v).Kind() == reflect.Int {
-			strongConditions = append(strongConditions, fmt.Sprintf("%s = %d", k, v))
-			continue
+
+		var conditionValue string
+		switch v.(type) {
+		case string:
+			conditionValue = fmt.Sprintf("%s = '%s'", k, v)
+		case int:
+			conditionValue = fmt.Sprintf("%s = %d", k, v)
+		case float64:
+			conditionValue = fmt.Sprintf("%s = %.f", k, v)
 		}
-		strongConditions = append(strongConditions, fmt.Sprintf("%s = '%s'", k, v))
+
+		strongConditions = append(strongConditions, conditionValue)
 	}
 
 	var strongCondition string

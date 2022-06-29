@@ -109,9 +109,10 @@ func (u *userHandlers) userUpdateCtrl(w http.ResponseWriter, r *http.Request) { 
 	}
 
 	R.RenderJSON(w, responseMessage{
-		Error: false,
-		ID:    user.ID,
-		Data:  user,
+		Error:   false,
+		Message: "ok",
+		ID:      user.ID,
+		Data:    user,
 	})
 }
 
