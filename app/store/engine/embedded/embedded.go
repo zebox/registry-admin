@@ -206,16 +206,6 @@ func filtersBuilder(filter engine.QueryFilter, fieldsName ...string) (f queryFil
 
 	var ids string
 
-	// build filter by list of IDs
-	/*if len(filter.IDs) > 0 {
-		var stringIds []string
-		for _, v := range filter.IDs {
-			stringIds = append(stringIds, strconv.FormatInt(v, 10))
-		}
-		ids = strings.Join(stringIds, ", ")
-		f.in = fmt.Sprintf("id IN (%s)", ids)
-	}*/
-
 	// skip and limit statement build
 	skip := ""
 	if filter.Range[0] > 0 {

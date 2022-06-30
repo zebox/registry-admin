@@ -94,18 +94,6 @@ func FilterFromUrlExtractor(url *url.URL) (filters QueryFilter, err error) {
 	return filters, err
 }
 
-/*// checkIDsExist checking url params contain IDs for include in store query filter
-func checkIDsExist(str string) (ids []int64, err error) {
-	var Ids struct {
-		Ids []int64 `json:"ids"`
-	}
-
-	if err = json.Unmarshal([]byte(str), &Ids); err != nil {
-		return ids, err
-	}
-	return Ids.Ids, nil
-}*/
-
 // getRange parse URL search string param for store query filter
 func getQuotedStrings(s string) []string {
 	var re = regexp.MustCompile(`".*?"`)
