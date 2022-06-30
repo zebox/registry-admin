@@ -6,12 +6,12 @@ import LabelIcon from '@mui/icons-material/Label';
 import {
     useTranslate,
     DashboardMenuItem,
-    // MenuItemLink,
+    MenuItemLink,
     MenuProps,
     useSidebarState,
 } from 'react-admin';
 
-
+import users from '../users';
 
 type MenuName = 'menuCatalog' | 'menuSales' | 'menuCustomers';
 
@@ -42,7 +42,17 @@ const Menu = ({ dense = false }: MenuProps) => {
             }}
         >
             <DashboardMenuItem />
+            <MenuItemLink
+                    to="/users"
+                    state={{ _scrollToTop: true }}
+                    primaryText={translate(`resources.commands.name`, {
+                        smart_count: 2,
+                    })}
+                    leftIcon={<users.icon />}
+                    dense={dense}
+                />
         </Box>
+        
     );
 };
 

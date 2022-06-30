@@ -6,7 +6,7 @@ import polyglotI18nProvider from 'ra-i18n-polyglot';
 
 import authProvider from './providers/authProviders';
 import { Login, Layout } from './layout';
-import AuthRequiredPage from './layout/AuthRequired';
+import Configuration from './configuration/Configuration';
 
 import englishMessages from './i18n/en';
 import { lightTheme } from './layout/themes';
@@ -18,10 +18,10 @@ import users from './users';
 
 const history = createBrowserHistory();
 const i18nProvider = polyglotI18nProvider(locale => {
-  /*   if (locale === 'en') {
-        return import('./i18n/en').then(messages => messages.default);
+   if (locale === 'ru') {
+        return import('./i18n/ru').then(messages => messages.default);
     }
-   */
+  
   // Always fallback on english
   return englishMessages;
 }, 'en',{allowMissing: true});
@@ -36,14 +36,15 @@ function App() {
       store={memoryStore()}
       disableTelemetry
       loginPage={Login}
-      // layout={Layout}
+      layout={Layout}
       i18nProvider={i18nProvider}
       theme={lightTheme}
       history={history}
     >
 
       <CustomRoutes>
-        <Route path="/auth-required" element={<AuthRequiredPage />} />
+        <Route path="/configuration" element={<Configuration />} />
+       
       </CustomRoutes>
       <Resource name="users" {...users} />
     </Admin>

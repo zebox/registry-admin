@@ -27,13 +27,13 @@ const ConfigurationMenu = React.forwardRef((props, ref) => {
             <ListItemIcon>
                 <SettingsIcon />
             </ListItemIcon>
-            <ListItemText>{translate('pos.configuration')}</ListItemText>
+            <ListItemText>{translate('portal.configuration')}</ListItemText>
         </MenuItem>
     );
 });
 const CustomUserMenu = () => (
     <UserMenu>
-      {/*   <ConfigurationMenu /> */}
+        <ConfigurationMenu />
         <Logout />
     </UserMenu>
 );

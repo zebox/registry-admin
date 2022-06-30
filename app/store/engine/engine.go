@@ -5,7 +5,6 @@ package engine
 import (
 	"context"
 	"encoding/json"
-	log "github.com/go-pkgz/lgr"
 	"github.com/zebox/registry-admin/app/store"
 	"net/url"
 	"regexp"
@@ -74,10 +73,6 @@ func FilterFromUrlExtractor(url *url.URL) (filters QueryFilter, err error) {
 	// check and try to extract IDs from search string
 	if isSearch {
 		var query map[string]interface{}
-		if filters.IDs, err = checkIDsExist(search[0]); err != nil {
-			log.Printf("[DEBUG] fetch ids list failed %v", err)
-			return filters, err
-		}
 
 		// check and try to extract strong condition by fields name
 		err = json.Unmarshal([]byte(search[0]), &query)
@@ -99,7 +94,7 @@ func FilterFromUrlExtractor(url *url.URL) (filters QueryFilter, err error) {
 	return filters, err
 }
 
-// checkIDsExist checking url params contain IDs for include in store query filter
+/*// checkIDsExist checking url params contain IDs for include in store query filter
 func checkIDsExist(str string) (ids []int64, err error) {
 	var Ids struct {
 		Ids []int64 `json:"ids"`
@@ -109,7 +104,7 @@ func checkIDsExist(str string) (ids []int64, err error) {
 		return ids, err
 	}
 	return Ids.Ids, nil
-}
+}*/
 
 // getRange parse URL search string param for store query filter
 func getQuotedStrings(s string) []string {
@@ -138,7 +133,6 @@ func getRange(sRange string) (r [2]int64, err error) {
 			return r, err
 		}
 		r[0], r[1] = int64(first), int64(last)+1 // +1 because js want range with start ZERO(0) index, but skip/limit DB function start from ONE(1)
-		return r, err
 	}
-	return r, err
+	return r, nil
 }

@@ -1,5 +1,6 @@
 
 import { Create, PasswordInput, TextInput,TextField,ReferenceField, SelectInput, SimpleForm } from 'react-admin';
+import { RoleList } from "./UsersList";
 
 export const UserCreate = () => {
 
@@ -16,11 +17,8 @@ export const UserCreate = () => {
                     source="role"
                     defaultValue={"user"}
                     emptyValue={null}
-                    choices={[
-                        { id: 'user', name: 'User' },
-                        { id: 'manager', name: 'Manager' },
-                        { id: 'admin', name: 'Admin' }
-                    ]} />
+                    emptyText=''
+                    choices={RoleList} />
             </SimpleForm>
 
         </Create>

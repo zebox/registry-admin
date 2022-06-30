@@ -11,7 +11,6 @@ import (
 	"github.com/zebox/registry-admin/app/store/engine"
 	"reflect"
 	"regexp"
-	"strconv"
 	"strings"
 )
 
@@ -208,14 +207,14 @@ func filtersBuilder(filter engine.QueryFilter, fieldsName ...string) (f queryFil
 	var ids string
 
 	// build filter by list of IDs
-	if len(filter.IDs) > 0 {
+	/*if len(filter.IDs) > 0 {
 		var stringIds []string
 		for _, v := range filter.IDs {
 			stringIds = append(stringIds, strconv.FormatInt(v, 10))
 		}
 		ids = strings.Join(stringIds, ", ")
 		f.in = fmt.Sprintf("id IN (%s)", ids)
-	}
+	}*/
 
 	// skip and limit statement build
 	skip := ""
@@ -237,11 +236,19 @@ func filtersBuilder(filter engine.QueryFilter, fieldsName ...string) (f queryFil
 	// search query statement and parse queryFilter value
 	for k, v := range filter.Filters {
 
-		if k == "ids" {
-			continue
-		}
 		// check sql value for sql-injection
 		k, v = sanitizeKeyValue(k, v)
+
+		// build filter by list of IDs
+		if k == "ids" {
+			var stringIds []string
+			for _, value := range v.([]interface{}) {
+				stringIds = append(stringIds, castValueTypeToString(value))
+			}
+			ids = strings.Join(stringIds, ", ")
+			f.in = fmt.Sprintf("id IN (%s)", ids)
+			continue
+		}
 
 		if k == "q" {
 			var likeConndition []string
@@ -256,16 +263,7 @@ func filtersBuilder(filter engine.QueryFilter, fieldsName ...string) (f queryFil
 			continue
 		}
 
-		var conditionValue string
-		switch v.(type) {
-		case string:
-			conditionValue = fmt.Sprintf("%s = '%s'", k, v)
-		case int:
-			conditionValue = fmt.Sprintf("%s = %d", k, v)
-		case float64:
-			conditionValue = fmt.Sprintf("%s = %.f", k, v)
-		}
-
+		conditionValue := fmt.Sprintf("%s = %s", k, castValueTypeToString(v))
 		strongConditions = append(strongConditions, conditionValue)
 	}
 
@@ -334,6 +332,23 @@ func (e *Embedded) getTotalRecordsExcludeRange(tableName string, filter engine.Q
 		return 0
 	}
 	return recordsCounter
+}
+
+// castValueTypeToString will select appropriate type to formatting string
+func castValueTypeToString(value interface{}) string {
+	switch v := value.(type) {
+	case string:
+		return fmt.Sprintf("'%s'", v)
+	case int:
+		return fmt.Sprintf("%d", v)
+	case int64:
+		return fmt.Sprintf("%d", v)
+	case float32:
+		return fmt.Sprintf("%.f", v)
+	case float64:
+		return fmt.Sprintf("%.f", v)
+	}
+	return ""
 }
 
 // sanitizeValue check key name and value for contain sql-injection code and cleanup ones

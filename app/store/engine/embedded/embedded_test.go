@@ -90,14 +90,16 @@ func TestFilterBuilder(t *testing.T) {
 		t.Log(f1.where)
 	}
 	{
-		filter.IDs = []int64{1019101756, 1334517373}
+
+		ids := []interface{}{float64(1019101756), float64(1334517373)}
 		filter.Filters = map[string]interface{}{"q": "test", "disabled": 1}
+		filter.Filters["ids"] = ids
 		f2 := filtersBuilder(filter, "role", "login")
 		checkWhere2 := "WHERE id IN (1019101756, 1334517373) AND (role LIKE '%test%' OR login LIKE '%test%') AND (disabled = 1) ORDER BY id asc  LIMIT 9 OFFSET 1"
 		assert.Equal(t, checkWhere2, f2.where)
 	}
 	{
-		filter.IDs = []int64{}
+		delete(filter.Filters, "ids")
 		filter.Range = [2]int64{}
 		filter.Filters = map[string]interface{}{"q": 1}
 		f2 := filtersBuilder(filter, "role", "id")
