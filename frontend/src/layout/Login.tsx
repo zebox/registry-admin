@@ -11,7 +11,7 @@ import {
     CardActions,
     CircularProgress,
 } from '@mui/material';
-import LockIcon from '@mui/icons-material/Lock';
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import {
     Form,
     required,
@@ -25,7 +25,7 @@ import Box from '@mui/material/Box';
 
 const Login = () => {
     const [userData, setUserData] = useStore('user.data', {})
-   
+
 
     const [loading, setLoading] = useState(false);
     const translate = useTranslate();
@@ -89,7 +89,7 @@ const Login = () => {
                         }}
                     >
                         <Avatar sx={{ bgcolor: 'secondary.main' }}>
-                            <LockIcon />
+                            <AdminPanelSettingsIcon />
                         </Avatar>
                     </Box>
                     <Box
@@ -100,7 +100,7 @@ const Login = () => {
                             color: theme => theme.palette.grey[500],
                         }}
                     >
-                        Hint: demo / demo
+                        Registry Admin
                     </Box>
                     <Box sx={{ padding: '0 1em 1em 1em' }}>
                         <Box sx={{ marginTop: '1em' }}>
