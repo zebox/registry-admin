@@ -329,13 +329,9 @@ func castValueTypeToString(value interface{}) string {
 	switch v := value.(type) {
 	case string:
 		return fmt.Sprintf("'%s'", v)
-	case int:
+	case int, int64:
 		return fmt.Sprintf("%d", v)
-	case int64:
-		return fmt.Sprintf("%d", v)
-	case float32:
-		return fmt.Sprintf("%.f", v)
-	case float64:
+	case float32, float64:
 		return fmt.Sprintf("%.f", v)
 	}
 	return ""
