@@ -15,7 +15,8 @@ const customEnglishMessages: TranslationMessages = {
     resources: {
 
         commands: {
-            name: "Users"
+            users_name: "Users",
+            groups_name: "Groups"
         },
         users: {
             name: "Users",
@@ -27,6 +28,15 @@ const customEnglishMessages: TranslationMessages = {
                 group: "Group",
                 role: "Role",
                 blocked: "User blocked",
+                description: "Description"
+
+            }
+        },
+        groups: {
+            name: "Groups",
+            edit_title: "Edit group",
+            fields: {
+                name: "Username",
                 description: "Description"
 
             }

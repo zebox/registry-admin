@@ -1,32 +1,22 @@
 import * as React from 'react';
-import { useState } from 'react';
 import Box from '@mui/material/Box';
-import LabelIcon from '@mui/icons-material/Label';
+
 
 import {
     useTranslate,
-    DashboardMenuItem,
     MenuItemLink,
     MenuProps,
     useSidebarState,
 } from 'react-admin';
 
 import users from '../users';
+import groups from '../groups';
 
-type MenuName = 'menuCatalog' | 'menuSales' | 'menuCustomers';
 
 const Menu = ({ dense = false }: MenuProps) => {
-    const [state, setState] = useState({
-        menuCatalog: true,
-        menuSales: true,
-        menuCustomers: true,
-    });
+    
     const translate = useTranslate();
     const [open] = useSidebarState();
-
-    const handleToggle = (menu: MenuName) => {
-        setState(state => ({ ...state, [menu]: !state[menu] }));
-    };
 
     return (
         <Box
@@ -41,14 +31,23 @@ const Menu = ({ dense = false }: MenuProps) => {
                     }),
             }}
         >
-            <DashboardMenuItem />
+           {/*  <DashboardMenuItem /> */}
             <MenuItemLink
                     to="/users"
                     state={{ _scrollToTop: true }}
-                    primaryText={translate(`resources.commands.name`, {
+                    primaryText={translate(`resources.commands.users_name`, {
                         smart_count: 2,
                     })}
                     leftIcon={<users.icon />}
+                    dense={dense}
+                />
+                <MenuItemLink
+                    to="/groups"
+                    state={{ _scrollToTop: true }}
+                    primaryText={translate(`resources.commands.groups_name`, {
+                        smart_count: 2,
+                    })}
+                    leftIcon={<groups.icon />}
                     dense={dense}
                 />
         </Box>

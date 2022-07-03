@@ -25,6 +25,17 @@ export const darkTheme = {
                 },
             },
         },
+        RaDatagrid: {
+            styleOverrides: {
+                root: {
+                    "& .RaDatagrid-headerCell": {
+                        backgroundColor: "#89c0ed",
+                        color: "black"
+                    }
+                }
+            }
+        },
+
         MuiAppBar: {
             styleOverrides: {
                 colorSecondary: {
@@ -69,6 +80,15 @@ export const lightTheme = {
                     },
                 },
             },
+        },
+        RaDatagrid: {
+            styleOverrides: {
+                root: {
+                    "& .RaDatagrid-headerCell": {
+                        backgroundColor: "#d9d9d9",
+                    }
+                }
+            }
         },
         MuiPaper: {
             styleOverrides: {

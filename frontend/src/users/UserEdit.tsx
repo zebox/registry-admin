@@ -19,7 +19,6 @@ const UserEdit = () => {
                     source="role"
                     defaultValue={"user"}
                     emptyValue={null}
-                    emptyText=''
                     choices={RoleList} />
                 <BooleanInput label={translate('resources.users.fields.blocked')} source="blocked" />
                 <TextInput label={translate('resources.users.fields.description')} source="description" autoComplete='off' fullWidth />

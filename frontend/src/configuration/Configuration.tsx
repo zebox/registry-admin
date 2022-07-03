@@ -3,14 +3,21 @@ import Card from '@mui/material/Card';
 import Box from '@mui/material/Box';
 import CardContent from '@mui/material/CardContent';
 import Button from '@mui/material/Button';
-import { useTranslate, useLocaleState, useTheme, Title } from 'react-admin';
+import { useTranslate, useLocaleState, useTheme, Title, RaThemeOptions } from 'react-admin';
 
 import { darkTheme, lightTheme } from '../layout/themes';
+
+export const themeSettingKey = "RaCurrentTheme";
 
 const Configuration = () => {
     const translate = useTranslate();
     const [locale, setLocale] = useLocaleState();
     const [theme, setTheme] = useTheme();
+
+    const themeSwitching = (themeValue: RaThemeOptions) => {
+        localStorage.setItem(themeSettingKey, themeValue === darkTheme ? "dark" : "light");
+        setTheme(themeValue);
+    }
 
     return (
         <Card>
@@ -27,7 +34,7 @@ const Configuration = () => {
                             ? 'primary'
                             : 'secondary'
                     }
-                    onClick={() => setTheme(lightTheme)}
+                    onClick={() => themeSwitching(lightTheme)}
                 >
                     {translate('portal.theme.light')}
                 </Button>
@@ -39,7 +46,7 @@ const Configuration = () => {
                             ? 'primary'
                             : 'secondary'
                     }
-                    onClick={() => setTheme(darkTheme)}
+                    onClick={() => themeSwitching(darkTheme)}
                 >
                     {translate('portal.theme.dark')}
                 </Button>

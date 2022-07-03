@@ -40,7 +40,8 @@ const Login = () => {
             auth,
             location.state ? (location.state as any).nextPathname : '/'
         ).then((data)=>{
-            setUserData(data)
+            setUserData(data);
+            console.info(userData);
         })
         .catch((error: Error) => {
             setLoading(false);

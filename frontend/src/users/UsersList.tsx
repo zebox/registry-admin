@@ -7,7 +7,6 @@ import {
     BooleanField,
     EditButton,
     DeleteButton,
-    ReferenceInput,
     SelectInput,
     TextInput
    

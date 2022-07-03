@@ -268,7 +268,7 @@ func (s *Server) routes() chi.Router {
 
 					routeAdminGroup.Post("/", gh.groupCreateCtrl)
 					routeAdminGroup.Put("/{id}", gh.groupUpdateCtrl)
-					routeAdminGroup.Delete("/", gh.groupDeleteCtrl)
+					routeAdminGroup.Delete("/{id}", gh.groupDeleteCtrl)
 				})
 			})
 

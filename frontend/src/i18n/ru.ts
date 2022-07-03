@@ -15,7 +15,8 @@ const customRussianMessages: TranslationMessages = {
     resources: {
 
         commands: {
-            name: "Пользователи"
+            users_name: "Пользователи",
+            groups_name: "Группы"
         },
         users: {
             name: "Пользователи",
@@ -27,6 +28,15 @@ const customRussianMessages: TranslationMessages = {
                 group: "Группа",
                 role: "Роль",
                 blocked: "Заблокирован",
+                description: "Комментарий"
+
+            }
+        },
+        groups: {
+            name: "Группы",
+            edit_title: "Редактирование группы",
+            fields: {
+                name: "Наименование",
                 description: "Комментарий"
 
             }
