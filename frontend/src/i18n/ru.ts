@@ -13,10 +13,10 @@ const customRussianMessages: TranslationMessages = {
         }
     },
     resources: {
-
         commands: {
             users_name: "Пользователи",
-            groups_name: "Группы"
+            groups_name: "Группы",
+            access_name: "Доступы"
         },
         users: {
             name: "Пользователи",
@@ -39,6 +39,19 @@ const customRussianMessages: TranslationMessages = {
                 name: "Наименование",
                 description: "Комментарий"
 
+            }
+        },
+        accesses:{
+            name: "Управление доступом",
+            add_title: "Добавить доступ",
+            edit_title: "Изменить",           
+            fields: {
+                name: "Наименование",
+                owner_id: "Пользователь",
+                resource_type: "Тип ресурса",
+                resource_name: "Имя репозитория",
+                action:"Вид операции",
+                disabled:"Отклюен"
             }
         }
     },

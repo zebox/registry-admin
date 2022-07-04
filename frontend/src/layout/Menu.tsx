@@ -11,7 +11,7 @@ import {
 
 import users from '../users';
 import groups from '../groups';
-
+import access from '../access';
 
 const Menu = ({ dense = false }: MenuProps) => {
     
@@ -48,6 +48,15 @@ const Menu = ({ dense = false }: MenuProps) => {
                         smart_count: 2,
                     })}
                     leftIcon={<groups.icon />}
+                    dense={dense}
+                />
+                 <MenuItemLink
+                    to="/access"
+                    state={{ _scrollToTop: true }}
+                    primaryText={translate(`resources.commands.access_name`, {
+                        smart_count: 2,
+                    })}
+                    leftIcon={<access.icon />}
                     dense={dense}
                 />
         </Box>

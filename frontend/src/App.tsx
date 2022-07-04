@@ -16,6 +16,7 @@ import dataProvider from './providers/dataProvider';
 
 import users from './users';
 import groups from './groups';
+import access from './access';
 
 const history = createBrowserHistory();
 const i18nProvider = polyglotI18nProvider(locale => {
@@ -49,6 +50,7 @@ function App() {
       </CustomRoutes>
       <Resource name="users" {...users} />
       <Resource name="groups" {...groups} />
+      <Resource name="access" {...access} />
     </Admin>
   );
 }

@@ -284,10 +284,9 @@ func (s *Server) routes() chi.Router {
 				// operation create/update/delete with Access items allow for admins only
 				routeAccess.Group(func(routeAdminAccess chi.Router) {
 					routeAdminAccess.Use(authMiddleware.RBAC("admin"))
-
-					routeAdminAccess.Post("/{id}", ah.accessAddCtrl)
+					routeAdminAccess.Post("/", ah.accessAddCtrl)
 					routeAdminAccess.Put("/{id}", ah.accessUpdateCtrl)
-					routeAdminAccess.Delete("/", ah.accessDeleteCtrl)
+					routeAdminAccess.Delete("/{id}", ah.accessDeleteCtrl)
 				})
 			})
 

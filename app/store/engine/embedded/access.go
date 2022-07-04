@@ -109,6 +109,7 @@ func (e *Embedded) FindAccesses(ctx context.Context, filter engine.QueryFilter) 
 	defer func() {
 		_ = rows.Close()
 	}()
+	accesses.Data = []interface{}{}
 
 	if accesses.Total = e.getTotalRecordsExcludeRange(accessTable, filter, []string{"owner_id", "resource_name"}); accesses.Total == 0 {
 		return accesses, nil // may be error handler catch

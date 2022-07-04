@@ -8,8 +8,9 @@ import {
     EditButton,
     DeleteButton,
     SelectInput,
-    TextInput
-   
+    TextInput,
+    ReferenceField
+
 } from 'react-admin';
 
 
@@ -18,7 +19,7 @@ interface IRoleList {
     name: string;
 }
 
-export const RoleList: Array<IRoleList>=[
+export const RoleList: Array<IRoleList> = [
     { id: 'user', name: 'User' },
     { id: 'manager', name: 'Manager' },
     { id: 'admin', name: 'Admin' }
@@ -28,10 +29,10 @@ export const RoleList: Array<IRoleList>=[
 const userFilters = [
     <TextInput source="q" label="Search" alwaysOn />,
     <SelectInput
-    source="role"
-    defaultValue={"user"}
-    emptyValue={null}
-    choices={RoleList} />
+        source="role"
+        defaultValue={"user"}
+        emptyValue={null}
+        choices={RoleList} />
 ];
 
 
@@ -42,13 +43,16 @@ const UserList = () => (
         filters={userFilters}
     >
         <Datagrid bulkActionButtons={false}>
-                <TextField source="id" />
-                <TextField source="login" />
+            <TextField source="id" />
+            <TextField source="login" />
+            <TextField source="name" />
+            <ReferenceField source="group" reference="groups">
                 <TextField source="name" />
-                <TextField source="role" />
-                <BooleanField source="blocked" />
-                <EditButton />
-                <DeleteButton />
+            </ReferenceField>
+            <TextField source="role" />
+            <BooleanField source="blocked" />
+            <EditButton />
+            <DeleteButton />
         </Datagrid>
     </List>
 );

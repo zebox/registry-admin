@@ -3,11 +3,11 @@ import GroupList from './GroupList';
 import GroupEdit from './GroupEdit';
 import GroupCreate from './GroupCreate';
 
-const users = {
+const groups = {
     list: GroupList,
     edit: GroupEdit,
     create:GroupCreate,
     icon: GroupIcon
 };
 
-export default users;
+export default groups;

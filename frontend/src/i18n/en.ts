@@ -13,13 +13,14 @@ const customEnglishMessages: TranslationMessages = {
         }
     },
     resources: {
-
         commands: {
             users_name: "Users",
-            groups_name: "Groups"
+            groups_name: "Groups",
+            access_name: "Accesses"
         },
         users: {
             name: "Users",
+            add_title: "Add new user",
             edit_title: "Edit user entry",
             fields: {
                 login: "Login",
@@ -34,11 +35,25 @@ const customEnglishMessages: TranslationMessages = {
         },
         groups: {
             name: "Groups",
+            add_title: "Add new group",
             edit_title: "Edit group",
             fields: {
                 name: "Username",
                 description: "Description"
 
+            }
+        },
+        accesses:{
+            name: "Accesses",
+            add_title: "Add new access",
+            edit_title: "Edit access",           
+            fields: {
+                name: "Access name",
+                owner_id: "User",
+                resource_type: "Resource type",
+                resource_name: "Repositry name",
+                action:"Allowed action",
+                disabled:"Disabled"
             }
         }
     }

@@ -11,8 +11,8 @@ const UserEdit = () => {
                 <TextInput label={translate('resources.users.fields.login')} source="login" disabled />
                 <TextInput label={translate('resources.users.fields.name')} source="name" autoComplete='off' />
                 <PasswordInput label={translate('resources.users.fields.password')} source="password" autoComplete="new-password" />
-                <ReferenceInput label={translate('resources.users.fields.group')} source="group" reference="groups">
-                    <SelectInput emptyValue={null} emptyText='' optionText="name" optionValue="id" />
+                <ReferenceInput  source="group" reference="groups">
+                    <SelectInput label={translate('resources.users.fields.group')} emptyValue={null} emptyText='' optionText="name" optionValue="id" />
                 </ReferenceInput >
                 <SelectInput
                     label={translate('resources.users.fields.role')}
