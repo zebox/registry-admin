@@ -6,7 +6,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/docker/libtrust"
 	"github.com/golang-jwt/jwt"
@@ -249,18 +248,6 @@ func (mr *MockRegistry) authCheck(req *http.Request) bool {
 	return false
 }
 
-func (mr *MockRegistry) parseHeaderForJwt(authToken string) (*jwt.Token, jwt.MapClaims, error) {
-
-	claims := jwt.MapClaims{}
-	token, err := jwt.ParseWithClaims(authToken, claims, func(token *jwt.Token) (interface{}, error) {
-		if mr.publicKey == nil {
-			return nil, errors.New("wrong public key")
-		}
-		return mr.publicKey.CryptoPublicKey(), nil
-	})
-	return token, claims, err
-
-}
 func (mr *MockRegistry) apiVersionCheck(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("content-type", "application/json; charset=utf-8")
 	w.Header().Set("docker-distribution-api-version", "registry/2.0")

@@ -306,14 +306,11 @@ func (r *Registry) Catalog(ctx context.Context, n, last string) (Repositories, e
 		return repos, err
 	}
 
-	// pagination request
-	if n != "" {
-		nextLink, err := getPaginationNextLink(resp)
-		if err != nil {
-			return repos, err
-		}
-		repos.NextLink = nextLink
+	nextLink, err := getPaginationNextLink(resp)
+	if err != nil {
+		return repos, err
 	}
+	repos.NextLink = nextLink
 
 	return repos, nil
 }

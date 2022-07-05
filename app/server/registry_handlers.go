@@ -102,6 +102,12 @@ func (rh *registryHandlers) health(w http.ResponseWriter, r *http.Request) {
 
 // catalogList returns list of repositories entry
 func (rh *registryHandlers) catalogList(w http.ResponseWriter, r *http.Request) {
+	/*filter, err := engine.FilterFromUrlExtractor(r.URL)
+	if err != nil {
+		SendErrorJSON(w, r, rh.l, http.StatusInternalServerError, err, "failed to parse URL parameters for make query filter")
+		return
+	}*/
+
 	repoList, err := rh.registryService.Catalog(r.Context(), "", "")
 	if err != nil {
 		SendErrorJSON(w, r, rh.l, http.StatusInternalServerError, err, "registry service request failed")

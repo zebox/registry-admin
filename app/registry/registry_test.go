@@ -115,7 +115,7 @@ func TestRegistry_Catalog(t *testing.T) {
 	require.NoError(t, err)
 
 	repos, err := r.Catalog(context.Background(), "", "")
-	assert.NoError(t, err)
+	assert.Equal(t, ErrNoMorePages, err)
 	assert.Equal(t, reposNumbers, len(repos.List))
 
 	// test with pagination
