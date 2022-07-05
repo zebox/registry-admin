@@ -158,7 +158,7 @@ func TestEmbedded_FindAccesses(t *testing.T) {
 		accesses, err = db.FindAccesses(ctx, filter)
 		require.NoError(t, err)
 		assert.Equal(t, int64(0), accesses.Total)
-		assert.Nil(t, accesses.Data)
+		assert.Equal(t, 0, len(accesses.Data))
 	}
 
 	{ // test filter query
