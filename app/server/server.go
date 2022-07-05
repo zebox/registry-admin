@@ -295,6 +295,7 @@ func (s *Server) routes() chi.Router {
 			rootRoute.Route("/registry", func(routeRegistry chi.Router) {
 
 				routeRegistry.Get("/auth", rh.tokenAuth)
+				routeRegistry.HandleFunc("/notification", rh.health)
 
 				routeRegistry.Group(func(registryApiUserAccess chi.Router) {
 					registryApiUserAccess.Use(authMiddleware.Auth, middleware.NoCache)
