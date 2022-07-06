@@ -1,0 +1,48 @@
+version: 0.1
+
+log:
+  accesslog:
+    disabled: true
+  level: debug
+  formatter: text
+  fields:
+    service: registry
+
+storage:
+  filesystem:
+    rootdirectory: /var/lib/registry
+    maxthreads: 100
+
+http:
+  addr: ":5000"
+  net: tcp
+  tls:
+    certificate: /certs/cert.crt
+    key: /certs/cert.key
+  
+auth:
+  token:
+    realm: http://192.168.12.58:80/api/v1/registry/auth
+    service: container_registry
+    issuer: registry_token_issuer
+    rootcertbundle: /certs/cert.crt
+
+notifications:
+  events:
+    includereferences: true
+  endpoints:
+    - name: ra-listener
+      disabled: false
+      url: http://192.168.12.58:80/api/v1/registry/events
+      headers: 
+        Authorization: [Basic Y2xpZW50MDg6Y0t1cnNrQWdybzA4]  
+      timeout: 1s
+      threshold: 5
+      backoff: 3s
+      ignoredmediatypes:
+        - application/octet-stream
+      ignore:
+        mediatypes:
+           - application/octet-stream
+        actions:
+           - pull

@@ -3,24 +3,7 @@ registry:
   image: registry:2
   ports:
     - 50554:5000
-  environment:
-    REGISTRY_LOG_LEVEL: debug
-    REGISTRY_LOG_FORMATTER: text
-    REGISTRY_LOG_FIELDS_SERVICE: registry
-    REGISTRY_HTTP_TLS_CERTIFICATE: /certs/cert.crt
-    REGISTRY_HTTP_TLS_KEY: /certs/cert.key
-    REGISTRY_AUTH_TOKEN_REALM: http://192.168.12.58:80/api/v1/registry/auth
-    REGISTRY_AUTH_TOKEN_SERVICE: container_registry
-    REGISTRY_AUTH_TOKEN_ISSUER: registry_token_issuer
-    REGISTRY_AUTH_TOKEN_ROOTCERTBUNDLE: /certs/cert.crt
-    #REGISTRY_NOTIFICATIONS_EVENTS_INCLUDEREFERENCES: true
-    REGISTRY_NOTIFICATIONS_ENDPOINTS: "- name: notifications-test\n  url: http://192.168.12.58:80/api/v1/registry/notification\n  timeout: 5s\n  threshold: 8\n  backoff: 10s"
-    #REGISTRY_NOTIFICATIONS_ENDPOINTS_IGNOREMEDIATYPES: application/octet-stream
-    #REGISTRY_NOTIFICATIONS_ENDPOINTS_IGNORE_MEDIATYPES: application/octet-stream
-    #REGISTRY_NOTIFICATIONS_ENDPOINTS_IGNORE_ACTIONS: pull
-    #REGISTRY_AUTH_HTPASSWD_PATH: /auth/htpasswd
-    #REGISTRY_AUTH_HTPASSWD_REALM: Registry Realm
   volumes:
     - ./data:/var/lib/registry
     - ./certs:/certs
-
+    - ./registry_config.yml:/etc/docker/registry/config.yml
