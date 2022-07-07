@@ -295,10 +295,10 @@ func (s *Server) routes() chi.Router {
 			rootRoute.Route("/registry", func(routeRegistry chi.Router) {
 
 				routeRegistry.Get("/auth", rh.tokenAuth)
-				routeRegistry.HandleFunc("/notification", rh.health)
 
 				routeRegistry.Group(func(registryApiUserAccess chi.Router) {
 					registryApiUserAccess.Use(authMiddleware.Auth, middleware.NoCache)
+					routeRegistry.Post("/events", rh.events)
 					registryApiUserAccess.Get("/health", rh.health)
 				})
 
@@ -306,6 +306,7 @@ func (s *Server) routes() chi.Router {
 				routeRegistry.Group(func(registryApiAccess chi.Router) {
 					registryApiAccess.Use(authMiddleware.Auth, middleware.NoCache)
 					registryApiAccess.Use(authMiddleware.RBAC("admin", "manager"))
+					registryApiAccess.Delete("/delete", rh.delete)
 					registryApiAccess.Get("/catalog", rh.catalogList)
 
 				})

@@ -18,6 +18,8 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/jessevdk/go-flags v1.4.0
 	github.com/mattn/go-sqlite3 v1.14.10
+	github.com/opencontainers/go-digest v1.0.0 // indirect
+	github.com/opencontainers/image-spec v1.0.2 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/shirou/gopsutil v2.21.11+incompatible
 	github.com/stretchr/testify v1.7.0

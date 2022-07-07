@@ -2,6 +2,8 @@ package server
 
 import (
 	"context"
+	"encoding/json"
+	"github.com/docker/distribution/notifications"
 	"github.com/go-pkgz/rest"
 	"github.com/zebox/registry-admin/app/registry"
 	"github.com/zebox/registry-admin/app/store"
@@ -98,6 +100,44 @@ func (rh *registryHandlers) health(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	rest.RenderJSON(w, responseMessage{Message: "ok"})
+}
+
+// events handle registry event and pass them to a relevant service which will processing an events.
+// In particular this service should has information about all repositories in registry, but registry hasn't API for get repository by name
+// and return repository entries with set up to 100 items per each request.
+func (rh *registryHandlers) events(w http.ResponseWriter, r *http.Request) {
+
+	var eventData notifications.Envelope
+
+	if err := json.NewDecoder(r.Body).Decode(&eventData); err != nil {
+		SendErrorJSON(w, r, rh.l, http.StatusInternalServerError, err, "failed to parse notification event")
+		return
+	}
+	defer func() { _ = r.Body.Close() }()
+
+	// rh.registryService.DeleteTag()
+	/*digest := eventData.Events[0].Target.Descriptor.Digest
+	//tag := eventData.Events[0].Target.Tag
+
+	repo := eventData.Events[0].Target.Repository
+	if err := rh.registryService.DeleteTag(r.Context(), repo, digest.String()); err != nil {
+		rh.l.Logf("%v", err)
+	}*/
+	rh.l.Logf("%s", eventData.Events[0].Action)
+	rest.RenderJSON(w, responseMessage{Message: "ok"})
+}
+
+func (rh *registryHandlers) delete(w http.ResponseWriter, r *http.Request) {
+	t := r.URL.Query()["tag"]
+	n := r.URL.Query()["name"]
+	// rh.registryService.DeleteTag()
+	/*digest := eventData.Events[0].Target.Descriptor.Digest
+	//tag := eventData.Events[0].Target.Tag
+
+	repo := eventData.Events[0].Target.Repository*/
+	if err := rh.registryService.DeleteTag(r.Context(), n[0], t[0]); err != nil {
+		rh.l.Logf("%v", err)
+	}
 }
 
 // catalogList returns list of repositories entry
