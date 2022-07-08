@@ -410,13 +410,21 @@ func prepareUserMock(t *testing.T) *engine.InterfaceMock {
 			result := engine.ListResponse{}
 
 			for _, user := range users {
-				if len(filter.IDs) > 0 {
-					for _, id := range filter.IDs {
-						if id == user.ID {
-							result.Total += 1
-							result.Data = append(result.Data, user)
+				if filter.Filters != nil {
+					if ids, ok := filter.Filters["ids"]; ok {
+
+						for _, id := range ids.([]interface{}) {
+							switch v := id.(type) {
+							case float64:
+								if int64(v) == user.ID {
+									result.Total += 1
+									result.Data = append(result.Data, user)
+								}
+							}
+
 						}
 					}
+
 				}
 
 				if val, ok := filter.Filters["login"]; ok && val.(string) == user.Login {

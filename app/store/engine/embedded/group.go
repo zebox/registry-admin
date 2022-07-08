@@ -89,7 +89,7 @@ func (e *Embedded) FindGroups(ctx context.Context, filter engine.QueryFilter) (g
 
 	rows, err = stmt.QueryContext(ctx)
 	if err != nil {
-		return groups, errors.Wrap(err, "failed to get users list")
+		return groups, errors.Wrap(err, "failed to get groups list")
 	}
 	defer func() {
 		_ = rows.Close()

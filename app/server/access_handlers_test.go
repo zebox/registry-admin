@@ -261,12 +261,19 @@ func prepareAccessMock() engine.Interface {
 			testListResponse := engine.ListResponse{}
 
 			// fetch by ids
-			if len(filter.IDs) > 0 {
-				for _, id := range filter.IDs {
-					if val, ok := testAccessStorage[id]; ok {
-						testListResponse.Total++
-						testListResponse.Data = append(testListResponse.Data, val)
+			if filter.Filters != nil {
+				if val, ok := filter.Filters["ids"]; ok {
+
+					for _, id := range val.([]interface{}) {
+						switch v := id.(type) {
+						case float64:
+							if val, ok := testAccessStorage[int64(v)]; ok {
+								testListResponse.Total++
+								testListResponse.Data = append(testListResponse.Data, val)
+							}
+						}
 					}
+
 				}
 				if testListResponse.Total == 0 {
 					return testListResponse, errors.New("access records not found")

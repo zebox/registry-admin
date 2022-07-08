@@ -443,11 +443,17 @@ func prepareGroupMock() engine.Interface {
 			testListResponse := engine.ListResponse{}
 
 			// fetch by ids
-			if len(filter.IDs) > 0 {
-				for _, id := range filter.IDs {
-					if val, ok := testGroupStorage[id]; ok {
-						testListResponse.Total++
-						testListResponse.Data = append(testListResponse.Data, val)
+			if filter.Filters != nil {
+				if ids, ok := filter.Filters["ids"]; ok {
+					for _, id := range ids.([]interface{}) {
+						switch v := id.(type) {
+						case float64:
+							if val, ok := testGroupStorage[int64(v)]; ok {
+								testListResponse.Total++
+								testListResponse.Data = append(testListResponse.Data, val)
+							}
+						}
+
 					}
 				}
 				if testListResponse.Total == 0 {

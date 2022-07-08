@@ -277,6 +277,7 @@ func TestEmbedded_UpdateUser(t *testing.T) {
 	user.Password = ""
 	assert.NoError(t, db.UpdateUser(ctx, *user))
 	userData, err = db.GetUser(ctx, user.ID)
+	require.NoError(t, err)
 	assert.True(t, store.ComparePassword(userData.Password, "new_user_password"))
 	assert.Equal(t, "updated_user_name", userData.Name)
 

@@ -34,6 +34,10 @@ func TestSQLite_Connect(t *testing.T) {
 	assert.NoError(t, err)
 	assert.True(t, isExist)
 
+	isExist, err = db.isTableExist(ctx, repositoriesTable)
+	assert.NoError(t, err)
+	assert.True(t, isExist)
+
 	assert.NoError(t, db.Close(ctx))
 	assert.NoError(t, os.Remove(dbPath))
 
@@ -47,11 +51,12 @@ func TestSQlite_initTables(t *testing.T) {
 
 	var err error
 	db.db, err = sql.Open("sqlite3", db.Path)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	assert.NoError(t, db.initUserTable(ctx))
 	assert.NoError(t, db.initGroupsTable(ctx))
 	assert.NoError(t, db.initAccessTable(ctx))
+	assert.NoError(t, db.initRepositoriesTable(ctx))
 
 	err = db.initTables(ctx)
 	assert.Error(t, err)

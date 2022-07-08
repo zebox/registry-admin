@@ -15,9 +15,10 @@ import (
 )
 
 const (
-	usersTable  = "users"
-	groupsTable = "groups"
-	accessTable = "access"
+	usersTable        = "users"
+	groupsTable       = "groups"
+	accessTable       = "access"
+	repositoriesTable = "repositories"
 )
 
 var (
@@ -68,6 +69,10 @@ func (e *Embedded) initTables(ctx context.Context) (err error) {
 
 	if err = e.initAccessTable(ctx); err != nil {
 		err = multierror.Append(err, errors.Errorf("failed to create %s table", accessTable))
+	}
+
+	if err = e.initRepositoriesTable(ctx); err != nil {
+		err = multierror.Append(err, errors.Errorf("failed to create %s table", repositoriesTable))
 	}
 
 	return err
@@ -180,6 +185,27 @@ func (e *Embedded) initAccessTable(ctx context.Context) (err error) {
 	_, err = e.db.Exec(sqlText)
 	if err != nil {
 		return multierror.Append(err, errors.Errorf("failed to create %s table", accessTable))
+	}
+	return nil
+}
+
+func (e *Embedded) initRepositoriesTable(ctx context.Context) (err error) {
+	if exist, err := e.isTableExist(ctx, repositoriesTable); err != nil || exist {
+		return ErrTableAlreadyExist
+	}
+
+	sqlText := fmt.Sprintf(`CREATE TABLE %s(
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		repository_name INTEGER NOT NULL CHECK(repository_name <> ''),
+		tag TEXT NOT NULL CHECK(tag <> ''),
+		digest TEXT NOT NULL CHECK(digest <> ''),
+		size INTEGER,
+		raw BLOB,
+		UNIQUE(repository_name,tag))`, repositoriesTable)
+
+	_, err = e.db.Exec(sqlText)
+	if err != nil {
+		return multierror.Append(err, errors.Errorf("failed to create %s table", repositoriesTable))
 	}
 	return nil
 }
