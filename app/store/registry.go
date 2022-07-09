@@ -14,5 +14,17 @@ type RegistryEntry struct {
 	Tag            string          `json:"tag"`             // Tag provides the tag
 	Digest         string          `json:"digest"`          // Digest uniquely identifies the content. A byte stream can be verified against this digest.
 	Size           int64           `json:"size"`            // Size in bytes of content.
+	PullCounter    int64           `json:"pull_counter"`    // image pull counter
+	Timestamp      int64           `json:"timestamp"`       // last modification date/time
 	Raw            json.RawMessage `json:"raw,omitempty"`   // Raw is a whole notify event data in json
+}
+
+// RegistryDbContract is main contract for repository entry model save in a storage
+type RegistryDbFields struct {
+	ID, RepositoryNameField, TagField, DigestNameField, SizeNameField, PullCounterField, TimestampField, RawField, TableName string
+}
+
+// RegistryDbContract return fields names
+func RegistryDbContract() RegistryDbFields {
+	return RegistryDbFields{"id", "repository_name", "tag", "digest", "size", "pull_counter", "timestamp", "raw", "repositories"}
 }

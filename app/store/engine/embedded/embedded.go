@@ -200,6 +200,8 @@ func (e *Embedded) initRepositoriesTable(ctx context.Context) (err error) {
 		tag TEXT NOT NULL CHECK(tag <> ''),
 		digest TEXT NOT NULL CHECK(digest <> ''),
 		size INTEGER,
+		pull_counter INTEGER,
+		timestamp INTEGER,
 		raw BLOB,
 		UNIQUE(repository_name,tag))`, repositoriesTable)
 

@@ -9,6 +9,7 @@ import (
 	"github.com/zebox/registry-admin/app/store/engine"
 	"sync"
 	"testing"
+	"time"
 )
 
 func TestEmbedded_CreateRepository(t *testing.T) {
@@ -22,6 +23,8 @@ func TestEmbedded_CreateRepository(t *testing.T) {
 		Tag:            "test_tag",
 		Digest:         "sha256:fea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7cf",
 		Size:           708,
+		PullCounter:    1,
+		Timestamp:      time.Now().Unix(),
 		Raw:            []byte(`{"some":"json"}`),
 	}
 
@@ -62,6 +65,8 @@ func TestEmbedded_GetRepository(t *testing.T) {
 		Tag:            "test_tag",
 		Digest:         "sha256:fea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7cf",
 		Size:           708,
+		PullCounter:    1,
+		Timestamp:      time.Now().Unix(),
 		Raw:            []byte(`{"some":"json"}`),
 	}
 
@@ -101,6 +106,8 @@ func TestEmbedded_FindRepositories(t *testing.T) {
 			Tag:            "test_tag_1",
 			Digest:         "sha256:0ea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7cf",
 			Size:           708,
+			PullCounter:    1,
+			Timestamp:      time.Now().Unix(),
 			Raw:            []byte(`{"some":"json_1"}`),
 		},
 		{
@@ -108,6 +115,8 @@ func TestEmbedded_FindRepositories(t *testing.T) {
 			Tag:            "test_tag_2",
 			Digest:         "sha256:1ea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7cf",
 			Size:           709,
+			PullCounter:    1,
+			Timestamp:      time.Now().Unix(),
 			Raw:            []byte(`{"some":"json_2"}`),
 		},
 		{
@@ -115,6 +124,8 @@ func TestEmbedded_FindRepositories(t *testing.T) {
 			Tag:            "test_tag_3",
 			Digest:         "sha256:3ea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7cf",
 			Size:           710,
+			PullCounter:    1,
+			Timestamp:      time.Now().Unix(),
 			Raw:            []byte(`{"some":"json_3"}`),
 		},
 		{
@@ -122,6 +133,8 @@ func TestEmbedded_FindRepositories(t *testing.T) {
 			Tag:            "test_tag_4",
 			Digest:         "sha256:4ea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7cf",
 			Size:           711,
+			PullCounter:    1,
+			Timestamp:      time.Now().Unix(),
 			Raw:            []byte(`{"some":"json_4"}`),
 		},
 	}
@@ -154,7 +167,7 @@ func TestEmbedded_FindRepositories(t *testing.T) {
 	// fetch records start with ba* and has disabled field is false
 	filter = engine.QueryFilter{
 		Range:   [2]int64{0, 2},
-		Filters: map[string]interface{}{"repository_name": "aHello_test_1"},
+		Filters: map[string]interface{}{store.RegistryDbContract().RepositoryNameField: "aHello_test_1"},
 		Sort:    []string{"id", "asc"},
 	}
 
@@ -166,7 +179,7 @@ func TestEmbedded_FindRepositories(t *testing.T) {
 	// fetch with no result
 	filter = engine.QueryFilter{
 		Range:   [2]int64{0, 2},
-		Filters: map[string]interface{}{"repository_name": "unknown_repo_name"},
+		Filters: map[string]interface{}{store.RegistryDbContract().RepositoryNameField: "unknown_repo_name"},
 		Sort:    []string{"id", "asc"},
 	}
 
@@ -194,6 +207,136 @@ func TestEmbedded_FindRepositories(t *testing.T) {
 	require.NoError(t, badConn.Close(ctx))
 	_, err = badConn.FindRepositories(ctx, engine.QueryFilter{})
 	assert.Error(t, err)
+
+	ctxCancel()
+	wg.Wait()
+}
+
+func TestEmbedded_UpdateRepository(t *testing.T) {
+	ctx, ctxCancel := context.WithCancel(context.Background())
+	var wg = new(sync.WaitGroup)
+	db := prepareTestDB(ctx, t, wg) // defined mock store
+
+	entries := []store.RegistryEntry{
+		{
+			RepositoryName: "aHello_test_1",
+			Tag:            "test_tag_1",
+			Digest:         "sha256:0ea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7cf",
+			Size:           708,
+			PullCounter:    1,
+			Timestamp:      time.Now().Unix(),
+			Raw:            []byte(`{"some":"json_1"}`),
+		},
+		{
+			RepositoryName: "aHello_test_2",
+			Tag:            "test_tag_2",
+			Digest:         "sha256:1ea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7cf",
+			Size:           709,
+			PullCounter:    1,
+			Timestamp:      time.Now().Unix(),
+			Raw:            []byte(`{"some":"json_2"}`),
+		},
+		{
+			RepositoryName: "bHello_test_3",
+			Tag:            "test_tag_3",
+			Digest:         "sha256:3ea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7cf",
+			Size:           710,
+			PullCounter:    1,
+			Timestamp:      time.Now().Unix(),
+			Raw:            []byte(`{"some":"json_3"}`),
+		},
+		{
+			RepositoryName: "bHello_test_4",
+			Tag:            "test_tag_4",
+			Digest:         "sha256:4ea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7cf",
+			Size:           711,
+			PullCounter:    1,
+			Timestamp:      time.Now().Unix(),
+			Raw:            []byte(`{"some":"json_4"}`),
+		},
+	}
+
+	for _, entry := range entries {
+		tmpGr := entry
+		err := db.CreateRepository(ctx, &tmpGr)
+		entry.ID = tmpGr.ID
+		require.NoError(t, err)
+	}
+
+	// test for update a one filed with on conditions
+	conditionClause := map[string]interface{}{store.RegistryDbContract().RepositoryNameField: "aHello_test_2"}
+	fieldForUpdate := map[string]interface{}{store.RegistryDbContract().TagField: "test_tag_222"}
+	err := db.UpdateRepository(ctx, conditionClause, fieldForUpdate)
+	require.NoError(t, err)
+
+	updatedEntry, errGet := db.GetRepository(ctx, 2)
+	require.NoError(t, errGet)
+	assert.Equal(t, "test_tag_222", updatedEntry.Tag)
+
+	timestamp := updatedEntry.Timestamp + 100
+	conditionClause = map[string]interface{}{store.RegistryDbContract().RepositoryNameField: "aHello_test_2", store.RegistryDbContract().SizeNameField: 709}
+	fieldForUpdate = map[string]interface{}{store.RegistryDbContract().TagField: "test_tag_0222", store.RegistryDbContract().TimestampField: timestamp}
+	err = db.UpdateRepository(ctx, conditionClause, fieldForUpdate)
+	require.NoError(t, err)
+
+	updatedEntry, errGet = db.GetRepository(ctx, 2)
+	require.NoError(t, errGet)
+	assert.Equal(t, "test_tag_0222", updatedEntry.Tag)
+	assert.Equal(t, timestamp, updatedEntry.Timestamp)
+
+	// try to update not existed repository
+	conditionClause = map[string]interface{}{store.RegistryDbContract().RepositoryNameField: "xyz"}
+	fieldForUpdate = map[string]interface{}{store.RegistryDbContract().TagField: "test_tag_000"}
+	assert.Error(t, db.UpdateRepository(ctx, conditionClause, fieldForUpdate))
+
+	// try with  bad or closed connection
+	badConn := Embedded{}
+	err = badConn.Connect(ctx)
+	require.NoError(t, err)
+	require.NoError(t, badConn.Close(ctx))
+	assert.Error(t, badConn.UpdateRepository(ctx, conditionClause, fieldForUpdate))
+
+	ctxCancel()
+	wg.Wait()
+}
+
+func TestEmbedded_DeleteRepository(t *testing.T) {
+
+	ctx, ctxCancel := context.WithCancel(context.Background())
+	var wg = new(sync.WaitGroup)
+	db := prepareTestDB(ctx, t, wg) // defined mock store
+
+	testEntry := store.RegistryEntry{
+		RepositoryName: "hello_test",
+		Tag:            "test_tag",
+		Digest:         "sha256:fea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7cf",
+		Size:           708,
+		PullCounter:    1,
+		Timestamp:      time.Now().Unix(),
+		Raw:            []byte(`{"some":"json"}`),
+	}
+
+	err := db.CreateRepository(ctx, &testEntry)
+	assert.NoError(t, err)
+	assert.Greater(t, testEntry.ID, int64(0))
+
+	err = db.DeleteRepository(ctx, store.RegistryDbContract().RepositoryNameField, "hello_test")
+	assert.NoError(t, err)
+
+	_, err = db.GetRepository(ctx, testEntry.ID)
+	require.Error(t, err)
+
+	err = db.DeleteRepository(ctx, store.RegistryDbContract().RepositoryNameField, "hello_test")
+	assert.Error(t, err)
+
+	err = db.DeleteRepository(ctx, store.RegistryDbContract().RepositoryNameField, nil)
+	assert.Error(t, err)
+
+	badConn := Embedded{}
+	err = badConn.Connect(ctx)
+	require.NoError(t, err)
+	require.NoError(t, badConn.Close(ctx))
+	assert.Error(t, badConn.DeleteRepository(ctx, store.RegistryDbContract().RepositoryNameField, "hello_test"))
 
 	ctxCancel()
 	wg.Wait()
