@@ -142,7 +142,7 @@ func (e *Embedded) UpdateRepository(ctx context.Context, conditionClause, data m
 
 // DeleteRepository delete repository entry by ID
 func (e *Embedded) DeleteRepository(ctx context.Context, key string, id interface{}) (err error) {
-	deleteSql := fmt.Sprintf("DELETE FROM %s WHERE %s=?", store.RegistryDbContract().TableName, key) //nolint:gosec
+	deleteSql := fmt.Sprintf("DELETE FROM %s WHERE %s=?", repositoriesTable, key) //nolint:gosec
 	res, err := e.db.ExecContext(ctx, deleteSql, id)
 	if err != nil {
 		return errors.Wrapf(err, "failed execute query for user delete")

@@ -19,12 +19,15 @@ type RegistryEntry struct {
 	Raw            json.RawMessage `json:"raw,omitempty"`   // Raw is a whole notify event data in json
 }
 
-// RegistryDbContract is main contract for repository entry model save in a storage
-type RegistryDbFields struct {
-	ID, RepositoryNameField, TagField, DigestNameField, SizeNameField, PullCounterField, TimestampField, RawField, TableName string
-}
-
-// RegistryDbContract return fields names
-func RegistryDbContract() RegistryDbFields {
-	return RegistryDbFields{"id", "repository_name", "tag", "digest", "size", "pull_counter", "timestamp", "raw", "repositories"}
-}
+// Contract for storage for a registry data
+const (
+	RegistryIdField             = "id"
+	RegistryRepositoryNameField = "repository_name"
+	RegistryTagField            = "tag"
+	RegistryDigestNameField     = "digest"
+	RegistrySizeNameField       = "size"
+	RegistryPullCounterField    = "pull_counter"
+	RegistryTimestampField      = "timestamp"
+	RegistryRawField            = "raw"
+	RegistryTableName           = "repositories"
+)

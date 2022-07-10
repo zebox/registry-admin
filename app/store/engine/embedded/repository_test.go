@@ -167,7 +167,7 @@ func TestEmbedded_FindRepositories(t *testing.T) {
 	// fetch records start with ba* and has disabled field is false
 	filter = engine.QueryFilter{
 		Range:   [2]int64{0, 2},
-		Filters: map[string]interface{}{store.RegistryDbContract().RepositoryNameField: "aHello_test_1"},
+		Filters: map[string]interface{}{store.RegistryRepositoryNameField: "aHello_test_1"},
 		Sort:    []string{"id", "asc"},
 	}
 
@@ -179,7 +179,7 @@ func TestEmbedded_FindRepositories(t *testing.T) {
 	// fetch with no result
 	filter = engine.QueryFilter{
 		Range:   [2]int64{0, 2},
-		Filters: map[string]interface{}{store.RegistryDbContract().RepositoryNameField: "unknown_repo_name"},
+		Filters: map[string]interface{}{store.RegistryRepositoryNameField: "unknown_repo_name"},
 		Sort:    []string{"id", "asc"},
 	}
 
@@ -264,8 +264,8 @@ func TestEmbedded_UpdateRepository(t *testing.T) {
 	}
 
 	// test for update a one filed with on conditions
-	conditionClause := map[string]interface{}{store.RegistryDbContract().RepositoryNameField: "aHello_test_2"}
-	fieldForUpdate := map[string]interface{}{store.RegistryDbContract().TagField: "test_tag_222"}
+	conditionClause := map[string]interface{}{store.RegistryRepositoryNameField: "aHello_test_2"}
+	fieldForUpdate := map[string]interface{}{store.RegistryTagField: "test_tag_222"}
 	err := db.UpdateRepository(ctx, conditionClause, fieldForUpdate)
 	require.NoError(t, err)
 
@@ -274,8 +274,8 @@ func TestEmbedded_UpdateRepository(t *testing.T) {
 	assert.Equal(t, "test_tag_222", updatedEntry.Tag)
 
 	timestamp := updatedEntry.Timestamp + 100
-	conditionClause = map[string]interface{}{store.RegistryDbContract().RepositoryNameField: "aHello_test_2", store.RegistryDbContract().SizeNameField: 709}
-	fieldForUpdate = map[string]interface{}{store.RegistryDbContract().TagField: "test_tag_0222", store.RegistryDbContract().TimestampField: timestamp}
+	conditionClause = map[string]interface{}{store.RegistryRepositoryNameField: "aHello_test_2", store.RegistrySizeNameField: 709}
+	fieldForUpdate = map[string]interface{}{store.RegistryTagField: "test_tag_0222", store.RegistryTimestampField: timestamp}
 	err = db.UpdateRepository(ctx, conditionClause, fieldForUpdate)
 	require.NoError(t, err)
 
@@ -285,8 +285,8 @@ func TestEmbedded_UpdateRepository(t *testing.T) {
 	assert.Equal(t, timestamp, updatedEntry.Timestamp)
 
 	// try to update not existed repository
-	conditionClause = map[string]interface{}{store.RegistryDbContract().RepositoryNameField: "xyz"}
-	fieldForUpdate = map[string]interface{}{store.RegistryDbContract().TagField: "test_tag_000"}
+	conditionClause = map[string]interface{}{store.RegistryRepositoryNameField: "xyz"}
+	fieldForUpdate = map[string]interface{}{store.RegistryTagField: "test_tag_000"}
 	assert.Error(t, db.UpdateRepository(ctx, conditionClause, fieldForUpdate))
 
 	// try with  bad or closed connection
@@ -320,23 +320,23 @@ func TestEmbedded_DeleteRepository(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Greater(t, testEntry.ID, int64(0))
 
-	err = db.DeleteRepository(ctx, store.RegistryDbContract().RepositoryNameField, "hello_test")
+	err = db.DeleteRepository(ctx, store.RegistryRepositoryNameField, "hello_test")
 	assert.NoError(t, err)
 
 	_, err = db.GetRepository(ctx, testEntry.ID)
 	require.Error(t, err)
 
-	err = db.DeleteRepository(ctx, store.RegistryDbContract().RepositoryNameField, "hello_test")
+	err = db.DeleteRepository(ctx, store.RegistryRepositoryNameField, "hello_test")
 	assert.Error(t, err)
 
-	err = db.DeleteRepository(ctx, store.RegistryDbContract().RepositoryNameField, nil)
+	err = db.DeleteRepository(ctx, store.RegistryRepositoryNameField, nil)
 	assert.Error(t, err)
 
 	badConn := Embedded{}
 	err = badConn.Connect(ctx)
 	require.NoError(t, err)
 	require.NoError(t, badConn.Close(ctx))
-	assert.Error(t, badConn.DeleteRepository(ctx, store.RegistryDbContract().RepositoryNameField, "hello_test"))
+	assert.Error(t, badConn.DeleteRepository(ctx, store.RegistryRepositoryNameField, "hello_test"))
 
 	ctxCancel()
 	wg.Wait()
