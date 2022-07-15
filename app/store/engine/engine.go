@@ -47,6 +47,13 @@ type Interface interface {
 	UpdateAccess(ctx context.Context, access store.Access) (err error)
 	DeleteAccess(ctx context.Context, id int64) (err error)
 
+	// Repositories manipulation methods
+	CreateRepository(ctx context.Context, entry *store.RegistryEntry) (err error)
+	GetRepository(ctx context.Context, entryID int64) (entry store.RegistryEntry, err error)
+	FindRepositories(ctx context.Context, filter QueryFilter) (entries ListResponse, err error)
+	UpdateRepository(ctx context.Context, conditionClause, data map[string]interface{}) (err error)
+	DeleteRepository(ctx context.Context, key string, id interface{})
+
 	// Misc storage function
 	Close(ctx context.Context) error
 }
