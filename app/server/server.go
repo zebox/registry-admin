@@ -7,6 +7,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/gorilla/handlers"
 	"github.com/zebox/registry-admin/app/registry"
+	"github.com/zebox/registry-admin/app/store/service"
 	"io"
 	"net/http"
 	"strconv"
@@ -53,7 +54,7 @@ type endpointsHandler struct {
 
 // registryInterface implement method for access data of a registry instance
 type registryInterface interface {
-
+	service.DataService
 	// Login is initials login step when docker login command call
 	Login(user store.User) (string, error)
 
