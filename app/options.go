@@ -27,12 +27,12 @@ type Options struct {
 	Registry RegistryGroup `group:"registry" namespace:"registry" env-namespace:"REGISTRY" json:"registry"`
 
 	Auth struct {
-		TokenSecret    string `long:"token-secret" env:"AUTH_TOKEN_SECRET" required:"true" description:"Main secret for auth token sign" json:"token_secret" `
-		HostName       string `long:"hostname" env:"AUTH_HOST_NAME" default:"localhost" description:"Main hostname of service" json:"host_name"`
-		IssuerName     string `long:"jwt-issuer" env:"AUTH_ISSUER_NAME" required:"true" default:"zebox" description:"Token issuer signature" json:"issuer_name"`
-		TokenDuration  string `long:"jwt-ttl" env:"AUTH_JWT_TTL" default:"1h" description:"Define JWT expired timeout" json:"jwt_ttl"`
-		CookieDuration string `long:"cookie-ttl" env:"AUTH_COOKIE_TTL" default:"24h" description:"Define cookies expired timeout" json:"cookie_ttl"`
-	} `group:"auth" namespace:"auth" env-namespace:"AUTH" json:"authenticate"`
+		TokenSecret    string `long:"token-secret" env:"TOKEN_SECRET" required:"true" description:"Main secret for auth token sign" json:"token_secret" `
+		HostName       string `long:"hostname" env:"HOST_NAME" default:"localhost" description:"Main hostname of service" json:"host_name"`
+		IssuerName     string `long:"jwt-issuer" env:"ISSUER_NAME" required:"true" default:"zebox" description:"Token issuer signature" json:"issuer_name"`
+		TokenDuration  string `long:"jwt-ttl" env:"JWT_TTL" default:"1h" description:"Define JWT expired timeout" json:"jwt_ttl"`
+		CookieDuration string `long:"cookie-ttl" env:"COOKIE_TTL" default:"24h" description:"Define cookies expired timeout" json:"cookie_ttl"`
+	} `group:"auth" namespace:"auth" env-namespace:"AUTH" json:"auth"`
 
 	Logger struct {
 		StdOut     bool   `long:"stdout" env:"LOGGER_STDOUT" description:"enable stdout logging" json:"stdout"`

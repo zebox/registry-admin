@@ -40,7 +40,7 @@ var _ Interface = &InterfaceMock{}
 // 			DeleteGroupFunc: func(ctx context.Context, id int64) error {
 // 				panic("mock out the DeleteGroup method")
 // 			},
-// 			DeleteRepositoryFunc: func(ctx context.Context, key string, id interface{})  {
+// 			DeleteRepositoryFunc: func(ctx context.Context, key string, id interface{}) error {
 // 				panic("mock out the DeleteRepository method")
 // 			},
 // 			DeleteUserFunc: func(ctx context.Context, id int64) error {
@@ -111,7 +111,7 @@ type InterfaceMock struct {
 	DeleteGroupFunc func(ctx context.Context, id int64) error
 
 	// DeleteRepositoryFunc mocks the DeleteRepository method.
-	DeleteRepositoryFunc func(ctx context.Context, key string, id interface{})
+	DeleteRepositoryFunc func(ctx context.Context, key string, id interface{}) error
 
 	// DeleteUserFunc mocks the DeleteUser method.
 	DeleteUserFunc func(ctx context.Context, id int64) error
@@ -569,7 +569,7 @@ func (mock *InterfaceMock) DeleteGroupCalls() []struct {
 }
 
 // DeleteRepository calls DeleteRepositoryFunc.
-func (mock *InterfaceMock) DeleteRepository(ctx context.Context, key string, id interface{}) {
+func (mock *InterfaceMock) DeleteRepository(ctx context.Context, key string, id interface{}) error {
 	if mock.DeleteRepositoryFunc == nil {
 		panic("InterfaceMock.DeleteRepositoryFunc: method is nil but Interface.DeleteRepository was just called")
 	}
@@ -585,7 +585,7 @@ func (mock *InterfaceMock) DeleteRepository(ctx context.Context, key string, id 
 	mock.lockDeleteRepository.Lock()
 	mock.calls.DeleteRepository = append(mock.calls.DeleteRepository, callInfo)
 	mock.lockDeleteRepository.Unlock()
-	mock.DeleteRepositoryFunc(ctx, key, id)
+	return mock.DeleteRepositoryFunc(ctx, key, id)
 }
 
 // DeleteRepositoryCalls gets all the calls that were made to DeleteRepository.

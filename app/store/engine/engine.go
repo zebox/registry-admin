@@ -52,7 +52,7 @@ type Interface interface {
 	GetRepository(ctx context.Context, entryID int64) (entry store.RegistryEntry, err error)
 	FindRepositories(ctx context.Context, filter QueryFilter) (entries ListResponse, err error)
 	UpdateRepository(ctx context.Context, conditionClause, data map[string]interface{}) (err error)
-	DeleteRepository(ctx context.Context, key string, id interface{})
+	DeleteRepository(ctx context.Context, key string, id interface{}) (err error)
 
 	// Misc storage function
 	Close(ctx context.Context) error

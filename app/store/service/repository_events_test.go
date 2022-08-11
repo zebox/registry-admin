@@ -7,6 +7,7 @@ import (
 	"github.com/docker/distribution/notifications"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/zebox/registry-admin/app/store"
 	"github.com/zebox/registry-admin/app/store/engine"
 	"strings"
@@ -54,6 +55,24 @@ func TestDataService_RepositoryEventsProcessing(t *testing.T) {
 
 	err := ds.RepositoryEventsProcessing(ctx, testEnvelope)
 	assert.NoError(t, err)
+
+	// test with pull action event
+	testEnvelopePullEvent := testEnvelope
+	testEnvelopePullEvent.Events[0].Action = notifications.EventActionPull
+	for i := 0; i < 3; i++ {
+		errProcessing := ds.RepositoryEventsProcessing(ctx, testEnvelopePullEvent)
+		assert.NoError(t, errProcessing)
+	}
+	filter := engine.QueryFilter{
+		Filters: map[string]interface{}{"repository_name": testEnvelopePullEvent.Events[0].Target.Repository, "tag": testEnvelopePullEvent.Events[0].Target.Tag},
+	}
+
+	result, errFind := ds.Repository.FindRepositories(ctx, filter)
+	assert.NoError(t, errFind)
+	require.Len(t, result.Data, 1)
+	assert.IsType(t, store.RegistryEntry{}, result.Data[0])
+	testRegistyEntry := result.Data[0].(store.RegistryEntry)
+	assert.Equal(t, int64(3), testRegistyEntry.PullCounter)
 
 	// test with not exist repository
 	testEnvelope.Events[0].Target.Repository = "test/repo_3"
@@ -117,8 +136,13 @@ func prepareEngineMock() *engine.InterfaceMock {
 			if v, ok := conditionClause["id"]; ok {
 				id = v.(int64)
 			}
-			for _, testEntry := range testRepositoriesEntries {
+			for i, testEntry := range testRepositoriesEntries {
 				if id == testEntry.ID {
+					for k, v := range data {
+						if k == "pull_counter" {
+							testRepositoriesEntries[i].PullCounter = v.(int64)
+						}
+					}
 					return nil
 				}
 			}

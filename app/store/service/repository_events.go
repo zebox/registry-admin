@@ -20,11 +20,10 @@ func (ds *DataService) RepositoryEventsProcessing(ctx context.Context, envelope 
 
 	for _, e := range envelope.Events {
 		switch e.Action {
-		case notifications.EventActionPush:
+		case notifications.EventActionPush, notifications.EventActionPull:
 			if errUpdate := ds.updateRepositoryEntry(ctx, e); errUpdate != nil {
 				err = multierror.Append(err, errUpdate)
 			}
-		case notifications.EventActionPull:
 		case notifications.EventActionDelete:
 
 		}
@@ -41,6 +40,18 @@ func (ds DataService) updateRepositoryEntry(ctx context.Context, event notificat
 
 	result, err := ds.Repository.FindRepositories(ctx, filter)
 	if err != nil {
+		return err
+	}
+
+	// increase pull counter when repo pull
+	if event.Action == notifications.EventActionPull && result.Total == 1 {
+		repositoryEntry := result.Data[0].(store.RegistryEntry)
+
+		err = ds.Repository.UpdateRepository(
+			ctx,
+			map[string]interface{}{"id": repositoryEntry.ID},                        // condition
+			map[string]interface{}{"pull_counter": repositoryEntry.PullCounter + 1}, // data for update
+		)
 		return err
 	}
 
