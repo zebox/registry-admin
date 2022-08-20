@@ -45,13 +45,17 @@ func TestDataService_RepositoryEventsProcessing(t *testing.T) {
 		},
 	}
 
-	testEnvelope.Events[0].Target.Repository = "test/repo_1"
-	testEnvelope.Events[0].Target.Tag = "1.1.0"
-	testEnvelope.Events[0].Target.MediaType = "application/vnd.docker.distribution.manifest.v2+json"
-	testEnvelope.Events[0].Target.Digest = "sha256:fea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7cf"
-	testEnvelope.Events[0].Target.Length = 708
-	testEnvelope.Events[0].Target.Size = 708
-	testEnvelope.Events[0].Target.URL = "http://192.168.100.227:5000/v2/hello-world/manifests/sha256:fea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7cf"
+	createTestEvent := func() {
+		testEnvelope.Events[0].Target.Repository = "test/repo_1"
+		testEnvelope.Events[0].Target.Tag = "1.1.0"
+		testEnvelope.Events[0].Target.MediaType = "application/vnd.docker.distribution.manifest.v2+json"
+		testEnvelope.Events[0].Target.Digest = "sha256:fea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7cf"
+		testEnvelope.Events[0].Target.Length = 708
+		testEnvelope.Events[0].Target.Size = 708
+		testEnvelope.Events[0].Target.URL = "http://192.168.100.227:5000/v2/hello-world/manifests/sha256:fea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7cf"
+	}
+
+	createTestEvent()
 
 	err := ds.RepositoryEventsProcessing(ctx, testEnvelope)
 	assert.NoError(t, err)
@@ -91,24 +95,44 @@ func TestDataService_RepositoryEventsProcessing(t *testing.T) {
 	testEnvelope.Events[0].Target.Tag = ""
 	err = ds.RepositoryEventsProcessing(ctx, testEnvelope)
 	assert.Error(t, err)
+
+	// test with delete action
+	createTestEvent()
+	testEnvelopePullEvent.Events[0].Action = notifications.EventActionDelete
+	err = ds.RepositoryEventsProcessing(ctx, testEnvelope)
+	assert.NoError(t, err)
+
+	// test delete with not existed repository entry
+	testEnvelopePullEvent.Events[0].Target.Repository = "unknown"
+	err = ds.RepositoryEventsProcessing(ctx, testEnvelope)
+	assert.Error(t, err)
+
+	// test delete with not existed repository entry
+	testEnvelopePullEvent.Events[0].Target.Repository = "unknown"
+	err = ds.RepositoryEventsProcessing(nil, testEnvelope)
+	assert.Error(t, err)
 }
 
 func prepareEngineMock() *engine.InterfaceMock {
 
 	testRepositoriesEntries := []store.RegistryEntry{
 		{
+			ID:             1,
 			RepositoryName: "test/repo_1",
 			Tag:            "1.1.0",
 		},
 		{
+			ID:             2,
 			RepositoryName: "test/repo_1",
 			Tag:            "1.2.0",
 		},
 		{
+			ID:             3,
 			RepositoryName: "test/repo_2",
 			Tag:            "2.1.0",
 		},
 		{
+			ID:             4,
 			RepositoryName: "test/repo_2",
 			Tag:            "2.2.0",
 		},
@@ -116,9 +140,10 @@ func prepareEngineMock() *engine.InterfaceMock {
 
 	return &engine.InterfaceMock{
 		CreateRepositoryFunc: func(ctx context.Context, entry *store.RegistryEntry) error {
+
 			for _, testEntry := range testRepositoriesEntries {
 				if testEntry.RepositoryName == entry.RepositoryName && testEntry.Tag == entry.Tag {
-					return errors.New(" duplicate repository entry")
+					return errors.New("duplicate repository entry")
 				}
 
 				hasher := sha256.New()
@@ -150,6 +175,10 @@ func prepareEngineMock() *engine.InterfaceMock {
 		},
 
 		FindRepositoriesFunc: func(ctx context.Context, filter engine.QueryFilter) (result engine.ListResponse, err error) {
+
+			if ctx == nil {
+				return result, errors.New("nil context not allowed")
+			}
 			if _, ok := filter.Filters["repository_name"]; !ok {
 				return result, errors.New("empty repository name not allowed")
 			}
@@ -175,6 +204,15 @@ func prepareEngineMock() *engine.InterfaceMock {
 				}
 			}
 			return result, nil
+		},
+
+		DeleteRepositoryFunc: func(ctx context.Context, key string, id interface{}) error {
+			for _, val := range testRepositoriesEntries {
+				if val.ID == id.(int64) {
+					return nil
+				}
+			}
+			return errors.Errorf("entry not found: id %v", id)
 		},
 	}
 }

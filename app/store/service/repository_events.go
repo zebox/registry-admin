@@ -24,12 +24,12 @@ func (ds *DataService) RepositoryEventsProcessing(ctx context.Context, envelope 
 			if errUpdate := ds.updateRepositoryEntry(ctx, e); errUpdate != nil {
 				err = multierror.Append(err, errUpdate)
 			}
+			return err
 		case notifications.EventActionDelete:
-
+			return ds.deleteRepositoryEntry(ctx, e)
 		}
 	}
-
-	return err
+	return errors.New("unsupported event")
 }
 
 // updateRepositoryEntry will create repository entry if it doesn't exist or update when already exist
@@ -85,4 +85,26 @@ func (ds DataService) updateRepositoryEntry(ctx context.Context, event notificat
 	}
 
 	return errors.Errorf("query filter returned multiple result: %v+", filter.Filters)
+}
+
+// deleteRepositoryEntry will delete repository entry
+func (ds DataService) deleteRepositoryEntry(ctx context.Context, event notifications.Event) error {
+	filter := engine.QueryFilter{
+		Filters: map[string]interface{}{"repository_name": event.Target.Repository, "tag": event.Target.Tag},
+	}
+
+	result, err := ds.Repository.FindRepositories(ctx, filter)
+	if err != nil {
+		return err
+	}
+
+	if result.Total == 0 {
+		return errors.Errorf("failed to delete repository, entry %s not found", event.Target.Repository)
+	}
+
+	entry := result.Data[0].(store.RegistryEntry)
+	if err = ds.Repository.DeleteRepository(ctx, "id", entry.ID); err != nil {
+		return errors.Errorf("failed to delete repository, entry %v", err)
+	}
+	return nil
 }
