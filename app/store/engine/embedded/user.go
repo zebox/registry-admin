@@ -172,7 +172,7 @@ func (e *Embedded) UpdateUser(ctx context.Context, user store.User) (err error) 
 			user.Name, user.Password, user.Role, user.Group, user.Disabled, user.Description, user.ID)
 
 	} else {
-		// skip password update if updating password value is empty
+		// skip a password field update if updating password value is empty
 		res, err = e.db.ExecContext(ctx, fmt.Sprintf("UPDATE %s SET name=?, role=?, user_group=?, disabled=?, description=? WHERE id = ?", usersTable),
 			user.Name, user.Role, user.Group, user.Disabled, user.Description, user.ID)
 	}

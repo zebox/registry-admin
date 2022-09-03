@@ -11,13 +11,16 @@ import (
 	"strconv"
 )
 
+/*
 // Filters using for query filtered data from store
 type Filters struct {
 	Range   [2]int64
 	Filters map[string]interface{}
 	Sort    []string
 }
+*/
 
+// ListResponse is a container for return list of result data
 type ListResponse struct {
 	Total int64         `json:"total"`
 	Data  []interface{} `json:"data"`
@@ -25,29 +28,28 @@ type ListResponse struct {
 
 // Interface defines methods provided by low-level storage engine
 type Interface interface {
-	// Users model manipulation
+	// Users manipulations
 	CreateUser(ctx context.Context, user *store.User) (err error)
 	GetUser(ctx context.Context, id interface{}) (user store.User, err error)
 	FindUsers(ctx context.Context, filter QueryFilter) (users ListResponse, err error)
 	UpdateUser(ctx context.Context, user store.User) (err error)
 	DeleteUser(ctx context.Context, id int64) (err error)
 
-	// Groups model manipulation
-
+	// Groups manipulations
 	CreateGroup(ctx context.Context, group *store.Group) (err error)
 	GetGroup(ctx context.Context, id int64) (group store.Group, err error)
 	FindGroups(ctx context.Context, filter QueryFilter) (groups ListResponse, err error)
 	UpdateGroup(ctx context.Context, group store.Group) (err error)
 	DeleteGroup(ctx context.Context, id int64) (err error)
 
-	// Accesses model manipulation
+	// Accesses manipulations
 	CreateAccess(ctx context.Context, access *store.Access) (err error)
 	GetAccess(ctx context.Context, id int64) (access store.Access, err error)
 	FindAccesses(ctx context.Context, filter QueryFilter) (accesses ListResponse, err error)
 	UpdateAccess(ctx context.Context, access store.Access) (err error)
 	DeleteAccess(ctx context.Context, id int64) (err error)
 
-	// Repositories manipulation methods
+	// Repositories methods
 	CreateRepository(ctx context.Context, entry *store.RegistryEntry) (err error)
 	GetRepository(ctx context.Context, entryID int64) (entry store.RegistryEntry, err error)
 	FindRepositories(ctx context.Context, filter QueryFilter) (entries ListResponse, err error)
@@ -61,7 +63,7 @@ type Interface interface {
 // QueryFilter using for query to data from storage
 
 type QueryFilter struct {
-	Range [2]int64 // array indexes, 0 - Skip value, 1 - Limit value
+	Range [2]int64 // array indexes are: 0 - Skip value, 1 - Limit value
 	IDs   []int64  `json:"id"`
 
 	// 'q' - key in filter use for full text search by fields which defined with parameters in filtersBuilder
@@ -69,6 +71,10 @@ type QueryFilter struct {
 	Filters map[string]interface{}
 
 	Sort []string // ASC or DESC
+
+	// GroupByFiled set field name to make a unique search by repositories table which contain duplicate repository names linked to different tags
+	// GroupByField value for grouping should define in an engine implementation
+	GroupByField bool
 }
 
 // FilterFromUrlExtractor extracts param from URL and pass it to query which manipulation data in storage
