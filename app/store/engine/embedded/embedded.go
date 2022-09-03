@@ -37,6 +37,7 @@ type queryFilter struct {
 	in        string // in array values
 	all       string // where without limit and offset params, return all items when math where clause
 	where     string // raw where clause with skip and limit
+	groupBy   string
 }
 
 func NewEmbedded(pathToDB string) *Embedded {
@@ -230,6 +231,8 @@ func (e *Embedded) Close(_ context.Context) error {
 	return e.db.Close()
 }
 
+// filtersBuilder parse an engine filter values and build query filter for 'embedded' implementation
+// IMPORTANT: value for group by always fetch from FIRST index of 'fieldsName' list, keep in mind this when use 'group by'
 func filtersBuilder(filter engine.QueryFilter, fieldsName ...string) (f queryFilter) {
 
 	var ids string
@@ -321,9 +324,16 @@ func filtersBuilder(filter engine.QueryFilter, fieldsName ...string) (f queryFil
 		filter.Sort = []string{"id", "asc"} // default sorting
 	}
 
-	f.order = fmt.Sprintf(" ORDER BY %s %s ", filter.Sort[0], filter.Sort[1])
+	// set value for group by clause.
+	// IMPORTANT: group by field name always fetch from first index of fieldsName option
+	if filter.GroupByField && len(fieldsName) > 0 {
+		f.groupBy = "GROUP BY " + fieldsName[0]
+	}
+
+	f.order = fmt.Sprintf("%s ORDER BY %s %s ", f.groupBy, filter.Sort[0], filter.Sort[1])
 
 	f.where = f.where + f.order + f.skipLimit
+
 	return f
 }
 
@@ -334,8 +344,17 @@ func filtersBuilder(filter engine.QueryFilter, fieldsName ...string) (f queryFil
 func (e *Embedded) getTotalRecordsExcludeRange(tableName string, filter engine.QueryFilter, searchFields []string) int64 {
 	filter.Range = [2]int64{0, 0} // clear skip/offset range
 
+	// it defines request type for get total records from table with duplicates fields such like repositories
+	countType := "COUNT(*)"
+	if filter.GroupByField && len(searchFields) > 0 {
+		filter.GroupByField = false // reset 'GROUP BY' clause for exclude it from filterBuilder
+
+		// IMPORTANT: for distinct values gets FIRST item of searchFields list
+		countType = fmt.Sprintf("COUNT(DISTINCT %s)", searchFields[0])
+	}
+
 	f := filtersBuilder(filter, searchFields...)
-	rows, err := e.db.Query(fmt.Sprintf("SELECT COUNT(*) FROM %s %s", tableName, f.where))
+	rows, err := e.db.Query(fmt.Sprintf("SELECT %s FROM %s %s", countType, tableName, f.where))
 	if err != nil {
 		return 0
 	}

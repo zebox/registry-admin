@@ -70,7 +70,8 @@ func (e *Embedded) GetRepository(ctx context.Context, entryID int64) (entry stor
 
 // FindRepositories fetch list of existed repositories
 func (e *Embedded) FindRepositories(ctx context.Context, filter engine.QueryFilter) (entries engine.ListResponse, err error) {
-	f := filtersBuilder(filter, "repository_name", "tag")                         // set key filed for search query
+	f := filtersBuilder(filter, "repository_name", "tag") // set key filed for search query
+
 	queryString := fmt.Sprintf("SELECT * FROM %s %s", repositoriesTable, f.where) //nolint:gosec // query sanitizing calling before
 
 	// avoid error shadowed
