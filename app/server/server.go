@@ -54,7 +54,7 @@ type endpointsHandler struct {
 
 // registryInterface implement method for access data of a registry instance
 type registryInterface interface {
-	service.DataService
+
 	// Login is initials login step when docker login command call
 	Login(user store.User) (string, error)
 
@@ -292,7 +292,11 @@ func (s *Server) routes() chi.Router {
 			})
 
 			// this route expose api for manipulation with Registry service entries
-			rh := registryHandlers{eh, s.RegistryService}
+			rh := registryHandlers{
+				endpointsHandler: eh,
+				registryService:  s.RegistryService,
+				dataService:      service.DataService{Repository: s.Storage},
+			}
 			rootRoute.Route("/registry", func(routeRegistry chi.Router) {
 
 				routeRegistry.Get("/auth", rh.tokenAuth)

@@ -8,6 +8,7 @@ import (
 	"github.com/zebox/registry-admin/app/registry"
 	"github.com/zebox/registry-admin/app/store"
 	"github.com/zebox/registry-admin/app/store/engine"
+	"github.com/zebox/registry-admin/app/store/service"
 	"net/http"
 	"net/url"
 	"strings"
@@ -17,6 +18,7 @@ import (
 type registryHandlers struct {
 	endpointsHandler
 	registryService registryInterface
+	dataService     service.DataService
 }
 
 func (rh *registryHandlers) tokenAuth(w http.ResponseWriter, r *http.Request) {
@@ -103,27 +105,24 @@ func (rh *registryHandlers) health(w http.ResponseWriter, r *http.Request) {
 }
 
 // events handle registry event and pass them to a relevant service which will processing an events.
-// In particular this service should has information about all repositories in registry, but registry hasn't API for get repository by name
-// and return repository entries with set up to 100 items per each request.
+// In particular this service should contain information about all repositories in registry, but registry hasn't API
+// for get repository by name and return repository entries with set up to 100 items per each request
+// and more with cursor pagination.
+// This handler catch events from repository, extract repository data from one and store it in a storage of service.
 func (rh *registryHandlers) events(w http.ResponseWriter, r *http.Request) {
 
-	var eventData notifications.Envelope
+	var eventsEnvelope notifications.Envelope
 
-	if err := json.NewDecoder(r.Body).Decode(&eventData); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&eventsEnvelope); err != nil {
 		SendErrorJSON(w, r, rh.l, http.StatusInternalServerError, err, "failed to parse notification event")
 		return
 	}
 	defer func() { _ = r.Body.Close() }()
 
-	// rh.registryService.DeleteTag()
-	/*digest := eventData.Events[0].Target.Descriptor.Digest
-	//tag := eventData.Events[0].Target.Tag
-
-	repo := eventData.Events[0].Target.Repository
-	if err := rh.registryService.DeleteTag(r.Context(), repo, digest.String()); err != nil {
-		rh.l.Logf("%v", err)
-	}*/
-	rh.l.Logf("%s", eventData.Events[0].Action)
+	if err := rh.dataService.RepositoryEventsProcessing(r.Context(), eventsEnvelope); err != nil {
+		SendErrorJSON(w, r, rh.l, http.StatusInternalServerError, err, "failed to processing event message from registry")
+	}
+	// rh.l.Logf("%s", eventsEnvelope.Events[0].Action)
 	rest.RenderJSON(w, responseMessage{Message: "ok"})
 }
 

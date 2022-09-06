@@ -29,7 +29,7 @@ func TestRegistryHandlers_tokenAuth(t *testing.T) {
 	testRegistryHandlers.l = log.Default()
 
 	testRegistryHandlers.registryService = prepareRegistryMock(t)
-	testRegistryHandlers.dataStore = prepareUserAccessStoreMock(t)
+	testRegistryHandlers.dataStore = prepareAccessStoreMock(t)
 
 	filledTestEntries(t, &testRegistryHandlers)
 
@@ -135,7 +135,7 @@ func TestRegistryHandlers_health(t *testing.T) {
 	testRegistryHandlers.l = log.Default()
 
 	testRegistryHandlers.registryService = prepareRegistryMock(t)
-	testRegistryHandlers.dataStore = prepareUserAccessStoreMock(t)
+	testRegistryHandlers.dataStore = prepareAccessStoreMock(t)
 	filledTestEntries(t, &testRegistryHandlers)
 
 	ctx := context.Background()
@@ -144,6 +144,10 @@ func TestRegistryHandlers_health(t *testing.T) {
 	// test with error
 	ctx = context.WithValue(ctx, ctxKey, false)
 	requestWithCredentials(t, ctx, "bar", "bar_password", "GET", "/api/v1/registry/health", testRegistryHandlers.health, nil, http.StatusInternalServerError)
+}
+
+func TestRegistryHandlers_events(t *testing.T) {
+
 }
 
 func filledTestEntries(t *testing.T, testRegistryHandlers *registryHandlers) {
@@ -272,7 +276,7 @@ func prepareRegistryMock(_ *testing.T) *registryInterfaceMock {
 	}
 }
 
-func prepareUserAccessStoreMock(t *testing.T) *engine.InterfaceMock {
+func prepareAccessStoreMock(t *testing.T) *engine.InterfaceMock {
 
 	var testUsersIndex, testAccessIndex int64
 
@@ -336,6 +340,10 @@ func prepareUserAccessStoreMock(t *testing.T) *engine.InterfaceMock {
 				}
 			}
 			return testListResponse, nil
+		},
+
+		FindRepositoriesFunc: func(ctx context.Context, filter engine.QueryFilter) (result engine.ListResponse, err error) {
+			return result, err
 		},
 	}
 }
