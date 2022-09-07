@@ -11,8 +11,10 @@ import (
 	"github.com/zebox/registry-admin/app/registry"
 	"github.com/zebox/registry-admin/app/store"
 	"github.com/zebox/registry-admin/app/store/engine"
+	"github.com/zebox/registry-admin/app/store/service"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
@@ -147,7 +149,55 @@ func TestRegistryHandlers_health(t *testing.T) {
 }
 
 func TestRegistryHandlers_events(t *testing.T) {
+	testEnvelope := `{
+	"events": [
+		{
+		  "id": "asdf-asdf-asdf-asdf-0",
+		  "timestamp": "2006-01-02T15:04:05Z",
+		  "action": "pull",
+		  "target": {
+			"mediaType": "application/vnd.docker.distribution.manifest.v1+json",
+			"length": 1,
+			"digest": "sha256:fea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7cf",
+			"repository": "library/test",
+			"url": "https://example.com/v2/library/test/manifests/sha256:c3b3692957d439ac1928219a83fac91e7bf96c153725526874673ae1f2023f8d5"
+		  }
+		}]
+	}`
 
+	testRegistryHandlers := registryHandlers{}
+	testRegistryHandlers.l = log.Default()
+
+	testRegistryHandlers.registryService = prepareRegistryMock(t)
+	testRegistryHandlers.dataService = service.DataService{Repository: prepareAccessStoreMock(t)}
+
+	testsTable := []struct {
+		name     string
+		body     []byte
+		expected int
+	}{
+		{
+			name:     "working test",
+			body:     []byte(testEnvelope),
+			expected: http.StatusOK,
+		},
+		{
+			name:     "with json unmarshal error",
+			body:     nil,
+			expected: http.StatusInternalServerError,
+		},
+		{
+			name:     "with dataService error",
+			body:     []byte(strings.Replace(testEnvelope, "pull", "unknown", 1)),
+			expected: http.StatusInternalServerError,
+		},
+	}
+
+	ctx := context.Background()
+	for _, test := range testsTable {
+		t.Log(test.name)
+		requestWithCredentials(t, ctx, "bar", "bar_password", "GET", "/api/v1/registry/events", testRegistryHandlers.events, test.body, test.expected)
+	}
 }
 
 func filledTestEntries(t *testing.T, testRegistryHandlers *registryHandlers) {
@@ -342,8 +392,16 @@ func prepareAccessStoreMock(t *testing.T) *engine.InterfaceMock {
 			return testListResponse, nil
 		},
 
+		CreateRepositoryFunc: func(ctx context.Context, entry *store.RegistryEntry) error {
+			return nil
+		},
+
 		FindRepositoriesFunc: func(ctx context.Context, filter engine.QueryFilter) (result engine.ListResponse, err error) {
 			return result, err
+		},
+
+		UpdateRepositoryFunc: func(ctx context.Context, conditionClause map[string]interface{}, data map[string]interface{}) error {
+			return nil
 		},
 	}
 }

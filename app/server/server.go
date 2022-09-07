@@ -301,10 +301,10 @@ func (s *Server) routes() chi.Router {
 
 				routeRegistry.Get("/auth", rh.tokenAuth)
 
-				routeRegistry.Group(func(registryApiUserAccess chi.Router) {
-					registryApiUserAccess.Use(authMiddleware.Auth, middleware.NoCache)
+				routeRegistry.Group(func(registryApiAccess chi.Router) {
+					registryApiAccess.Use(authMiddleware.Auth, middleware.NoCache)
 					routeRegistry.Post("/events", rh.events)
-					registryApiUserAccess.Get("/health", rh.health)
+					registryApiAccess.Get("/health", rh.health)
 				})
 
 				// manipulations registry entries (catalog/tags/manifest/delete)
