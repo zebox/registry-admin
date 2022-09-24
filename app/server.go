@@ -69,7 +69,7 @@ func run() error {
 	}
 
 	srv := server.Server{
-		Hostname:        opts.Auth.HostName,
+		Hostname:        checkHostnameForURL(opts.HostName, opts.SSL.Type),
 		Listen:          opts.Listen,
 		Port:            opts.Port,
 		AccessLog:       accessLogger,
@@ -87,7 +87,7 @@ func run() error {
 		TokenDuration:    tokenDuration,
 		CookieDuration:   cookieDuration,
 		Issuer:           opts.Auth.IssuerName,
-		URL:              checkHostnameForURL(opts.Auth.HostName, opts.SSL.Type),
+		URL:              checkHostnameForURL(opts.HostName, opts.SSL.Type),
 		BasicAuthChecker: srv.BasicAuthCheckerFn,
 		AvatarStore:      avatar.NewNoOp(),
 		SecureCookies:    opts.SSL.Type != "none",

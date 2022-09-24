@@ -403,5 +403,8 @@ func (rt *registryToken) appendDSnToCertificate() {
 		}
 
 	}
+
+	rt.caRoot.KeyUsage = x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign
+	rt.caRoot.ExtKeyUsage = []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth}
 	rt.caRoot.DNSNames = append(rt.caRoot.DNSNames, rt.serviceHost)
 }

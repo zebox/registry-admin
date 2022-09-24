@@ -197,9 +197,10 @@ func (s *Server) routes() chi.Router {
 	corsMiddleware := cors.New(cors.Options{
 		AllowedOrigins:   []string{s.Hostname, "http://127.0.0.1:3000", "https://127.0.0.1:3000"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-XSRF-Token", "X-JWT"},
+		AllowedHeaders:   []string{"Origin", "Accept", "Authorization", "Content-Type", "X-XSRF-Token", "X-JWT"},
 		ExposedHeaders:   []string{"Authorization"},
 		AllowCredentials: true,
+		Debug:            true,
 		MaxAge:           300,
 	})
 	router.Use(corsMiddleware.Handler)

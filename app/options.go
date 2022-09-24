@@ -21,6 +21,7 @@ type configReader interface {
 type Options struct {
 	Version    string
 	Listen     string `short:"l" long:"listen" env:"LISTEN" description:"listen on host:port (127.0.0.1:80/443 without)" json:"listen"`
+	HostName   string `long:"hostname" env:"HOST_NAME" default:"localhost" description:"Main hostname of service" json:"host_name"`
 	Port       int    `short:"p" long:"port" env:"PORT" description:"Main web-service port. Default:80" default:"80" json:"port"`
 	ConfigPath string `short:"f" long:"config-file" env:"CONFIG_FILE" description:"Path to config file"`
 
@@ -28,7 +29,6 @@ type Options struct {
 
 	Auth struct {
 		TokenSecret    string `long:"token-secret" env:"TOKEN_SECRET" required:"true" description:"Main secret for auth token sign" json:"token_secret" `
-		HostName       string `long:"hostname" env:"HOST_NAME" default:"localhost" description:"Main hostname of service" json:"host_name"`
 		IssuerName     string `long:"jwt-issuer" env:"ISSUER_NAME" required:"true" default:"zebox" description:"Token issuer signature" json:"issuer_name"`
 		TokenDuration  string `long:"jwt-ttl" env:"JWT_TTL" default:"1h" description:"Define JWT expired timeout" json:"jwt_ttl"`
 		CookieDuration string `long:"cookie-ttl" env:"COOKIE_TTL" default:"24h" description:"Define cookies expired timeout" json:"cookie_ttl"`
