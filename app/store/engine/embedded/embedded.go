@@ -140,6 +140,7 @@ func (e *Embedded) initUserTable(ctx context.Context) error {
 		Name:        "admin", // default login
 		Password:    "admin", // default password
 		Role:        "admin",
+		Group:       1,
 		Description: "Default administration user",
 	}
 
