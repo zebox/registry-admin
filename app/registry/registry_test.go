@@ -10,7 +10,6 @@ import (
 	"github.com/zebox/registry-admin/app/store"
 	"math/rand"
 	"net"
-	"net/url"
 	"os"
 	"testing"
 )
@@ -133,7 +132,7 @@ func TestRegistry_Catalog(t *testing.T) {
 		}
 		require.NoError(t, err)
 		assert.Equal(t, 10, len(repos.List))
-		n, last, err = parseUrlForNextLink(repos.NextLink)
+		n, last, err = ParseUrlForNextLink(repos.NextLink)
 		require.NoError(t, err)
 		if total > reposNumbers {
 			require.Fail(t, "out of bound of repositories index ")
@@ -182,7 +181,7 @@ func TestRegistry_ListingImageTags(t *testing.T) {
 			}
 			require.NoError(t, err)
 			assert.Equal(t, 10, len(tags.Tags))
-			n, last, err = parseUrlForNextLink(tags.NextLink)
+			n, last, err = ParseUrlForNextLink(tags.NextLink)
 			require.NoError(t, err)
 			if total > tagsNumbers*reposNumbers {
 				require.Fail(t, "out of bound of tags index ")
@@ -426,22 +425,4 @@ func chooseRandomUnusedPort() (port uint) {
 		}
 	}
 	return port
-}
-
-func parseUrlForNextLink(nextLink string) (string, string, error) {
-	urlQuery, err := url.Parse(nextLink)
-	if err != nil {
-		return "", "", err
-	}
-	result, err := url.ParseQuery(urlQuery.RawQuery)
-
-	if err != nil {
-		return "", "", err
-	}
-	n := result.Get("n")
-	last := result.Get("last")
-	if n == "" && last == "" {
-		return "", "", errors.New("page index is undefined in url params")
-	}
-	return n, last, nil
 }

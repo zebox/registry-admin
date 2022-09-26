@@ -21,7 +21,7 @@ func TestDataService_RepositoryEventsProcessing(t *testing.T) {
 	defer cancel()
 
 	ds := DataService{
-		Repository: prepareEngineMock(),
+		Storage: prepareEngineMock(),
 	}
 	testEnvelope := notifications.Envelope{
 		Events: []notifications.Event{
@@ -71,7 +71,7 @@ func TestDataService_RepositoryEventsProcessing(t *testing.T) {
 		Filters: map[string]interface{}{"repository_name": testEnvelopePullEvent.Events[0].Target.Repository, "tag": testEnvelopePullEvent.Events[0].Target.Tag},
 	}
 
-	result, errFind := ds.Repository.FindRepositories(ctx, filter)
+	result, errFind := ds.Storage.FindRepositories(ctx, filter)
 	assert.NoError(t, errFind)
 	require.Len(t, result.Data, 1)
 	assert.IsType(t, store.RegistryEntry{}, result.Data[0])

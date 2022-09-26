@@ -296,7 +296,10 @@ func (s *Server) routes() chi.Router {
 			rh := registryHandlers{
 				endpointsHandler: eh,
 				registryService:  s.RegistryService,
-				dataService:      service.DataService{Repository: s.Storage},
+				dataService: service.DataService{
+					Registry: s.RegistryService,
+					Storage:  s.Storage,
+				},
 			}
 			rootRoute.Route("/registry", func(routeRegistry chi.Router) {
 
@@ -312,6 +315,7 @@ func (s *Server) routes() chi.Router {
 				routeRegistry.Group(func(registryApiAccess chi.Router) {
 					registryApiAccess.Use(authMiddleware.Auth, middleware.NoCache)
 					registryApiAccess.Use(authMiddleware.RBAC("admin", "manager"))
+					registryApiAccess.Get("/sync", rh.syncRepositories)
 					registryApiAccess.Delete("/delete", rh.delete)
 					registryApiAccess.Get("/catalog", rh.catalogList)
 

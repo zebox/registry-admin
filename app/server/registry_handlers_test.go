@@ -169,7 +169,7 @@ func TestRegistryHandlers_events(t *testing.T) {
 	testRegistryHandlers.l = log.Default()
 
 	testRegistryHandlers.registryService = prepareRegistryMock(t)
-	testRegistryHandlers.dataService = service.DataService{Repository: prepareAccessStoreMock(t)}
+	testRegistryHandlers.dataService = service.DataService{Storage: prepareAccessStoreMock(t)}
 
 	testsTable := []struct {
 		name     string

@@ -10,12 +10,6 @@ import (
 	"github.com/zebox/registry-admin/app/store/engine"
 )
 
-// DataService is service which allow manipulation entries of registry such repositories or tags
-type DataService struct {
-	Repository engine.Interface
-}
-
-// RepositoryEventsProcessing use for precessing main registry events such as push, pull and delete
 func (ds *DataService) RepositoryEventsProcessing(ctx context.Context, envelope notifications.Envelope) (err error) {
 
 	for _, e := range envelope.Events {
@@ -38,7 +32,7 @@ func (ds DataService) updateRepositoryEntry(ctx context.Context, event notificat
 		Filters: map[string]interface{}{"repository_name": event.Target.Repository, "tag": event.Target.Tag},
 	}
 
-	result, err := ds.Repository.FindRepositories(ctx, filter)
+	result, err := ds.Storage.FindRepositories(ctx, filter)
 	if err != nil {
 		return err
 	}
@@ -47,7 +41,7 @@ func (ds DataService) updateRepositoryEntry(ctx context.Context, event notificat
 	if event.Action == notifications.EventActionPull && result.Total == 1 {
 		repositoryEntry := result.Data[0].(store.RegistryEntry)
 
-		err = ds.Repository.UpdateRepository(
+		err = ds.Storage.UpdateRepository(
 			ctx,
 			map[string]interface{}{"id": repositoryEntry.ID},                        // condition
 			map[string]interface{}{"pull_counter": repositoryEntry.PullCounter + 1}, // data for update
@@ -69,14 +63,14 @@ func (ds DataService) updateRepositoryEntry(ctx context.Context, event notificat
 			Timestamp:      event.Timestamp.Unix(),
 			Raw:            eventRawBytes,
 		}
-		err = ds.Repository.CreateRepository(ctx, repositoryEntry)
+		err = ds.Storage.CreateRepository(ctx, repositoryEntry)
 		return err
 	}
 
 	if result.Total == 1 {
 		repositoryEntry := result.Data[0].(store.RegistryEntry)
 
-		err = ds.Repository.UpdateRepository(
+		err = ds.Storage.UpdateRepository(
 			ctx,
 			map[string]interface{}{"id": repositoryEntry.ID}, // condition
 			map[string]interface{}{"digest": event.Target.Digest, "size": event.Target.Size, "timestamp": event.Timestamp.Unix(), "raw": eventRawBytes}, // data for update
@@ -93,7 +87,7 @@ func (ds DataService) deleteRepositoryEntry(ctx context.Context, event notificat
 		Filters: map[string]interface{}{"repository_name": event.Target.Repository, "tag": event.Target.Tag},
 	}
 
-	result, err := ds.Repository.FindRepositories(ctx, filter)
+	result, err := ds.Storage.FindRepositories(ctx, filter)
 	if err != nil {
 		return err
 	}
@@ -103,7 +97,7 @@ func (ds DataService) deleteRepositoryEntry(ctx context.Context, event notificat
 	}
 
 	entry := result.Data[0].(store.RegistryEntry)
-	if err = ds.Repository.DeleteRepository(ctx, "id", entry.ID); err != nil {
+	if err = ds.Storage.DeleteRepository(ctx, "id", entry.ID); err != nil {
 		return errors.Errorf("failed to delete repository, entry %v", err)
 	}
 	return nil

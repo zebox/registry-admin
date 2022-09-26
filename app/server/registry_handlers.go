@@ -133,23 +133,33 @@ func (rh *registryHandlers) delete(w http.ResponseWriter, r *http.Request) {
 	/*digest := eventData.Events[0].Target.Descriptor.Digest
 	//tag := eventData.Events[0].Target.Tag
 
-	repo := eventData.Events[0].Target.Repository*/
+	repo := eventData.Events[0].Target.Storage*/
 	if err := rh.registryService.DeleteTag(r.Context(), n[0], t[0]); err != nil {
 		rh.l.Logf("%v", err)
 	}
 }
 
+// syncRepositories runs task for check existed entries at a registry service and synchronize it
+func (rh *registryHandlers) syncRepositories(w http.ResponseWriter, r *http.Request) {
+	if err := rh.dataService.SyncExistedRepositories(r.Context()); err != nil {
+		SendErrorJSON(w, r, rh.l, http.StatusInternalServerError, err, "failed to run repositories sync task")
+		return
+	}
+	rest.RenderJSON(w, responseMessage{Message: "ok"})
+}
+
 // catalogList returns list of repositories entry
 func (rh *registryHandlers) catalogList(w http.ResponseWriter, r *http.Request) {
-	/*filter, err := engine.FilterFromUrlExtractor(r.URL)
+	filter, err := engine.FilterFromUrlExtractor(r.URL)
 	if err != nil {
 		SendErrorJSON(w, r, rh.l, http.StatusInternalServerError, err, "failed to parse URL parameters for make query filter")
 		return
-	}*/
+	}
 
-	repoList, err := rh.registryService.Catalog(r.Context(), "", "")
-	if err != nil {
-		SendErrorJSON(w, r, rh.l, http.StatusInternalServerError, err, "registry service request failed")
+	filter.GroupByField = true
+	repoList, errReposList := rh.dataStore.FindRepositories(r.Context(), filter)
+	if errReposList != nil {
+		SendErrorJSON(w, r, rh.l, http.StatusInternalServerError, err, "failed to fetch list of repositories")
 		return
 	}
 	rest.RenderJSON(w, responseMessage{Message: "ok", Data: repoList})

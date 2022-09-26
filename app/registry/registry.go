@@ -11,6 +11,7 @@ import (
 	"github.com/zebox/registry-admin/app/store"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"reflect"
 	"regexp"
 	"strings"
@@ -570,6 +571,25 @@ func (m *ManifestSchemaV2) calculateCompressedImageSize() {
 	for _, v := range m.LayersDescriptors {
 		m.TotalSize += v.Size
 	}
+}
+
+// ParseUrlForNextLink check pagination cursor for next
+func ParseUrlForNextLink(nextLink string) (string, string, error) {
+	urlQuery, err := url.Parse(nextLink)
+	if err != nil {
+		return "", "", err
+	}
+	result, err := url.ParseQuery(urlQuery.RawQuery)
+
+	if err != nil {
+		return "", "", err
+	}
+	n := result.Get("n")
+	last := result.Get("last")
+	if n == "" && last == "" {
+		return "", "", errors.New("page index is undefined in url params")
+	}
+	return n, last, nil
 }
 
 // ApiError contain detail in their relevant sections,

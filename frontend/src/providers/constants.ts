@@ -5,8 +5,8 @@ function getBaseUrl(): string {
     let hostNameParts: string[] = url.split(":");
     let baseURL: string;
 
-    console.log(hostName[2])
-    console.log(window.location.hostname)
+    // console.log(hostName[2])
+    // console.log(window.location.hostname)
 
     if (hostNameParts.length > 0) {
         hostNameParts[2] === undefined ? (
