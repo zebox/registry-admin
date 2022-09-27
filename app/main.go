@@ -41,7 +41,6 @@ func main() {
 
 func setupLog(dbg bool) {
 	if dbg {
-
 		log.Setup(log.Debug, log.CallerFile, log.CallerFunc, log.Msec, log.LevelBraces)
 		return
 	}

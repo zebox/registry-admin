@@ -50,6 +50,7 @@ type endpointsHandler struct {
 	dataStore     engine.Interface
 	authenticator *auth.Service
 	l             log.L
+	ctx           context.Context // pass global context
 }
 
 // registryInterface implement method for access data of a registry instance
@@ -228,6 +229,7 @@ func (s *Server) routes() chi.Router {
 		dataStore:     s.Storage,
 		authenticator: s.Authenticator,
 		l:             s.L,
+		ctx:           s.ctx,
 	}
 
 	// main endpoints routes

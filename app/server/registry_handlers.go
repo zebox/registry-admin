@@ -141,7 +141,7 @@ func (rh *registryHandlers) delete(w http.ResponseWriter, r *http.Request) {
 
 // syncRepositories runs task for check existed entries at a registry service and synchronize it
 func (rh *registryHandlers) syncRepositories(w http.ResponseWriter, r *http.Request) {
-	if err := rh.dataService.SyncExistedRepositories(r.Context()); err != nil {
+	if err := rh.dataService.SyncExistedRepositories(rh.ctx); err != nil {
 		SendErrorJSON(w, r, rh.l, http.StatusInternalServerError, err, "failed to run repositories sync task")
 		return
 	}
