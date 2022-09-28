@@ -107,7 +107,7 @@ func (ds *DataService) SyncExistedRepositories(ctx context.Context) error {
 							log.Printf("[ERROR] sync operation aborted")
 							return
 						}
-						log.Printf("[WARN] entry already exist and skipped for add: repo: '%s', tag: '%s'")
+						log.Printf("[WARN] entry already exist and skipped for add: repo: '%s', tag: '%s'", repo, tag)
 						continue
 					}
 					log.Printf("[DEBUG] New entry added: repo: '%s', tag: '%s'", repo, tag)
@@ -118,7 +118,7 @@ func (ds *DataService) SyncExistedRepositories(ctx context.Context) error {
 					continue
 				}
 
-				_, lastTag, err = registry.ParseUrlForNextLink(tags.NextLink)
+				_, _, err = registry.ParseUrlForNextLink(tags.NextLink)
 				if err != nil {
 					log.Printf("[ERROR] failed to parse next link: %v", err)
 					log.Printf("[ERROR] sync operation aborted")
