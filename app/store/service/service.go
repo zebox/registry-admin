@@ -40,7 +40,7 @@ func (ds *DataService) SyncExistedRepositories(ctx context.Context) error {
 
 	// prevent parallel syncing
 	if ds.isSyncing {
-		return errors.New("repository syncing currently already running")
+		return errors.New("repository sync currently running")
 	}
 	ds.isSyncing = true
 	defer func() { ds.isSyncing = false }()
