@@ -4,55 +4,68 @@ import (
 	"context"
 	"crypto/sha256"
 	"fmt"
+	"github.com/mattn/go-sqlite3"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/zebox/registry-admin/app/registry"
+	"github.com/zebox/registry-admin/app/store"
+	"github.com/zebox/registry-admin/app/store/engine"
 	"sort"
 	"strconv"
 	"testing"
+	"time"
 )
 
 func TestDataService_SyncExistedRepositories(t *testing.T) {
-	ctx := context.Background()
+
+	var repositoryStore = make(map[string]store.RegistryEntry)
+	ctx, _ := context.WithTimeout(context.Background(), time.Second*10)
+	testSize := 55
+
 	testDS := DataService{
-		Registry: prepareRegistryMock(),
+		Registry: prepareRegistryMock(testSize),
+		Storage:  prepareStorageMock(repositoryStore),
 	}
 	require.NotNil(t, testDS)
+	//require.NoError(t, testDS.SyncExistedRepositories(ctx))
+	testDS.doSyncRepositories(ctx)
+	//<-ctx.Done()
+	assert.Equal(t, testSize*testSize, len(repositoryStore))
+	/*
+		var n, last string = "20", ""
+		var list registry.ImageTags
+		for {
+			repos, err := testDS.Registry.ListingImageTags(ctx, "test_repo_10", n, last)
 
-	var n, last string = "20", ""
-	var list registry.ImageTags
-	for {
-		repos, err := testDS.Registry.ListingImageTags(ctx, "test_repo_10", n, last)
-
-		list.Tags = append(list.Tags, repos.Tags...)
-		if errors.Is(err, registry.ErrNoMorePages) {
-			t.Logf("[INFO] Repositories synced. Total: %d\n", len(repos.Tags))
-			break
+			list.Tags = append(list.Tags, repos.Tags...)
+			if errors.Is(err, registry.ErrNoMorePages) {
+				t.Logf("[INFO] Repositories synced. Total: %d\n", len(repos.Tags))
+				break
+			}
+			n, last, err = registry.ParseUrlForNextLink(repos.NextLink)
+			if err != nil {
+				t.Logf("failed to parse next link: %v", err)
+				break
+			}
 		}
-		n, last, err = registry.ParseUrlForNextLink(repos.NextLink)
-		if err != nil {
-			t.Logf("failed to parse next link: %v", err)
-			break
-		}
-	}
-	for _, l := range list.Tags {
-		m, err := testDS.Registry.Manifest(ctx, "test_repo_10", l)
-		assert.NoError(t, err)
-		t.Logf("%v", m)
-	}
+		for _, l := range list.Tags {
+			m, err := testDS.Registry.Manifest(ctx, "test_repo_10", l)
+			assert.NoError(t, err)
+			t.Logf("%v", m)
+		}*/
 }
 
-func prepareRegistryMock() *registryInterfaceMock {
+func prepareRegistryMock(size int) *registryInterfaceMock {
 	var testRepositories = make(map[string]registry.ImageTags)
 	var testManifests = make(map[string]registry.ManifestSchemaV2)
 
 	// filling test data
-	for i := 0; i < 55; i++ {
+	for i := 0; i < size; i++ {
 		repoName := "test_repo_" + strconv.Itoa(i)
 		var tags []string
 
-		for j := 0; j < 55; j++ {
+		for j := 0; j < size; j++ {
 			tagName := "test_tag_" + strconv.Itoa(j)
 			tags = append(tags, tagName)
 
@@ -77,7 +90,6 @@ func prepareRegistryMock() *registryInterfaceMock {
 			for repoName := range testRepositories {
 				names = append(names, repoName)
 			}
-			sort.Strings(names)
 
 			repos.List, repos.NextLink = paginationParse(names, n, last)
 			if repos.List == nil {
@@ -95,7 +107,7 @@ func prepareRegistryMock() *registryInterfaceMock {
 				for _, tagName := range val.Tags {
 					names = append(names, tagName)
 				}
-				sort.Strings(names)
+
 				tags.Tags, tags.NextLink = paginationParse(names, n, last)
 				if tags.Tags == nil {
 					return tags, errors.New("failed to parse tag list")
@@ -117,7 +129,22 @@ func prepareRegistryMock() *registryInterfaceMock {
 	}
 }
 
+func prepareStorageMock(repositoryStore map[string]store.RegistryEntry) *engine.InterfaceMock {
+
+	return &engine.InterfaceMock{
+		CreateRepositoryFunc: func(_ context.Context, entry *store.RegistryEntry) error {
+			entryName := entry.RepositoryName + "_" + entry.Tag
+			if _, ok := repositoryStore[entryName]; ok {
+				return sqlite3.ErrConstraintUnique
+			}
+			repositoryStore[entryName] = *entry
+			return nil
+		},
+	}
+}
+
 func paginationParse(names []string, n, last string) (repos []string, next string) {
+	sort.Strings(names)
 	pageSize, err := strconv.Atoi(n)
 	if err != nil {
 		return nil, ""
