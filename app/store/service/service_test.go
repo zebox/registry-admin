@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/sha256"
 	"fmt"
-	"github.com/mattn/go-sqlite3"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -28,9 +27,11 @@ func TestDataService_SyncExistedRepositories(t *testing.T) {
 		Storage:  prepareStorageMock(repositoryStore),
 	}
 	require.NotNil(t, testDS)
-	//require.NoError(t, testDS.SyncExistedRepositories(ctx))
 	testDS.doSyncRepositories(ctx)
-	//<-ctx.Done()
+	assert.Equal(t, testSize*testSize, len(repositoryStore))
+
+	// test for duplicate exclude
+	testDS.doSyncRepositories(ctx)
 	assert.Equal(t, testSize*testSize, len(repositoryStore))
 	/*
 		var n, last string = "20", ""
@@ -135,7 +136,7 @@ func prepareStorageMock(repositoryStore map[string]store.RegistryEntry) *engine.
 		CreateRepositoryFunc: func(_ context.Context, entry *store.RegistryEntry) error {
 			entryName := entry.RepositoryName + "_" + entry.Tag
 			if _, ok := repositoryStore[entryName]; ok {
-				return sqlite3.ErrConstraintUnique
+				return errors.New("UNIQUE constraint error")
 			}
 			repositoryStore[entryName] = *entry
 			return nil
