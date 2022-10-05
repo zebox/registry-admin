@@ -10,6 +10,7 @@ import (
 	"github.com/zebox/registry-admin/app/registry"
 	"github.com/zebox/registry-admin/app/store"
 	"github.com/zebox/registry-admin/app/store/engine"
+	"math/rand"
 	"sort"
 	"strconv"
 	"testing"
@@ -19,42 +20,44 @@ import (
 func TestDataService_SyncExistedRepositories(t *testing.T) {
 
 	var repositoryStore = make(map[string]store.RegistryEntry)
-	ctx, _ := context.WithTimeout(context.Background(), time.Second*10)
-	testSize := 55
+	ctx, _ := context.WithTimeout(context.Background(), time.Second*5)
+
+	generator := rand.New(rand.NewSource(time.Now().UnixNano()))
+	n := generator.Intn(55-10) + 10
+	t.Logf("test data count is: %d | required repositories count: %d", n, n*n)
+	testSize := n
 
 	testDS := DataService{
 		Registry: prepareRegistryMock(testSize),
 		Storage:  prepareStorageMock(repositoryStore),
 	}
 	require.NotNil(t, testDS)
-	testDS.doSyncRepositories(ctx)
+	err := testDS.SyncExistedRepositories(ctx)
+	require.NoError(t, err)
+
+	time.Sleep(time.Millisecond * 10)
+	err = testDS.SyncExistedRepositories(ctx)
+	assert.Error(t, err)
+
+	// wait until synced
+	for testDS.isSyncing {
+		select {
+		case <-ctx.Done():
+			t.Error("context timeout before sync done")
+			return
+		default:
+			time.Sleep(time.Millisecond * 10)
+		}
+
+	}
+
 	assert.Equal(t, testSize*testSize, len(repositoryStore))
 
 	// test for duplicate exclude
-	testDS.doSyncRepositories(ctx)
+	err = testDS.SyncExistedRepositories(ctx)
+	assert.NoError(t, err)
 	assert.Equal(t, testSize*testSize, len(repositoryStore))
-	/*
-		var n, last string = "20", ""
-		var list registry.ImageTags
-		for {
-			repos, err := testDS.Registry.ListingImageTags(ctx, "test_repo_10", n, last)
 
-			list.Tags = append(list.Tags, repos.Tags...)
-			if errors.Is(err, registry.ErrNoMorePages) {
-				t.Logf("[INFO] Repositories synced. Total: %d\n", len(repos.Tags))
-				break
-			}
-			n, last, err = registry.ParseUrlForNextLink(repos.NextLink)
-			if err != nil {
-				t.Logf("failed to parse next link: %v", err)
-				break
-			}
-		}
-		for _, l := range list.Tags {
-			m, err := testDS.Registry.Manifest(ctx, "test_repo_10", l)
-			assert.NoError(t, err)
-			t.Logf("%v", m)
-		}*/
 }
 
 func prepareRegistryMock(size int) *registryInterfaceMock {
