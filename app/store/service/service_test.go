@@ -20,7 +20,9 @@ import (
 func TestDataService_SyncExistedRepositories(t *testing.T) {
 
 	var repositoryStore = make(map[string]store.RegistryEntry)
-	ctx, _ := context.WithTimeout(context.Background(), time.Second*5)
+	var errs = &errorsEmulator{} // fake errors emitter
+
+	ctx, _ := context.WithTimeout(context.Background(), time.Second*10)
 
 	generator := rand.New(rand.NewSource(time.Now().UnixNano()))
 	n := generator.Intn(55-10) + 10
@@ -28,8 +30,8 @@ func TestDataService_SyncExistedRepositories(t *testing.T) {
 	testSize := n
 
 	testDS := DataService{
-		Registry: prepareRegistryMock(testSize),
-		Storage:  prepareStorageMock(repositoryStore),
+		Registry: prepareRegistryMock(testSize, errs),
+		Storage:  prepareStorageMock(repositoryStore, errs),
 	}
 	require.NotNil(t, testDS)
 	err := testDS.SyncExistedRepositories(ctx)
@@ -58,9 +60,42 @@ func TestDataService_SyncExistedRepositories(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, testSize*testSize, len(repositoryStore))
 
+	// test with fake errors
+	repositoryStore = make(map[string]store.RegistryEntry) // clear data in mock registry
+	errs.createError = errorCreate
+	testDS.doSyncRepositories(ctx)
+	assert.Equal(t, 0, len(repositoryStore))
+
+	repositoryStore = make(map[string]store.RegistryEntry) // clear data in mock registry
+	errs.manifestError = errorManifest
+	testDS.doSyncRepositories(ctx)
+	assert.Equal(t, 0, len(repositoryStore))
+
+	repositoryStore = make(map[string]store.RegistryEntry) // clear data in mock registry
+	errs.listError = errorList
+	testDS.doSyncRepositories(ctx)
+	assert.Equal(t, 0, len(repositoryStore))
+
+	repositoryStore = make(map[string]store.RegistryEntry) // clear data in mock registry
+	errs.catalogError = errorCatalog
+	testDS.doSyncRepositories(ctx)
+	assert.Equal(t, 0, len(repositoryStore))
 }
 
-func prepareRegistryMock(size int) *registryInterfaceMock {
+var (
+	errorCreate   error = errors.New("failed to create entry in registry")
+	errorManifest       = errors.New("failed to get manifest data")
+	errorList           = errors.New("failed to list repository tags")
+	errorCatalog        = errors.New("failed to get repository list")
+)
+
+type errorsEmulator struct {
+	catalogError, listError, manifestError error // errors for registry
+
+	createError error // errors for storage
+}
+
+func prepareRegistryMock(size int, errs *errorsEmulator) *registryInterfaceMock {
 	var testRepositories = make(map[string]registry.ImageTags)
 	var testManifests = make(map[string]registry.ManifestSchemaV2)
 
@@ -89,6 +124,11 @@ func prepareRegistryMock(size int) *registryInterfaceMock {
 	return &registryInterfaceMock{
 		CatalogFunc: func(ctx context.Context, n string, last string) (repos registry.Repositories, err error) {
 
+			// emit fake error
+			if errs.catalogError != nil {
+				return repos, errs.catalogError
+			}
+
 			// sorting testRepos
 			names := make([]string, 0, len(testRepositories))
 			for repoName := range testRepositories {
@@ -105,6 +145,12 @@ func prepareRegistryMock(size int) *registryInterfaceMock {
 			return repos, nil
 		},
 		ListingImageTagsFunc: func(ctx context.Context, repoName string, n string, last string) (tags registry.ImageTags, err error) {
+
+			// emit fake error
+			if errs.listError != nil {
+				return tags, errs.listError
+			}
+
 			tags.Name = repoName
 			if val, ok := testRepositories[repoName]; ok {
 				names := make([]string, 0, len(val.Tags))
@@ -124,7 +170,12 @@ func prepareRegistryMock(size int) *registryInterfaceMock {
 
 			return tags, errors.New("repository not found")
 		},
-		ManifestFunc: func(ctx context.Context, repoName string, tag string) (registry.ManifestSchemaV2, error) {
+		ManifestFunc: func(ctx context.Context, repoName string, tag string) (manifest registry.ManifestSchemaV2, _ error) {
+			// emit fake error
+			if errs.manifestError != nil {
+				return manifest, errs.manifestError
+			}
+
 			if val, ok := testManifests[repoName+"_"+tag]; ok {
 				return val, nil
 			}
@@ -133,10 +184,16 @@ func prepareRegistryMock(size int) *registryInterfaceMock {
 	}
 }
 
-func prepareStorageMock(repositoryStore map[string]store.RegistryEntry) *engine.InterfaceMock {
+func prepareStorageMock(repositoryStore map[string]store.RegistryEntry, errs *errorsEmulator) *engine.InterfaceMock {
 
 	return &engine.InterfaceMock{
 		CreateRepositoryFunc: func(_ context.Context, entry *store.RegistryEntry) error {
+
+			// emit fake error
+			if errs.createError != nil {
+				return errs.createError
+			}
+
 			entryName := entry.RepositoryName + "_" + entry.Tag
 			if _, ok := repositoryStore[entryName]; ok {
 				return errors.New("UNIQUE constraint error")
