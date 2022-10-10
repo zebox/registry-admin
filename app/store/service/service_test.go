@@ -22,7 +22,8 @@ func TestDataService_SyncExistedRepositories(t *testing.T) {
 	var repositoryStore = make(map[string]store.RegistryEntry)
 	var errs = &errorsEmulator{} // fake errors emitter
 
-	ctx, _ := context.WithTimeout(context.Background(), time.Second*10)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
 
 	generator := rand.New(rand.NewSource(time.Now().UnixNano()))
 	n := generator.Intn(55-10) + 10
@@ -80,13 +81,14 @@ func TestDataService_SyncExistedRepositories(t *testing.T) {
 	errs.catalogError = errorCatalog
 	testDS.doSyncRepositories(ctx)
 	assert.Equal(t, 0, len(repositoryStore))
+
 }
 
 var (
-	errorCreate   error = errors.New("failed to create entry in registry")
-	errorManifest       = errors.New("failed to get manifest data")
-	errorList           = errors.New("failed to list repository tags")
-	errorCatalog        = errors.New("failed to get repository list")
+	errorCreate   = errors.New("failed to create entry in registry")
+	errorManifest = errors.New("failed to get manifest data")
+	errorList     = errors.New("failed to list repository tags")
+	errorCatalog  = errors.New("failed to get repository list")
 )
 
 type errorsEmulator struct {
@@ -154,9 +156,7 @@ func prepareRegistryMock(size int, errs *errorsEmulator) *registryInterfaceMock 
 			tags.Name = repoName
 			if val, ok := testRepositories[repoName]; ok {
 				names := make([]string, 0, len(val.Tags))
-				for _, tagName := range val.Tags {
-					names = append(names, tagName)
-				}
+				names = append(names, val.Tags...)
 
 				tags.Tags, tags.NextLink = paginationParse(names, n, last)
 				if tags.Tags == nil {
