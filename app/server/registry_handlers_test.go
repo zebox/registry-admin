@@ -169,7 +169,7 @@ func TestRegistryHandlers_events(t *testing.T) {
 	testRegistryHandlers.l = log.Default()
 
 	testRegistryHandlers.registryService = prepareRegistryMock(t)
-	testRegistryHandlers.dataService = service.DataService{Storage: prepareAccessStoreMock(t)}
+	testRegistryHandlers.dataService = &service.DataService{Storage: prepareAccessStoreMock(t)}
 
 	testsTable := []struct {
 		name     string
@@ -198,6 +198,20 @@ func TestRegistryHandlers_events(t *testing.T) {
 		t.Log(test.name)
 		requestWithCredentials(t, ctx, "bar", "bar_password", "GET", "/api/v1/registry/events", testRegistryHandlers.events, test.body, test.expected)
 	}
+}
+
+func TestRegistryHandlers_syncRepositories(t *testing.T) {
+	testRegistryHandlers := registryHandlers{
+		dataService: prepareDataServiceMock(),
+	}
+	testRegistryHandlers.l = log.Default()
+	testRegistryHandlers.ctx = context.Background()
+
+	requestWithCredentials(t, testRegistryHandlers.ctx, "bar", "bar_password", "GET", "/api/v1/registry/events", testRegistryHandlers.syncRepositories, nil, http.StatusOK)
+
+	ctx := context.WithValue(testRegistryHandlers.ctx, ctxKey, errors.New("repo sync error"))
+	testRegistryHandlers.ctx = ctx
+	requestWithCredentials(t, ctx, "bar", "bar_password", "GET", "/api/v1/registry/events", testRegistryHandlers.syncRepositories, nil, http.StatusInternalServerError)
 }
 
 func filledTestEntries(t *testing.T, testRegistryHandlers *registryHandlers) {
@@ -401,6 +415,18 @@ func prepareAccessStoreMock(t *testing.T) *engine.InterfaceMock {
 		},
 
 		UpdateRepositoryFunc: func(ctx context.Context, conditionClause map[string]interface{}, data map[string]interface{}) error {
+			return nil
+		},
+	}
+}
+
+func prepareDataServiceMock() dataServiceInterface {
+	return &dataServiceInterfaceMock{
+		SyncExistedRepositoriesFunc: func(ctx context.Context) error {
+
+			if value := ctx.Value(ctxKey); value != nil {
+				return errors.New("sync repo error")
+			}
 			return nil
 		},
 	}

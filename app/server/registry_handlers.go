@@ -8,17 +8,22 @@ import (
 	"github.com/zebox/registry-admin/app/registry"
 	"github.com/zebox/registry-admin/app/store"
 	"github.com/zebox/registry-admin/app/store/engine"
-	"github.com/zebox/registry-admin/app/store/service"
 	"net/http"
 	"net/url"
 	"strings"
 )
 
+// dataServiceInterface implement dataService instance
+type dataServiceInterface interface {
+	RepositoryEventsProcessing(ctx context.Context, envelope notifications.Envelope) (err error)
+	SyncExistedRepositories(ctx context.Context) error
+}
+
 // registryHandlers implement controllers which allow manipulation with registry entries using REST API endpoints
 type registryHandlers struct {
 	endpointsHandler
 	registryService registryInterface
-	dataService     service.DataService
+	dataService     dataServiceInterface
 }
 
 func (rh *registryHandlers) tokenAuth(w http.ResponseWriter, r *http.Request) {
@@ -139,7 +144,7 @@ func (rh *registryHandlers) delete(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// syncRepositories runs task for check existed entries at a registry service and synchronize it
+// syncRepositories runs task for check existed entries in a registry service and synchronize it with storage
 func (rh *registryHandlers) syncRepositories(w http.ResponseWriter, r *http.Request) {
 	if err := rh.dataService.SyncExistedRepositories(rh.ctx); err != nil {
 		SendErrorJSON(w, r, rh.l, http.StatusInternalServerError, err, "failed to run repositories sync task")

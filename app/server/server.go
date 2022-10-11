@@ -298,7 +298,7 @@ func (s *Server) routes() chi.Router {
 			rh := registryHandlers{
 				endpointsHandler: eh,
 				registryService:  s.RegistryService,
-				dataService: service.DataService{
+				dataService: &service.DataService{
 					Registry: s.RegistryService,
 					Storage:  s.Storage,
 				},
