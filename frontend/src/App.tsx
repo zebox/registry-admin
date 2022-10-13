@@ -17,6 +17,7 @@ import dataProvider from './providers/dataProvider';
 import users from './users';
 import groups from './groups';
 import access from './access';
+import repository from './registry';
 
 const history = createBrowserHistory();
 const i18nProvider = polyglotI18nProvider(locale => {
@@ -51,6 +52,7 @@ function App() {
       <Resource name="users" {...users} />
       <Resource name="groups" {...groups} />
       <Resource name="access" {...access} />
+      <Resource name="registry/catalog" {...repository} />
     </Admin>
   );
 }

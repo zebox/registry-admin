@@ -16,7 +16,8 @@ const customEnglishMessages: TranslationMessages = {
         commands: {
             users_name: "Users",
             groups_name: "Groups",
-            access_name: "Accesses"
+            access_name: "Accesses",
+            repository_name: "Repositories"
         },
         users: {
             name: "Users",
@@ -46,7 +47,7 @@ const customEnglishMessages: TranslationMessages = {
         accesses:{
             name: "Accesses",
             add_title: "Add new access",
-            edit_title: "Edit access",           
+            edit_title: "Edit access",
             fields: {
                 name: "Access name",
                 owner_id: "User",

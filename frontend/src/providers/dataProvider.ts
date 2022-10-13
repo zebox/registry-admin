@@ -60,7 +60,7 @@ const dataProvider: DataProvider = {
         };
         const url = `${apiUrl}/${resource}?${stringify(query)}`;
         return httpClient(url,createOptions("GET")).then(({ headers, json }) => (json));
-        
+
     },
     update: function <RecordType extends RaRecord = any>(resource: string, params: UpdateParams<any>): Promise<UpdateResult<RecordType>> {
         return httpClient(`${apiUrl}/${resource}/${params.id}`, {

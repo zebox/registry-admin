@@ -12,9 +12,10 @@ import {
 import users from '../users';
 import groups from '../groups';
 import access from '../access';
+import repository from '../registry';
 
 const Menu = ({ dense = false }: MenuProps) => {
-    
+
     const translate = useTranslate();
     const [open] = useSidebarState();
 
@@ -59,8 +60,17 @@ const Menu = ({ dense = false }: MenuProps) => {
                     leftIcon={<access.icon />}
                     dense={dense}
                 />
+                 <MenuItemLink
+                    to="/registry/catalog"
+                    state={{ _scrollToTop: true }}
+                    primaryText={translate(`resources.commands.repository_name`, {
+                        smart_count: 2,
+                    })}
+                    leftIcon={<repository.icon />}
+                    dense={dense}
+                />
         </Box>
-        
+
     );
 };
 

@@ -167,7 +167,7 @@ func (rh *registryHandlers) catalogList(w http.ResponseWriter, r *http.Request) 
 		SendErrorJSON(w, r, rh.l, http.StatusInternalServerError, err, "failed to fetch list of repositories")
 		return
 	}
-	rest.RenderJSON(w, responseMessage{Message: "ok", Data: repoList})
+	rest.RenderJSON(w, repoList)
 }
 
 func (rh *registryHandlers) checkUserAccess(ctx context.Context, user store.User, tokenRequest registry.TokenRequest) (bool, error) {

@@ -19,6 +19,7 @@ const russianMessages: TranslationMessages = {
             list: 'Список',
             refresh: 'Обновить',
             remove_filter: 'Убрать фильтр',
+            remove_all_filters: 'Убрать все фильтры',
             remove: 'Переместить',
             save: 'Сохранить',
             search: 'Поиск',

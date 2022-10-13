@@ -16,7 +16,8 @@ const customRussianMessages: TranslationMessages = {
         commands: {
             users_name: "Пользователи",
             groups_name: "Группы",
-            access_name: "Доступы"
+            access_name: "Доступы",
+            repository_name: "Репозитории"
         },
         users: {
             name: "Пользователи",
@@ -44,7 +45,7 @@ const customRussianMessages: TranslationMessages = {
         accesses:{
             name: "Управление доступом",
             add_title: "Добавить доступ",
-            edit_title: "Изменить",           
+            edit_title: "Изменить",
             fields: {
                 name: "Наименование",
                 owner_id: "Пользователь",
@@ -55,7 +56,7 @@ const customRussianMessages: TranslationMessages = {
             }
         }
     },
-    
+
 
 };
 
