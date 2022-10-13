@@ -31,11 +31,18 @@ const dataProvider: DataProvider = {
 
 
             return httpClient(url, createOptions("GET")).then(({ status, json }) => {
-
+                if (json.total === 0) {
+                    json.data=[];
+                }
                 if (status === 200) {
+                   
                     return resolve(json);
                 }
-                return reject();
+                return reject( new HttpError(
+                    (json && json.message) || status,
+                    status,
+                    json
+                ));
             }
             );
         });
