@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/docker/distribution/notifications"
 	"github.com/go-pkgz/rest"
 	"github.com/zebox/registry-admin/app/registry"
@@ -167,7 +168,7 @@ func (rh *registryHandlers) catalogList(w http.ResponseWriter, r *http.Request) 
 		SendErrorJSON(w, r, rh.l, http.StatusInternalServerError, err, "failed to fetch list of repositories")
 		return
 	}
-
+	w.Header().Add("Content-Range", fmt.Sprintf("accesses %d-%d/%d", filter.Range[0], filter.Range[1], repoList.Total))
 	rest.RenderJSON(w, repoList)
 
 }
