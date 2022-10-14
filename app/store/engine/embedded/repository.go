@@ -95,7 +95,7 @@ func (e *Embedded) FindRepositories(ctx context.Context, filter engine.QueryFilt
 	if entries.Total = e.getTotalRecordsExcludeRange(repositoriesTable, filter, []string{"repository_name", "tag"}); entries.Total == 0 {
 		return entries, nil // may be error handler catch
 	}
-
+	entries.Data = []interface{}{}
 	for rows.Next() {
 		var entry store.RegistryEntry
 		if err = rows.Scan(&entry.ID, &entry.RepositoryName, &entry.Tag, &entry.Digest, &entry.Size, &entry.PullCounter, &entry.Timestamp, &entry.Raw); err != nil {

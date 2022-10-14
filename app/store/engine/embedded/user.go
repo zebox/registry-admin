@@ -144,7 +144,7 @@ func (e *Embedded) FindUsers(ctx context.Context, filter engine.QueryFilter) (us
 	if users.Total = e.getTotalRecordsExcludeRange(usersTable, filter, []string{"login", "password"}); users.Total == 0 {
 		return users, nil // may be error handler catch
 	}
-
+	users.Data = []interface{}{}
 	for rows.Next() {
 		var user store.User
 		if err = rows.Scan(&user.ID, &user.Login, &user.Name, &user.Password, &user.Role, &user.Group, &user.Disabled, &user.Description); err != nil {

@@ -98,7 +98,7 @@ func (e *Embedded) FindGroups(ctx context.Context, filter engine.QueryFilter) (g
 	if groups.Total = e.getTotalRecordsExcludeRange(groupsTable, filter, []string{"name"}); groups.Total == 0 {
 		return groups, nil // may be error handler catch
 	}
-
+	groups.Data = []interface{}{}
 	for rows.Next() {
 		var group store.Group
 		if err = rows.Scan(&group.ID, &group.Name, &group.Description); err != nil {
