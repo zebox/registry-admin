@@ -320,6 +320,7 @@ func (s *Server) routes() chi.Router {
 					registryApiAccess.Get("/sync", rh.syncRepositories)
 					registryApiAccess.Delete("/delete", rh.delete)
 					registryApiAccess.Get("/catalog", rh.catalogList)
+					registryApiAccess.Get("/catalog/{repository_name}", rh.repositoryEntry)
 
 				})
 			})

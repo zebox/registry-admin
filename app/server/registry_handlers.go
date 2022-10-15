@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/docker/distribution/notifications"
+	"github.com/go-chi/chi/v5"
 	"github.com/go-pkgz/rest"
 	"github.com/zebox/registry-admin/app/registry"
 	"github.com/zebox/registry-admin/app/store"
@@ -165,10 +166,26 @@ func (rh *registryHandlers) catalogList(w http.ResponseWriter, r *http.Request) 
 	filter.GroupByField = true
 	repoList, errReposList := rh.dataStore.FindRepositories(r.Context(), filter)
 	if errReposList != nil {
-		SendErrorJSON(w, r, rh.l, http.StatusInternalServerError, err, "failed to fetch list of repositories")
+		SendErrorJSON(w, r, rh.l, http.StatusInternalServerError, errReposList, "failed to fetch list of repositories")
 		return
 	}
-	w.Header().Add("Content-Range", fmt.Sprintf("accesses %d-%d/%d", filter.Range[0], filter.Range[1], repoList.Total))
+	w.Header().Add("Content-Range", fmt.Sprintf("registry/catalog %d-%d/%d", filter.Range[0], filter.Range[1], repoList.Total))
+	rest.RenderJSON(w, repoList)
+
+}
+
+// catalogList returns list of repositories entry
+func (rh *registryHandlers) repositoryEntry(w http.ResponseWriter, r *http.Request) {
+	repositoryName := chi.URLParam(r, "repository_name")
+	filter := engine.QueryFilter{Filters: map[string]interface{}{"repository_name": repositoryName}}
+
+	filter.GroupByField = true
+	repoList, errReposList := rh.dataStore.FindRepositories(r.Context(), filter)
+	if errReposList != nil {
+		SendErrorJSON(w, r, rh.l, http.StatusInternalServerError, errReposList, "failed to fetch list of repositories")
+		return
+	}
+
 	rest.RenderJSON(w, repoList)
 
 }
