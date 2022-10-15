@@ -12,6 +12,7 @@ import {
 
 } from 'react-admin';
 
+import { SearchFieldTranslated } from '../helpers/Helpers'
 
 interface IRoleList {
     id: string;
@@ -39,7 +40,11 @@ const UserList = () => (
     <List
         sort={{ field: 'name', order: 'ASC' }}
         perPage={25}
-        filters={userFilters}
+        filters={SearchFieldTranslated([<SelectInput
+            source="role"
+            defaultValue={"user"}
+            emptyValue={null}
+            choices={RoleList} />])}
     >
         <Datagrid bulkActionButtons={false}>
             <TextField source="id" />

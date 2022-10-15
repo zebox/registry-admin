@@ -1,16 +1,17 @@
-
+import { element } from 'prop-types';
+import { ReactElement } from 'react'; 
 import { TextInput, useTranslate } from 'react-admin';
 
-export const SearchFieldTranslated = (additionalComponent?: any[]): any => {
+export const SearchFieldTranslated = (additionalComponent?:ReactElement<any, any>[]): any => {
     const translate = useTranslate();
-    if (additionalComponent && additionalComponent.length > 0) {
-        return [
-            <TextInput source="q" label={translate('ra.action.search')} alwaysOn />,
-            { ...additionalComponent }
-        ]
-    }
-    return [
+    let filters = [
         <TextInput source="q" label={translate('ra.action.search')} alwaysOn />
     ]
+    if (additionalComponent && additionalComponent.length > 0) {
+        additionalComponent.map(element=>{
+            filters.push(element);
+        })
+    }
+    return filters;
 
 }
