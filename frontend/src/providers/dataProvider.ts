@@ -16,7 +16,9 @@ const httpClient = fetchUtils.fetchJson;
 
 const dataProvider: DataProvider = {
     getOne: function <RecordType extends RaRecord = any>(resource: string, params: GetOneParams<any>): Promise<GetOneResult<RecordType>> {
-        return httpClient(`${apiUrl}/${resource}/${params.id}`, createOptions("GET")).then(({ json }) => (json));
+
+        const meta = new URLSearchParams(params.meta).toString();
+        return httpClient(`${apiUrl}/${resource}/${params.id}${meta && meta.length>0 ? "?"+meta : ""}`, createOptions("GET")).then(({ json }) => (json));
     },
     getList: function <RecordType extends RaRecord = any>(resource: string, params: GetListParams): Promise<GetListResult<RecordType> | any> {
         return new Promise((resolve, reject): Promise<GetListResult<any> | any> => {
@@ -35,7 +37,7 @@ const dataProvider: DataProvider = {
                     json.data=[];
                 }
                 if (status === 200) {
-                   
+
                     return resolve(json);
                 }
                 return reject( new HttpError(

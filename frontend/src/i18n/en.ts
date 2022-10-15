@@ -56,6 +56,9 @@ const customEnglishMessages: TranslationMessages = {
                 action:"Allowed action",
                 disabled:"Disabled"
             }
+        },
+        repository:{
+            title:"Repository details"
         }
     }
 };

@@ -54,6 +54,9 @@ const customRussianMessages: TranslationMessages = {
                 action:"Вид операции",
                 disabled:"Отклюен"
             }
+        },
+        repository:{
+            title:"Информация о репозитории"
         }
     },
 
