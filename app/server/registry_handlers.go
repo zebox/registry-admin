@@ -152,7 +152,7 @@ func (rh *registryHandlers) syncRepositories(w http.ResponseWriter, r *http.Requ
 		SendErrorJSON(w, r, rh.l, http.StatusInternalServerError, err, "failed to run repositories sync task")
 		return
 	}
-	rest.RenderJSON(w, responseMessage{Message: "ok"})
+	rest.RenderJSON(w, responseMessage{Message: "ok", Data: []interface{}{}})
 }
 
 // catalogList returns list of repositories entry

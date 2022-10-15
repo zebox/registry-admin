@@ -58,7 +58,14 @@ const customEnglishMessages: TranslationMessages = {
             }
         },
         repository:{
-            title:"Repository details"
+            title:"Repository details",
+            message_empty_page:"Repositories entry not found.",
+            message_sync_repo:"Synchronize repositories from registry",
+            message_syncing_repo:"Repositories sync in progress...",
+            message_error_syncing_repo:"Synchronization error",
+            message_repo_syncing_running:"Synchronization currently running. Please wait for complete previous task.",
+            button_sync:"Sync"
+           
         }
     }
 };

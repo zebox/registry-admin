@@ -56,7 +56,13 @@ const customRussianMessages: TranslationMessages = {
             }
         },
         repository:{
-            title:"Информация о репозитории"
+            title:"Информация о репозитории",
+            message_empty_page:"Ни одной записи не найдено. Список репозиториев пуст.",
+            message_sync_repo:"Синхронизировать репозитории из реестра",
+            message_syncing_repo:"Синхронизация репозиториев запущена",
+            message_error_syncing_repo:"Попытка синхронизации завершилась ошибкой",
+            message_repo_syncing_running:"Синхронизация уже запущена. Дождитесь окончания окончания операции.",
+            button_sync:"Синхронизировать"
         }
     },
 
