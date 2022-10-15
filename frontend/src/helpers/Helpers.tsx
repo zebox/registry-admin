@@ -1,4 +1,3 @@
-import { element } from 'prop-types';
 import { ReactElement } from 'react'; 
 import { TextInput, useTranslate } from 'react-admin';
 
