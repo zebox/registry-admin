@@ -77,7 +77,8 @@ const RepositoryShow = (props: any) => {
     const { data, isLoading, error } = useGetList(
         repositoryBaseResource,
         {
-            filter: { repository_name: id }
+            filter: { repository_name: id },
+            meta:{filter:"none"}
         },
         { onError: () => redirect("/"+repositoryBaseResource) }
     );

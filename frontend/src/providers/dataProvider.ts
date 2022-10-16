@@ -31,6 +31,7 @@ const dataProvider: DataProvider = {
                 sort: JSON.stringify([field, order]),
                 range: JSON.stringify([(page - 1) * perPage, page * perPage - 1]),
                 filter: JSON.stringify(params.filter),
+                meta: new URLSearchParams(params.meta).toString()
             };
             const url = `${apiUrl}/${resource}?${stringify(query)}`;
 
