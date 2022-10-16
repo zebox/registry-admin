@@ -17,7 +17,9 @@ import {
     useNotify,
     useDataProvider,
     useTranslate,
-    useRecordContext
+    useRecordContext,
+    useCreatePath,
+    useRedirect
 } from 'react-admin';
 
 
@@ -85,6 +87,22 @@ const SyncButton = () =>{
 
 }
 
+const RepositoryShowButton = ()=> {
+    const record = useRecordContext();
+    const createPath = useCreatePath();
+    const redirect = useRedirect();
+
+    const doShow = () =>{
+       console.log("click...");
+       redirect(createPath({ resource: 'registry/catalog', type: 'show', id: record.repository_name }))
+    }
+    if (record) {
+        record.id=record.repository_name;
+    }
+   //  return <p onClick={()=>doShow()}>fsdf</p>
+   return record && <ShowButton record={record} />
+}
+
 const RepositoryActions = () => (
     <TopToolbar>
         <ExportButton/>
@@ -92,8 +110,9 @@ const RepositoryActions = () => (
     </TopToolbar>
 );
 
-const RepositoryList = () => (
+const RepositoryList = (props:any) => (
     <List 
+        {...props}
         empty={<EmptyList/>}
         actions={<RepositoryActions/>}
         title={useTranslate()(`resources.commands.repository_name`)}
@@ -101,11 +120,12 @@ const RepositoryList = () => (
         perPage={25}
         filters={SearchFieldTranslated()}
     >
-        <Datagrid bulkActionButtons={false} >
-            <TextField source="id" />
+        <Datagrid bulkActionButtons={false}>
+           {/*  <TextField source="id" /> */}
             <TextField source="repository_name" />
             <SizeField source="size" />
-            <ShowButton />
+            <RepositoryShowButton/>
+            {/* <RepositoryShowButton /> */}
             <DeleteButton />
         </Datagrid>
     </List>
