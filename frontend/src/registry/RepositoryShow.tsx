@@ -1,7 +1,8 @@
 import * as React from "react";
 import { useParams, useLocation } from 'react-router-dom';
 import { useGetOne, useGetList, useRedirect, useTranslate, useRecordContext, useGetResourceLabel, Title, TextField, ShowContextProvider, RecordContextProvider, Loading, SimpleShowLayout } from 'react-admin';
-import { Card, Stack, Typography } from '@mui/material';
+import { Box,Card, Stack, Typography } from '@mui/material';
+import { ConverUnixTimeToDate } from "../helpers/Helpers";
 
 /**
  * Fetch a repository entry from the API and display it
@@ -37,28 +38,38 @@ const RepositoryShowView = ({ children }: any) => {
                 </Stack>
             </Card>
         </div>
-    );
+    )
 }
 
 const MyShowView = () => {
 
-    const record = useRecordContext();
-    return (record &&
-        <div>
-            <Title title={record.repository_name} />
-            <Card>
-                <Stack spacing={1}>
-                    <div>
-                        <Typography variant="caption" display="block">Title</Typography>
-                        <Typography variant="body2">{record.repository_name}</Typography>
-                    </div>
-                    <div>
-                        <Typography variant="caption" display="block">Publication Date</Typography>
-                        <Typography variant="body2">{new Date(record.timestamp).toDateString()}</Typography>
-                    </div>
-                </Stack>
-            </Card>
-        </div>
+    const records = useRecordContext();
+    return (records &&
+        <Box
+        sx={{padding:"10px", background:"#d6d6d6" }}>
+            { records.map((record:any)=>{
+                return (
+                <Card
+                key={record.tag}
+                sx={{padding:"2px"}} >
+                    <Stack spacing={1}    sx={{margin:"6px"}} >
+                        <div>
+                            <Typography variant="caption" display="block">Tag</Typography>
+                            <Typography variant="body2">{record.tag}</Typography>
+                        </div>
+                        <div>
+                            <Typography variant="caption" display="block">Publication Date</Typography>
+                            <Typography variant="body2">{ConverUnixTimeToDate(record.timestamp)}</Typography>
+                        </div>
+                        <div>
+                            <Typography variant="caption" display="block">Size</Typography>
+                            <Typography variant="body2">{record.size}</Typography>
+                        </div>
+                    </Stack>
+                </Card>
+                )
+            })}
+        </Box>
     );
 }
 
@@ -69,7 +80,6 @@ const GetRepositoryTag = () => {
 }
 
 
-
 const RepositoryShow = (props: any) => {
     const { id } = useParams();
     const redirect = useRedirect();
@@ -77,8 +87,9 @@ const RepositoryShow = (props: any) => {
     const { data, isLoading, error } = useGetList(
         repositoryBaseResource,
         {
+
             filter: { repository_name: id },
-            meta:{filter:"none"}
+            meta: {group_by:"none"}
         },
         { onError: () => redirect("/"+repositoryBaseResource) }
     );
@@ -113,7 +124,7 @@ export const RepositoryTags = () => {
         <SimpleShowLayout>
             <GetRepositoryTag />
         </SimpleShowLayout>
-  
+
     )
 } */
 

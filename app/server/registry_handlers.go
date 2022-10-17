@@ -163,7 +163,10 @@ func (rh *registryHandlers) catalogList(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	filter.GroupByField = true
+	groupBy, isGroupBy := r.URL.Query()["group_by"]
+	fmt.Printf("%v %v", isGroupBy, groupBy)
+
+	filter.GroupByField = !isGroupBy || (groupBy != nil && groupBy[0] != "none")
 	repoList, errReposList := rh.dataStore.FindRepositories(r.Context(), filter)
 	if errReposList != nil {
 		SendErrorJSON(w, r, rh.l, http.StatusInternalServerError, errReposList, "failed to fetch list of repositories")

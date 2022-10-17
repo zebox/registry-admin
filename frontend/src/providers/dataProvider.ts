@@ -17,7 +17,7 @@ const httpClient = fetchUtils.fetchJson;
 // const httpClient = fetcherJson;
 
 const dataProvider: DataProvider = {
-    
+
     getOne: function <RecordType extends RaRecord = any>(resource: string, params: GetOneParams<any>): Promise<GetOneResult<RecordType>> {
 
         const meta = new URLSearchParams(params.meta).toString();
@@ -31,12 +31,10 @@ const dataProvider: DataProvider = {
                 sort: JSON.stringify([field, order]),
                 range: JSON.stringify([(page - 1) * perPage, page * perPage - 1]),
                 filter: JSON.stringify(params.filter),
-                meta: new URLSearchParams(params.meta).toString()
+
             };
-            const url = `${apiUrl}/${resource}?${stringify(query)}`;
-
-
-
+            const meta = new URLSearchParams(params.meta).toString()
+            const url = `${apiUrl}/${resource}?${stringify(query)}&${meta}`;
 
             return httpClient(url, createOptions("GET")).then(({ status, json }) => {
 
@@ -55,8 +53,6 @@ const dataProvider: DataProvider = {
                     json
                 ));
             }).catch(error => {
-               // console.error(error);
-              
                  if (Object.hasOwn(error, 'body')) {
                     let json = error.body;
                     // throw new Error(json.message);
@@ -64,8 +60,8 @@ const dataProvider: DataProvider = {
                         (json && json.message) || error.status,
                         error.status,
                         json
-                    )); 
-                } 
+                    ));
+                }
             });
 
         });
