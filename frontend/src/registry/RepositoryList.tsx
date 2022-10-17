@@ -125,8 +125,6 @@ const RepositoryList = (props:any) => (
             <TextField source="repository_name" />
             <SizeFieldReadable source="size" />
             <RepositoryShowButton/>
-            {/* <RepositoryShowButton /> */}
-            <DeleteButton />
         </Datagrid>
     </List>
 );

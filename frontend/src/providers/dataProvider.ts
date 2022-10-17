@@ -38,7 +38,7 @@ const dataProvider: DataProvider = {
 
             return httpClient(url, createOptions("GET")).then(({ status, json }) => {
 
-                if (!Object.hasOwn(json, 'total')) {
+                if (!Object.hasOwn(json, 'total') || json.total==0) {
                     json.total = 0;
                     json.data = [];
                 }
@@ -120,7 +120,9 @@ const dataProvider: DataProvider = {
         }))
     },
     delete: function <RecordType extends RaRecord = any>(resource: string, params: DeleteParams<RecordType>): Promise<DeleteResult<RecordType>> {
-        return httpClient(`${apiUrl}/${resource}/${params.id}`, {
+        const meta = new URLSearchParams(params.meta).toString();
+
+        return httpClient(`${apiUrl}/${resource}/${params.id}${meta && meta.length > 0 ? "?" + meta : ""}`, {
             method: 'DELETE',
             mode: "cors",
             credentials: "include"

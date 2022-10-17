@@ -1,8 +1,8 @@
 import * as React from "react";
 import { useParams, useLocation } from 'react-router-dom';
-import { useGetOne, useGetList, useRedirect, useTranslate, Datagrid, useRecordContext, useListController, Title, ListBase, ListToolbar, Pagination, TextField, ShowContextProvider, RecordContextProvider, Loading, ListContextProvider } from 'react-admin';
-import { Box, Card, CardContent, Stack, Typography } from '@mui/material';
-import { ConvertUnixTimeToDate, ParseSizeToReadable } from "../helpers/Helpers";
+import { useGetOne, useGetList, useDelete, useTranslate, Datagrid, useRecordContext, DeleteButton, Title, ListBase, ListToolbar, Pagination, TextField, ShowContextProvider, RecordContextProvider, Loading, ListContextProvider } from 'react-admin';
+import { Box, Card, CardContent, Stack, Typography, Button } from '@mui/material';
+import { ConvertUnixTimeToDate, ParseSizeToReadable, SearchFieldTranslated } from "../helpers/Helpers";
 import { SizeFieldReadable } from "./RepositoryList";
 
 /**
@@ -17,9 +17,10 @@ const RepositoryShow = () => {
     return <TagList title={translate('resources.repository.tag_list_title')}>
         <Datagrid bulkActionButtons={false}>
             <TextField source="tag" />
-            <TagDescription source="digest"/>
+            <TagDescription source="digest" />
             <DateFieldFormatted source="timestamp" />
             <SizeFieldReadable source="size" />
+            <TagDeleteButton source={"digest"} />
         </Datagrid>
     </TagList>
 }
@@ -31,6 +32,7 @@ const TagList = ({ children, actions, filters, title, ...props }: any) => {
         <ListBase filter={{ repository_name: id }} queryOptions={{ meta: { group_by: "none" } }}>
             <Title title={id} />
             <ListToolbar
+                filters={SearchFieldTranslated()}
             />
             <Card >
                 {children}
@@ -46,16 +48,35 @@ const TagDescription = ({ source }: any) => {
     return <Card sx={{ minWidth: 275 }}>
         <CardContent>
             <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
-            {translate('resources.repository.pull_counter')} {record["pull_counter"]}
+                {translate('resources.repository.pull_counter')} {record["pull_counter"]}
             </Typography>
             <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
-            {translate('resources.repository.tag_digest')} <i>{record[source]}</i>
+                {translate('resources.repository.tag_digest')} <i>{record[source]}</i>
             </Typography>
             <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
-            {translate('resources.repository.tag_media_type')} <i>{record["raw"].mediaType}</i>
+                {translate('resources.repository.tag_media_type')} <i>{record["raw"].mediaType}</i>
             </Typography>
         </CardContent>
     </Card>
+}
+
+const TagDeleteButton = ({ source }: any) => {
+    const record = useRecordContext();
+    const [deleteOne, { isLoading, error }] = useDelete();
+
+    const deleteTag = () => {
+        deleteOne(
+            repositoryBaseResource,
+            { id: record["tag"], previousData: record, meta: { name: record["repository_name"], digest: record["digest"] } }
+        );
+
+    }
+
+    if (isLoading) return <Loading />
+    if (error) return <>Error!</>
+
+    return <Button onClick={() => deleteTag()}>DELETE</Button>
+
 }
 const DateFieldFormatted = ({ source }: any) => {
     const record = useRecordContext();

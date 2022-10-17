@@ -318,7 +318,7 @@ func (s *Server) routes() chi.Router {
 					registryApiAccess.Use(authMiddleware.Auth, middleware.NoCache)
 					registryApiAccess.Use(authMiddleware.RBAC("admin", "manager"))
 					registryApiAccess.Get("/sync", rh.syncRepositories)
-					registryApiAccess.Delete("/delete", rh.delete)
+					registryApiAccess.Delete("/catalog/*", rh.delete)
 					registryApiAccess.Get("/catalog", rh.catalogList)
 					registryApiAccess.Get("/catalog/{repository_name}", rh.repositoryEntry)
 
