@@ -57,6 +57,10 @@ const customRussianMessages: TranslationMessages = {
         },
         repository:{
             title:"Информация о репозитории",
+            tag_list_title:"Список меток (tags)",
+            pull_counter:"Количество загрузок: ",
+            tag_digest:"Подпись: ",
+            tag_media_type:"Тип: ",
             message_empty_page:"Ни одной записи не найдено. Список репозиториев пуст.",
             message_sync_repo:"Синхронизировать репозитории из реестра",
             message_syncing_repo:"Синхронизация репозиториев запущена",

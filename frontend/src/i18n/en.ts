@@ -59,6 +59,10 @@ const customEnglishMessages: TranslationMessages = {
         },
         repository:{
             title:"Repository details",
+            tag_list_title:"Tags list",
+            pull_counter:"Pull counter: ",
+            tag_digest:"Digest: ",
+            tag_media_type:"Type: ",
             message_empty_page:"Repositories entry not found.",
             message_sync_repo:"Synchronize repositories from registry",
             message_syncing_repo:"Repositories sync in progress...",

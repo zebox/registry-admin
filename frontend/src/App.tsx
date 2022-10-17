@@ -18,7 +18,6 @@ import users from './users';
 import groups from './groups';
 import access from './access';
 import repository from './registry';
-import { RepositoryTags } from './registry/RepositoryShow';
 
 const history = createBrowserHistory();
 const i18nProvider = polyglotI18nProvider(locale => {

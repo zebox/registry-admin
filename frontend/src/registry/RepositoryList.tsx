@@ -2,7 +2,7 @@ import SyncRepo from '@mui/icons-material/Sync';
 import { Box, Typography,Card,CardContent } from '@mui/material';
 import { useState } from 'react';
 
-import { SearchFieldTranslated } from '../helpers/Helpers';
+import { SearchFieldTranslated, ParseSizeToReadable } from '../helpers/Helpers';
 
 import {
     Button,
@@ -123,7 +123,7 @@ const RepositoryList = (props:any) => (
         <Datagrid bulkActionButtons={false}>
            {/*  <TextField source="id" /> */}
             <TextField source="repository_name" />
-            <SizeField source="size" />
+            <SizeFieldReadable source="size" />
             <RepositoryShowButton/>
             {/* <RepositoryShowButton /> */}
             <DeleteButton />
@@ -131,25 +131,14 @@ const RepositoryList = (props:any) => (
     </List>
 );
 
-const SizeField= ({ source }: any) => {
+export const SizeFieldReadable= ({ source }: any) => {
     const record = useRecordContext();
-
-    const convertSize=(bytes:any,decimals:number=2):string=> {
-        if (!+bytes) return '0 Bytes'
-
-        const k = 1024
-        const dm = decimals < 0 ? 0 : decimals
-        const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
-
-        const i = Math.floor(Math.log(bytes) / Math.log(k))
-
-        return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`
-    }
 
     return record ? (
         <>
-            {convertSize(record[source],2)}
+            {ParseSizeToReadable(record[source],2)}
         </>
     ) : null;
 }
+
 export default RepositoryList;

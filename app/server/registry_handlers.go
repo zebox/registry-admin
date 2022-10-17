@@ -136,11 +136,7 @@ func (rh *registryHandlers) events(w http.ResponseWriter, r *http.Request) {
 func (rh *registryHandlers) delete(w http.ResponseWriter, r *http.Request) {
 	t := r.URL.Query()["tag"]
 	n := r.URL.Query()["name"]
-	// rh.registryService.DeleteTag()
-	/*digest := eventData.Events[0].Target.Descriptor.Digest
-	//tag := eventData.Events[0].Target.Tag
 
-	repo := eventData.Events[0].Target.Storage*/
 	if err := rh.registryService.DeleteTag(r.Context(), n[0], t[0]); err != nil {
 		rh.l.Logf("%v", err)
 	}
