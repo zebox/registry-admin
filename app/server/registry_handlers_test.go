@@ -122,6 +122,20 @@ func TestRegistryHandlers_tokenAuth(t *testing.T) {
 			query:          "?account=baz&scope=repository:test_resource_3:pull&service=unknown_registry",
 			expectedStatus: http.StatusInternalServerError,
 		},
+		{
+			// test with expire param
+			login:          "baz",
+			password:       "baz_password",
+			query:          "?account=baz&scope=repository:test_resource_3:pull&service=container_registry&expire=3600",
+			expectedStatus: http.StatusOK,
+		},
+		{
+			// test with invalid expire param
+			login:          "baz",
+			password:       "baz_password",
+			query:          "?account=baz&scope=repository:test_resource_3:pull&service=container_registry&expire=NaN",
+			expectedStatus: http.StatusBadRequest,
+		},
 	}
 
 	ctx := context.Background()
