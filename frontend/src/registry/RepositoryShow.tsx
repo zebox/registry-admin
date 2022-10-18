@@ -73,7 +73,10 @@ const TagDeleteButton = ({ source }: any) => {
     }
 
     if (isLoading) return <Loading />
-    if (error) return <>Error!</>
+    if (error) {
+        console.error(error);
+    } 
+    
 
     return <Button onClick={() => deleteTag()}>DELETE</Button>
 
