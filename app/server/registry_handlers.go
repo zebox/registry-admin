@@ -12,6 +12,7 @@ import (
 	"github.com/zebox/registry-admin/app/store/engine"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 )
 
@@ -67,6 +68,17 @@ func (rh *registryHandlers) tokenAuth(w http.ResponseWriter, r *http.Request) {
 			Type:    scopeParts[0],
 			Name:    scopeParts[1],
 			Actions: strings.Split(scopeParts[2], ","),
+		}
+
+		if expireTime := queryParams.Get("expire"); expireTime != "" {
+			expireValue, errExpireConvert := strconv.ParseInt(expireTime, 10, 64)
+			if errExpireConvert != nil {
+				errValue := fmt.Errorf("expire value must be a number: %v", errExpireConvert)
+				rh.l.Logf("[ERROR] %v", errValue)
+				renderJSONWithStatus(w, responseMessage{Message: errValue.Error()}, http.StatusBadRequest)
+				return
+			}
+			tokenRequest.ExpireTime = expireValue
 		}
 
 		if allow, errCheck := rh.checkUserAccess(r.Context(), user, tokenRequest); !allow || errCheck != nil {
