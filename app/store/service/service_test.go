@@ -59,7 +59,10 @@ func TestDataService_SyncExistedRepositories(t *testing.T) {
 	// test for duplicate exclude
 	err = testDS.SyncExistedRepositories(ctx)
 	assert.NoError(t, err)
-	assert.Equal(t, testSize*testSize, len(repositoryStore))
+	for _, v := range repositoryStore {
+		assert.Equal(t, testDS.lastSyncTime, v.Timestamp)
+	}
+	// assert.Equal(t, testSize*testSize, len(repositoryStore))
 
 	// test with fake errors
 	repositoryStore = make(map[string]store.RegistryEntry) // clear data in mock registry
@@ -200,6 +203,21 @@ func prepareStorageMock(repositoryStore map[string]store.RegistryEntry, errs *er
 			}
 			repositoryStore[entryName] = *entry
 			return nil
+		},
+
+		UpdateRepositoryFunc: func(ctx context.Context, conditionClause map[string]interface{}, data map[string]interface{}) error {
+			// search entry first
+			repoName := conditionClause[store.RegistryRepositoryNameField].(string)
+			tagName := conditionClause[store.RegistryTagField].(string)
+			entryName := repoName + "_" + tagName
+
+			if entry, ok := repositoryStore[entryName]; ok {
+				entry.Size = data[store.RegistrySizeNameField].(int64)
+				entry.Timestamp = data[store.RegistryTimestampField].(int64)
+
+				return nil
+			}
+			return errors.New("entry not found")
 		},
 	}
 }

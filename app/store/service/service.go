@@ -33,7 +33,8 @@ type DataService struct {
 	Registry registryInterface
 	Storage  engine.Interface
 
-	isSyncing bool // used for checks status syncing operation is active
+	lastSyncTime int64 // timestamp for mark actual record and use it for repository garbage collector
+	isSyncing    bool  // used for checks status syncing operation is active
 }
 
 // SyncExistedRepositories will check existed entries at a registry service and synchronize it
@@ -52,6 +53,8 @@ func (ds *DataService) doSyncRepositories(ctx context.Context) {
 
 	ds.isSyncing = true
 	defer func() { ds.isSyncing = false }()
+
+	ds.lastSyncTime = time.Now().Unix()
 
 	var (
 		n          = defaultPageSize // item number per page
@@ -104,18 +107,34 @@ func (ds *DataService) doSyncRepositories(ctx context.Context) {
 						Tag:            tag,
 						Digest:         manifest.ContentDigest,
 						Size:           manifest.TotalSize,
-						Timestamp:      time.Now().Unix(),
+						Timestamp:      ds.lastSyncTime,
 						Raw:            rawManifestData,
 					}
 					if errCreate := ds.Storage.CreateRepository(ctx, entry); errCreate != nil {
 						if !strings.HasPrefix(errCreate.Error(), "UNIQUE") {
-							log.Printf("[ERROR] failed to marshal manifest data from repo '%s' for tag '%s' errCatalog: %s", repo, tag, errCreate)
+							log.Printf("[ERROR] failed to marshal manifest data from repo '%s' for tag '%s' err: %s", repo, tag, errCreate)
 							log.Printf("[ERROR] sync operation aborted")
 							return
 						}
-						log.Printf("[WARN] entry already exist and skipped for add: repo: '%s', tag: '%s'", repo, tag)
+
+						log.Printf("[WARN] entry already exist and will update : repo: '%s', tag: '%s'", repo, tag)
+
+						condition := map[string]interface{}{
+							store.RegistryRepositoryNameField: repo,
+							store.RegistryTagField:            tag}
+
+						fieldForUpdate := map[string]interface{}{
+							store.RegistrySizeNameField:  manifest.TotalSize,
+							store.RegistryTimestampField: ds.lastSyncTime,
+							store.RegistryRawField:       rawManifestData}
+
+						if errUpdate := ds.Storage.UpdateRepository(ctx, condition, fieldForUpdate); errUpdate != nil {
+							log.Printf("[ERROR] sync operation aborted: repo '%s' for tag '%s' err: %s", repo, tag, errUpdate)
+							return
+						}
 						continue
 					}
+
 					log.Printf("[DEBUG] New entry added: repo: '%s', tag: '%s'", repo, tag)
 				}
 
