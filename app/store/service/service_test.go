@@ -60,7 +60,7 @@ func TestDataService_SyncExistedRepositories(t *testing.T) {
 	err = testDS.SyncExistedRepositories(ctx)
 	assert.NoError(t, err)
 	for _, v := range repositoryStore {
-		assert.Equal(t, testDS.lastSyncTime, v.Timestamp)
+		assert.Equal(t, testDS.lastSyncDate, v.Timestamp)
 	}
 	// assert.Equal(t, testSize*testSize, len(repositoryStore))
 

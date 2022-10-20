@@ -4,17 +4,17 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"strings"
-
 	"github.com/zebox/registry-admin/app/registry"
 	"github.com/zebox/registry-admin/app/store"
 	"github.com/zebox/registry-admin/app/store/engine"
+	"strings"
 	"time"
 
 	log "github.com/go-pkgz/lgr"
 )
 
-const defaultPageSize = "50" // the number of repository items for pagination request when catalog listing
+const defaultPageSize = "50"              // the number of repository items for pagination request when catalog listing
+const defaultGarbageCollectorTimeout = 60 // second
 
 // registryInterface implement method for access data of a registry instance
 type registryInterface interface {
@@ -33,8 +33,8 @@ type DataService struct {
 	Registry registryInterface
 	Storage  engine.Interface
 
-	lastSyncTime int64 // timestamp for mark actual record and use it for repository garbage collector
-	isSyncing    bool  // used for checks status syncing operation is active
+	lastSyncDate int64 // timestamp for mark actual record and use it for repository garbage collector
+	isSyncing    bool  // used for checks status either syncing operation or garbage collector is active
 }
 
 // SyncExistedRepositories will check existed entries at a registry service and synchronize it
@@ -54,7 +54,7 @@ func (ds *DataService) doSyncRepositories(ctx context.Context) {
 	ds.isSyncing = true
 	defer func() { ds.isSyncing = false }()
 
-	ds.lastSyncTime = time.Now().Unix()
+	ds.lastSyncDate = time.Now().Unix()
 
 	var (
 		n          = defaultPageSize // item number per page
@@ -107,7 +107,7 @@ func (ds *DataService) doSyncRepositories(ctx context.Context) {
 						Tag:            tag,
 						Digest:         manifest.ContentDigest,
 						Size:           manifest.TotalSize,
-						Timestamp:      ds.lastSyncTime,
+						Timestamp:      ds.lastSyncDate,
 						Raw:            rawManifestData,
 					}
 					if errCreate := ds.Storage.CreateRepository(ctx, entry); errCreate != nil {
@@ -117,6 +117,8 @@ func (ds *DataService) doSyncRepositories(ctx context.Context) {
 							return
 						}
 
+						// if repositories with specific tag already exist the service try update dynamic field and set a new timestamp.
+						// Then timestamp using for garbage collector for detect outdated data and remove one from repository store
 						log.Printf("[WARN] entry already exist and will update : repo: '%s', tag: '%s'", repo, tag)
 
 						condition := map[string]interface{}{
@@ -125,7 +127,7 @@ func (ds *DataService) doSyncRepositories(ctx context.Context) {
 
 						fieldForUpdate := map[string]interface{}{
 							store.RegistrySizeNameField:  manifest.TotalSize,
-							store.RegistryTimestampField: ds.lastSyncTime,
+							store.RegistryTimestampField: ds.lastSyncDate,
 							store.RegistryRawField:       rawManifestData}
 
 						if errUpdate := ds.Storage.UpdateRepository(ctx, condition, fieldForUpdate); errUpdate != nil {
@@ -164,4 +166,38 @@ func (ds *DataService) doSyncRepositories(ctx context.Context) {
 			break
 		}
 	}
+}
+
+// garbageCollector check repositories for outdated data in repository storage with 'lastSyncDate' value
+// Timestamp field update at every sync call in repository storage and compare with 'lastSyncDate' variable.
+// If values above is different garbage collector will remove all outdated entries
+func (ds *DataService) garbageCollector(ctx context.Context, timeout int64) {
+
+	if timeout == 0 {
+		timeout = defaultGarbageCollectorTimeout
+	}
+	ticker := time.NewTicker(time.Duration(timeout) * time.Second)
+
+	gbTaskFn := func() {
+		if ds.isSyncing {
+			log.Printf("[DEBUG] garbage collector skip while syncing in progress")
+		}
+		ds.isSyncing = true
+		defer func() { ds.isSyncing = false }()
+	}
+
+	// starting garbage collector background task
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				log.Printf("[DEBUG] garbage collector task stopped")
+				return
+
+			case <-ticker.C:
+				gbTaskFn()
+			}
+		}
+	}()
+
 }
