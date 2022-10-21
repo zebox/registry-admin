@@ -8,6 +8,7 @@ import (
 	"github.com/zebox/registry-admin/app/store"
 	"github.com/zebox/registry-admin/app/store/engine"
 	"strings"
+	"sync"
 	"time"
 
 	log "github.com/go-pkgz/lgr"
@@ -34,14 +35,21 @@ type DataService struct {
 	Storage  engine.Interface
 
 	lastSyncDate int64 // timestamp for mark actual record and use it for repository garbage collector
-	isSyncing    bool  // used for checks status either syncing operation or garbage collector is active
+
+	// used for checks status either syncing operation or garbage collector is active
+	// it prevents stacking task in queue and run in parallels
+	isWorking bool
+
+	mutex sync.RWMutex
 }
 
 // SyncExistedRepositories will check existed entries at a registry service and synchronize it
 func (ds *DataService) SyncExistedRepositories(ctx context.Context) error {
 
 	// prevent parallel syncing
-	if ds.isSyncing {
+	ds.mutex.RLock()
+	defer ds.mutex.RUnlock()
+	if ds.isWorking {
 		return errors.New("repository sync currently running")
 	}
 
@@ -51,8 +59,12 @@ func (ds *DataService) SyncExistedRepositories(ctx context.Context) error {
 
 func (ds *DataService) doSyncRepositories(ctx context.Context) {
 
-	ds.isSyncing = true
-	defer func() { ds.isSyncing = false }()
+	ds.mutex.Lock()
+	ds.isWorking = true
+	defer func() {
+		ds.isWorking = false
+		ds.mutex.Unlock()
+	}()
 
 	ds.lastSyncDate = time.Now().Unix()
 
@@ -168,10 +180,10 @@ func (ds *DataService) doSyncRepositories(ctx context.Context) {
 	}
 }
 
-// garbageCollector check repositories for outdated data in repository storage with 'lastSyncDate' value
+// repositoriesSyncTask check repositories for outdated or updated data in repository storage with 'lastSyncDate' value
 // Timestamp field update at every sync call in repository storage and compare with 'lastSyncDate' variable.
 // If values above is different garbage collector will remove all outdated entries
-func (ds *DataService) garbageCollector(ctx context.Context, timeout int64) {
+func (ds *DataService) repositoriesSyncTask(ctx context.Context, timeout int64) {
 
 	if timeout == 0 {
 		timeout = defaultGarbageCollectorTimeout
@@ -179,11 +191,14 @@ func (ds *DataService) garbageCollector(ctx context.Context, timeout int64) {
 	ticker := time.NewTicker(time.Duration(timeout) * time.Second)
 
 	gbTaskFn := func() {
-		if ds.isSyncing {
+
+		ds.mutex.RLock()
+		defer ds.mutex.RUnlock()
+		if ds.isWorking {
 			log.Printf("[DEBUG] garbage collector skip while syncing in progress")
+			return
 		}
-		ds.isSyncing = true
-		defer func() { ds.isSyncing = false }()
+		ds.doGarbageCollector(ctx)
 	}
 
 	// starting garbage collector background task
@@ -193,11 +208,25 @@ func (ds *DataService) garbageCollector(ctx context.Context, timeout int64) {
 			case <-ctx.Done():
 				log.Printf("[DEBUG] garbage collector task stopped")
 				return
-
 			case <-ticker.C:
+				ds.doSyncRepositories(ctx)
 				gbTaskFn()
 			}
 		}
 	}()
+}
+
+func (ds *DataService) doGarbageCollector(ctx context.Context) {
+	ds.mutex.Lock()
+	ds.isWorking = true
+	defer func() {
+		ds.isWorking = false
+		ds.mutex.Unlock()
+	}()
+
+	if ds.lastSyncDate == 0 {
+		log.Printf("[DEBUG] garbage collector skip because sync required start first")
+		return
+	}
 
 }

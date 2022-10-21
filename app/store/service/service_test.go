@@ -43,7 +43,7 @@ func TestDataService_SyncExistedRepositories(t *testing.T) {
 	assert.Error(t, err)
 
 	// wait until synced
-	for testDS.isSyncing {
+	for testDS.isWorking {
 		select {
 		case <-ctx.Done():
 			t.Error("context timeout before sync done")

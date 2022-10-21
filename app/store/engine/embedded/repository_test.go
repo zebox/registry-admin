@@ -367,3 +367,71 @@ func TestEmbedded_DeleteRepository(t *testing.T) {
 	ctxCancel()
 	wg.Wait()
 }
+
+func TestEmbedded_DeleteRepositoryGarbage(t *testing.T) {
+	ctx, ctxCancel := context.WithCancel(context.Background())
+	var wg = new(sync.WaitGroup)
+	db := prepareTestDB(ctx, t, wg) // defined mock store
+
+	date_sync := time.Now().Unix()
+	outdated := time.Now().Add(-1 * time.Hour).Unix()
+	entries := []store.RegistryEntry{
+		{
+			RepositoryName: "aHello_test_1",
+			Tag:            "test_tag_1",
+			Digest:         "sha256:0ea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7cf",
+			Size:           708,
+			PullCounter:    1,
+			Timestamp:      date_sync,
+			Raw:            []byte(`{"some":"json_1"}`),
+		},
+		{
+			RepositoryName: "aHello_test_2",
+			Tag:            "test_tag_2",
+			Digest:         "sha256:1ea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7cf",
+			Size:           709,
+			PullCounter:    1,
+			Timestamp:      date_sync,
+			Raw:            []byte(`{"some":"json_2"}`),
+		},
+		{
+			RepositoryName: "bHello_test_3",
+			Tag:            "test_tag_3",
+			Digest:         "sha256:3ea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7cf",
+			Size:           710,
+			PullCounter:    1,
+			Timestamp:      outdated,
+			Raw:            []byte(`{"some":"json_3"}`),
+		},
+		{
+			RepositoryName: "bHello_test_4",
+			Tag:            "test_tag_4",
+			Digest:         "sha256:4ea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7cf",
+			Size:           711,
+			PullCounter:    1,
+			Timestamp:      outdated,
+			Raw:            []byte(`{"some":"json_4"}`),
+		},
+	}
+
+	for _, entry := range entries {
+		tmpGr := entry
+		err := db.CreateRepository(ctx, &tmpGr)
+		entry.ID = tmpGr.ID
+		require.NoError(t, err)
+	}
+
+	err := db.DeleteRepositoryGarbage(ctx, outdated)
+	assert.NoError(t, err)
+
+	filter := engine.QueryFilter{
+		Sort: []string{"id", "asc"},
+	}
+
+	result, errFind := db.FindRepositories(ctx, filter)
+	assert.NoError(t, errFind)
+	assert.Equal(t, int64(2), result.Total)
+
+	ctxCancel()
+	wg.Wait()
+}
