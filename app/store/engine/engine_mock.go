@@ -19,6 +19,9 @@ var _ Interface = &InterfaceMock{}
 //
 // 		// make and configure a mocked Interface
 // 		mockedInterface := &InterfaceMock{
+// 			AccessGarbageCollectorFunc: func(ctx context.Context) error {
+// 				panic("mock out the AccessGarbageCollector method")
+// 			},
 // 			CloseFunc: func(ctx context.Context) error {
 // 				panic("mock out the Close method")
 // 			},
@@ -42,6 +45,9 @@ var _ Interface = &InterfaceMock{}
 // 			},
 // 			DeleteRepositoryFunc: func(ctx context.Context, key string, id interface{}) error {
 // 				panic("mock out the DeleteRepository method")
+// 			},
+// 			DeleteRepositoryGarbageFunc: func(ctx context.Context, syncDate int64) error {
+// 				panic("mock out the DeleteRepositoryGarbage method")
 // 			},
 // 			DeleteUserFunc: func(ctx context.Context, id int64) error {
 // 				panic("mock out the DeleteUser method")
@@ -89,6 +95,9 @@ var _ Interface = &InterfaceMock{}
 //
 // 	}
 type InterfaceMock struct {
+	// AccessGarbageCollectorFunc mocks the AccessGarbageCollector method.
+	AccessGarbageCollectorFunc func(ctx context.Context) error
+
 	// CloseFunc mocks the Close method.
 	CloseFunc func(ctx context.Context) error
 
@@ -112,6 +121,9 @@ type InterfaceMock struct {
 
 	// DeleteRepositoryFunc mocks the DeleteRepository method.
 	DeleteRepositoryFunc func(ctx context.Context, key string, id interface{}) error
+
+	// DeleteRepositoryGarbageFunc mocks the DeleteRepositoryGarbage method.
+	DeleteRepositoryGarbageFunc func(ctx context.Context, syncDate int64) error
 
 	// DeleteUserFunc mocks the DeleteUser method.
 	DeleteUserFunc func(ctx context.Context, id int64) error
@@ -154,6 +166,11 @@ type InterfaceMock struct {
 
 	// calls tracks calls to the methods.
 	calls struct {
+		// AccessGarbageCollector holds details about calls to the AccessGarbageCollector method.
+		AccessGarbageCollector []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+		}
 		// Close holds details about calls to the Close method.
 		Close []struct {
 			// Ctx is the ctx argument value.
@@ -209,6 +226,13 @@ type InterfaceMock struct {
 			Key string
 			// ID is the id argument value.
 			ID interface{}
+		}
+		// DeleteRepositoryGarbage holds details about calls to the DeleteRepositoryGarbage method.
+		DeleteRepositoryGarbage []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// SyncDate is the syncDate argument value.
+			SyncDate int64
 		}
 		// DeleteUser holds details about calls to the DeleteUser method.
 		DeleteUser []struct {
@@ -304,27 +328,60 @@ type InterfaceMock struct {
 			User store.User
 		}
 	}
-	lockClose            sync.RWMutex
-	lockCreateAccess     sync.RWMutex
-	lockCreateGroup      sync.RWMutex
-	lockCreateRepository sync.RWMutex
-	lockCreateUser       sync.RWMutex
-	lockDeleteAccess     sync.RWMutex
-	lockDeleteGroup      sync.RWMutex
-	lockDeleteRepository sync.RWMutex
-	lockDeleteUser       sync.RWMutex
-	lockFindAccesses     sync.RWMutex
-	lockFindGroups       sync.RWMutex
-	lockFindRepositories sync.RWMutex
-	lockFindUsers        sync.RWMutex
-	lockGetAccess        sync.RWMutex
-	lockGetGroup         sync.RWMutex
-	lockGetRepository    sync.RWMutex
-	lockGetUser          sync.RWMutex
-	lockUpdateAccess     sync.RWMutex
-	lockUpdateGroup      sync.RWMutex
-	lockUpdateRepository sync.RWMutex
-	lockUpdateUser       sync.RWMutex
+	lockAccessGarbageCollector  sync.RWMutex
+	lockClose                   sync.RWMutex
+	lockCreateAccess            sync.RWMutex
+	lockCreateGroup             sync.RWMutex
+	lockCreateRepository        sync.RWMutex
+	lockCreateUser              sync.RWMutex
+	lockDeleteAccess            sync.RWMutex
+	lockDeleteGroup             sync.RWMutex
+	lockDeleteRepository        sync.RWMutex
+	lockDeleteRepositoryGarbage sync.RWMutex
+	lockDeleteUser              sync.RWMutex
+	lockFindAccesses            sync.RWMutex
+	lockFindGroups              sync.RWMutex
+	lockFindRepositories        sync.RWMutex
+	lockFindUsers               sync.RWMutex
+	lockGetAccess               sync.RWMutex
+	lockGetGroup                sync.RWMutex
+	lockGetRepository           sync.RWMutex
+	lockGetUser                 sync.RWMutex
+	lockUpdateAccess            sync.RWMutex
+	lockUpdateGroup             sync.RWMutex
+	lockUpdateRepository        sync.RWMutex
+	lockUpdateUser              sync.RWMutex
+}
+
+// AccessGarbageCollector calls AccessGarbageCollectorFunc.
+func (mock *InterfaceMock) AccessGarbageCollector(ctx context.Context) error {
+	if mock.AccessGarbageCollectorFunc == nil {
+		panic("InterfaceMock.AccessGarbageCollectorFunc: method is nil but Interface.AccessGarbageCollector was just called")
+	}
+	callInfo := struct {
+		Ctx context.Context
+	}{
+		Ctx: ctx,
+	}
+	mock.lockAccessGarbageCollector.Lock()
+	mock.calls.AccessGarbageCollector = append(mock.calls.AccessGarbageCollector, callInfo)
+	mock.lockAccessGarbageCollector.Unlock()
+	return mock.AccessGarbageCollectorFunc(ctx)
+}
+
+// AccessGarbageCollectorCalls gets all the calls that were made to AccessGarbageCollector.
+// Check the length with:
+//     len(mockedInterface.AccessGarbageCollectorCalls())
+func (mock *InterfaceMock) AccessGarbageCollectorCalls() []struct {
+	Ctx context.Context
+} {
+	var calls []struct {
+		Ctx context.Context
+	}
+	mock.lockAccessGarbageCollector.RLock()
+	calls = mock.calls.AccessGarbageCollector
+	mock.lockAccessGarbageCollector.RUnlock()
+	return calls
 }
 
 // Close calls CloseFunc.
@@ -604,6 +661,41 @@ func (mock *InterfaceMock) DeleteRepositoryCalls() []struct {
 	mock.lockDeleteRepository.RLock()
 	calls = mock.calls.DeleteRepository
 	mock.lockDeleteRepository.RUnlock()
+	return calls
+}
+
+// DeleteRepositoryGarbage calls DeleteRepositoryGarbageFunc.
+func (mock *InterfaceMock) DeleteRepositoryGarbage(ctx context.Context, syncDate int64) error {
+	if mock.DeleteRepositoryGarbageFunc == nil {
+		panic("InterfaceMock.DeleteRepositoryGarbageFunc: method is nil but Interface.DeleteRepositoryGarbage was just called")
+	}
+	callInfo := struct {
+		Ctx      context.Context
+		SyncDate int64
+	}{
+		Ctx:      ctx,
+		SyncDate: syncDate,
+	}
+	mock.lockDeleteRepositoryGarbage.Lock()
+	mock.calls.DeleteRepositoryGarbage = append(mock.calls.DeleteRepositoryGarbage, callInfo)
+	mock.lockDeleteRepositoryGarbage.Unlock()
+	return mock.DeleteRepositoryGarbageFunc(ctx, syncDate)
+}
+
+// DeleteRepositoryGarbageCalls gets all the calls that were made to DeleteRepositoryGarbage.
+// Check the length with:
+//     len(mockedInterface.DeleteRepositoryGarbageCalls())
+func (mock *InterfaceMock) DeleteRepositoryGarbageCalls() []struct {
+	Ctx      context.Context
+	SyncDate int64
+} {
+	var calls []struct {
+		Ctx      context.Context
+		SyncDate int64
+	}
+	mock.lockDeleteRepositoryGarbage.RLock()
+	calls = mock.calls.DeleteRepositoryGarbage
+	mock.lockDeleteRepositoryGarbage.RUnlock()
 	return calls
 }
 
