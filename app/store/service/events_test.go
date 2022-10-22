@@ -109,7 +109,7 @@ func TestDataService_RepositoryEventsProcessing(t *testing.T) {
 
 	// test delete with not existed repository entry
 	testEnvelopePullEvent.Events[0].Target.Repository = "unknown"
-	err = ds.RepositoryEventsProcessing(nil, testEnvelope)
+	err = ds.RepositoryEventsProcessing(nil, testEnvelope) // nolint
 	assert.Error(t, err)
 }
 

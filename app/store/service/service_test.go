@@ -17,10 +17,10 @@ import (
 	"time"
 )
 
-func TestDataService_SyncExistedRepositories(t *testing.T) {
+var repositoryStore = make(map[string]store.RegistryEntry)
+var errs = &errorsEmulator{} // fake errors emitter
 
-	var repositoryStore = make(map[string]store.RegistryEntry)
-	var errs = &errorsEmulator{} // fake errors emitter
+func TestDataService_SyncExistedRepositories(t *testing.T) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
@@ -30,7 +30,7 @@ func TestDataService_SyncExistedRepositories(t *testing.T) {
 	t.Logf("test data count is: %d | required repositories count: %d", n, n*n)
 	testSize := n
 
-	testDS := DataService{
+	testDS := &DataService{
 		Registry: prepareRegistryMock(testSize, errs),
 		Storage:  prepareStorageMock(repositoryStore, errs),
 	}
@@ -87,6 +87,25 @@ func TestDataService_SyncExistedRepositories(t *testing.T) {
 
 }
 
+func TestDataService_RepositoriesMaintaining(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
+
+	generator := rand.New(rand.NewSource(time.Now().UnixNano()))
+	n := generator.Intn(55-10) + 10
+	t.Logf("test data count is: %d | required repositories count: %d", n, n*n)
+	testSize := n
+
+	testDS := &DataService{
+		Registry: prepareRegistryMock(testSize, errs),
+		Storage:  prepareStorageMock(repositoryStore, errs),
+	}
+
+	testDS.RepositoriesMaintaining(ctx, 3)
+	<-ctx.Done()
+	time.Sleep(time.Second)
+}
+
 var (
 	errorCreate   = errors.New("failed to create entry in registry")
 	errorManifest = errors.New("failed to get manifest data")
@@ -96,8 +115,7 @@ var (
 
 type errorsEmulator struct {
 	catalogError, listError, manifestError error // errors for registry
-
-	createError error // errors for storage
+	createError                            error // errors for storage
 }
 
 func prepareRegistryMock(size int, errs *errorsEmulator) *registryInterfaceMock {
@@ -218,6 +236,14 @@ func prepareStorageMock(repositoryStore map[string]store.RegistryEntry, errs *er
 				return nil
 			}
 			return errors.New("entry not found")
+		},
+
+		RepositoryGarbageCollectorFunc: func(ctx context.Context, syncDate int64) error {
+			return nil
+		},
+
+		AccessGarbageCollectorFunc: func(ctx context.Context) error {
+			return nil
 		},
 	}
 }

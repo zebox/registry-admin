@@ -27,7 +27,7 @@ func (ds *DataService) RepositoryEventsProcessing(ctx context.Context, envelope 
 }
 
 // updateRepositoryEntry will create repository entry if it doesn't exist or update when already exist
-func (ds DataService) updateRepositoryEntry(ctx context.Context, event notifications.Event) error {
+func (ds *DataService) updateRepositoryEntry(ctx context.Context, event notifications.Event) error {
 	filter := engine.QueryFilter{
 		Filters: map[string]interface{}{"repository_name": event.Target.Repository, "tag": event.Target.Tag},
 	}
@@ -82,7 +82,7 @@ func (ds DataService) updateRepositoryEntry(ctx context.Context, event notificat
 }
 
 // deleteRepositoryEntry will delete repository entry
-func (ds DataService) deleteRepositoryEntry(ctx context.Context, event notifications.Event) error {
+func (ds *DataService) deleteRepositoryEntry(ctx context.Context, event notifications.Event) error {
 	filter := engine.QueryFilter{
 		Filters: map[string]interface{}{"repository_name": event.Target.Repository, "tag": event.Target.Tag},
 	}
