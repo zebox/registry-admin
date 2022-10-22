@@ -368,7 +368,7 @@ func TestEmbedded_DeleteRepository(t *testing.T) {
 	wg.Wait()
 }
 
-func TestEmbedded_DeleteRepositoryGarbage(t *testing.T) {
+func TestEmbedded_RepositoryGarbageCollector(t *testing.T) {
 	ctx, ctxCancel := context.WithCancel(context.Background())
 	var wg = new(sync.WaitGroup)
 	db := prepareTestDB(ctx, t, wg) // defined mock store
@@ -421,7 +421,7 @@ func TestEmbedded_DeleteRepositoryGarbage(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	err := db.DeleteRepositoryGarbage(ctx, outdated)
+	err := db.RepositoryGarbageCollector(ctx, date_sync)
 	assert.NoError(t, err)
 
 	filter := engine.QueryFilter{
@@ -432,7 +432,7 @@ func TestEmbedded_DeleteRepositoryGarbage(t *testing.T) {
 	assert.NoError(t, errFind)
 	assert.Equal(t, int64(2), result.Total)
 
-	err = db.DeleteRepositoryGarbage(ctx, outdated)
+	err = db.RepositoryGarbageCollector(ctx, outdated)
 	assert.Equal(t, ErrNotFound, err)
 
 	// try with  bad or closed connection
@@ -440,7 +440,7 @@ func TestEmbedded_DeleteRepositoryGarbage(t *testing.T) {
 	err = badConn.Connect(ctx)
 	require.NoError(t, err)
 	require.NoError(t, badConn.Close(ctx))
-	assert.Error(t, badConn.DeleteRepositoryGarbage(ctx, 0))
+	assert.Error(t, badConn.RepositoryGarbageCollector(ctx, 0))
 
 	ctxCancel()
 	wg.Wait()

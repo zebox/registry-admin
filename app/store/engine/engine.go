@@ -47,7 +47,7 @@ type Interface interface {
 	FindRepositories(ctx context.Context, filter QueryFilter) (entries ListResponse, err error)
 	UpdateRepository(ctx context.Context, conditionClause, data map[string]interface{}) (err error)
 	DeleteRepository(ctx context.Context, key string, id interface{}) (err error)
-	DeleteRepositoryGarbage(ctx context.Context, syncDate int64) (err error)
+	RepositoryGarbageCollector(ctx context.Context, syncDate int64) (err error)
 
 	// Misc storage function
 	Close(ctx context.Context) error

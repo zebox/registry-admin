@@ -40,7 +40,7 @@ func (e *Embedded) CreateRepository(ctx context.Context, entry *store.RegistryEn
 }
 
 // GetRepository get repository data by ID
-func (e *Embedded) GetRepository(ctx context.Context, entryID int64) (entry store.RegistryEntry, err error) {
+func (e *Embedded) GetRepository(ctx context.Context, entryID int64) (entry store.RegistryEntry, err error) { //nolint dupl
 
 	queryFilter := fmt.Sprintf("SELECT id, repository_name, tag, digest, size, pull_counter, timestamp,raw FROM %s WHERE id = ?", repositoriesTable)
 	stmt, err := e.db.PrepareContext(ctx, queryFilter)
@@ -160,10 +160,10 @@ func (e *Embedded) DeleteRepository(ctx context.Context, key string, id interfac
 	return err
 }
 
-// DeleteRepositoryGarbage deletes outdated repositories
-func (e *Embedded) DeleteRepositoryGarbage(ctx context.Context, syncDate int64) (err error) {
+// RepositoryGarbageCollector deletes outdated repositories
+func (e *Embedded) RepositoryGarbageCollector(ctx context.Context, syncDate int64) (err error) {
 
-	deleteSql := fmt.Sprintf("DELETE FROM %s WHERE %s!=?", repositoriesTable, store.RegistryTimestampField) //nolint:gosec
+	deleteSql := fmt.Sprintf("DELETE FROM %s WHERE %s<?", repositoriesTable, store.RegistryTimestampField) //nolint:gosec
 	res, err := e.db.ExecContext(ctx, deleteSql, syncDate)
 	if err != nil {
 		return errors.Wrapf(err, "failed execute query for user delete")

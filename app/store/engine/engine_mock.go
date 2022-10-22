@@ -47,7 +47,7 @@ var _ Interface = &InterfaceMock{}
 // 				panic("mock out the DeleteRepository method")
 // 			},
 // 			DeleteRepositoryGarbageFunc: func(ctx context.Context, syncDate int64) error {
-// 				panic("mock out the DeleteRepositoryGarbage method")
+// 				panic("mock out the RepositoryGarbageCollector method")
 // 			},
 // 			DeleteUserFunc: func(ctx context.Context, id int64) error {
 // 				panic("mock out the DeleteUser method")
@@ -122,7 +122,7 @@ type InterfaceMock struct {
 	// DeleteRepositoryFunc mocks the DeleteRepository method.
 	DeleteRepositoryFunc func(ctx context.Context, key string, id interface{}) error
 
-	// DeleteRepositoryGarbageFunc mocks the DeleteRepositoryGarbage method.
+	// DeleteRepositoryGarbageFunc mocks the RepositoryGarbageCollector method.
 	DeleteRepositoryGarbageFunc func(ctx context.Context, syncDate int64) error
 
 	// DeleteUserFunc mocks the DeleteUser method.
@@ -227,7 +227,7 @@ type InterfaceMock struct {
 			// ID is the id argument value.
 			ID interface{}
 		}
-		// DeleteRepositoryGarbage holds details about calls to the DeleteRepositoryGarbage method.
+		// RepositoryGarbageCollector holds details about calls to the RepositoryGarbageCollector method.
 		DeleteRepositoryGarbage []struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
@@ -664,10 +664,10 @@ func (mock *InterfaceMock) DeleteRepositoryCalls() []struct {
 	return calls
 }
 
-// DeleteRepositoryGarbage calls DeleteRepositoryGarbageFunc.
-func (mock *InterfaceMock) DeleteRepositoryGarbage(ctx context.Context, syncDate int64) error {
+// RepositoryGarbageCollector calls DeleteRepositoryGarbageFunc.
+func (mock *InterfaceMock) RepositoryGarbageCollector(ctx context.Context, syncDate int64) error {
 	if mock.DeleteRepositoryGarbageFunc == nil {
-		panic("InterfaceMock.DeleteRepositoryGarbageFunc: method is nil but Interface.DeleteRepositoryGarbage was just called")
+		panic("InterfaceMock.DeleteRepositoryGarbageFunc: method is nil but Interface.RepositoryGarbageCollector was just called")
 	}
 	callInfo := struct {
 		Ctx      context.Context
@@ -682,7 +682,7 @@ func (mock *InterfaceMock) DeleteRepositoryGarbage(ctx context.Context, syncDate
 	return mock.DeleteRepositoryGarbageFunc(ctx, syncDate)
 }
 
-// DeleteRepositoryGarbageCalls gets all the calls that were made to DeleteRepositoryGarbage.
+// DeleteRepositoryGarbageCalls gets all the calls that were made to RepositoryGarbageCollector.
 // Check the length with:
 //     len(mockedInterface.DeleteRepositoryGarbageCalls())
 func (mock *InterfaceMock) DeleteRepositoryGarbageCalls() []struct {
