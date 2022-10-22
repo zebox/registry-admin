@@ -165,3 +165,6 @@ func (e *Embedded) DeleteAccess(ctx context.Context, id int64) (err error) {
 
 	return err
 }
+
+// AccessGarbageCollector
+// SELECT resource_name from access WHERE resource_name NOT IN (SELECT repository_name from repositories)
