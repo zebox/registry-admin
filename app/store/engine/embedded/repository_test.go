@@ -432,6 +432,16 @@ func TestEmbedded_DeleteRepositoryGarbage(t *testing.T) {
 	assert.NoError(t, errFind)
 	assert.Equal(t, int64(2), result.Total)
 
+	err = db.DeleteRepositoryGarbage(ctx, outdated)
+	assert.Equal(t, ErrNotFound, err)
+
+	// try with  bad or closed connection
+	badConn := Embedded{}
+	err = badConn.Connect(ctx)
+	require.NoError(t, err)
+	require.NoError(t, badConn.Close(ctx))
+	assert.Error(t, badConn.DeleteRepositoryGarbage(ctx, 0))
+
 	ctxCancel()
 	wg.Wait()
 }

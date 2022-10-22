@@ -162,6 +162,7 @@ func (e *Embedded) DeleteRepository(ctx context.Context, key string, id interfac
 
 // DeleteRepositoryGarbage deletes outdated repositories
 func (e *Embedded) DeleteRepositoryGarbage(ctx context.Context, syncDate int64) (err error) {
+
 	deleteSql := fmt.Sprintf("DELETE FROM %s WHERE %s!=?", repositoriesTable, store.RegistryTimestampField) //nolint:gosec
 	res, err := e.db.ExecContext(ctx, deleteSql, syncDate)
 	if err != nil {

@@ -11,15 +11,6 @@ import (
 	"strconv"
 )
 
-/*
-// Filters using for query filtered data from store
-type Filters struct {
-	Range   [2]int64
-	Filters map[string]interface{}
-	Sort    []string
-}
-*/
-
 // ListResponse is a container for return list of result data
 type ListResponse struct {
 	Total int64         `json:"total"`
@@ -55,13 +46,13 @@ type Interface interface {
 	FindRepositories(ctx context.Context, filter QueryFilter) (entries ListResponse, err error)
 	UpdateRepository(ctx context.Context, conditionClause, data map[string]interface{}) (err error)
 	DeleteRepository(ctx context.Context, key string, id interface{}) (err error)
+	DeleteRepositoryGarbage(ctx context.Context, syncDate int64) (err error)
 
 	// Misc storage function
 	Close(ctx context.Context) error
 }
 
 // QueryFilter using for query to data from storage
-
 type QueryFilter struct {
 	Range [2]int64 // array indexes are: 0 - Skip value, 1 - Limit value
 	IDs   []int64  `json:"id"`
