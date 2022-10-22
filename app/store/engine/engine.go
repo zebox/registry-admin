@@ -39,6 +39,7 @@ type Interface interface {
 	FindAccesses(ctx context.Context, filter QueryFilter) (accesses ListResponse, err error)
 	UpdateAccess(ctx context.Context, access store.Access) (err error)
 	DeleteAccess(ctx context.Context, id int64) (err error)
+	AccessGarbageCollector(ctx context.Context) error
 
 	// Repositories methods
 	CreateRepository(ctx context.Context, entry *store.RegistryEntry) (err error)

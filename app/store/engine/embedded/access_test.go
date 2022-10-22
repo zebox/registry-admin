@@ -8,6 +8,7 @@ import (
 	"github.com/zebox/registry-admin/app/store/engine"
 	"sync"
 	"testing"
+	"time"
 )
 
 func TestEmbedded_CreateAccess(t *testing.T) {
@@ -274,6 +275,105 @@ func TestEmbedded_DeleteAccess(t *testing.T) {
 	err = badConn.DeleteAccess(ctx, -1)
 	assert.Error(t, err)
 
+	ctxCancel()
+	wg.Wait()
+}
+
+func TestEmbedded_AccessGarbageCollector(t *testing.T) {
+	ctx, ctxCancel := context.WithCancel(context.Background())
+	var wg = new(sync.WaitGroup)
+	db := prepareTestDB(ctx, t, wg) // defined mock store
+
+	testAccesses := []store.Access{
+		{
+			Name:         "test_access_1",
+			Owner:        1111,
+			Type:         "repository",
+			ResourceName: "test_rep/test_1",
+			Action:       "push",
+		},
+		{
+			Name:         "test_access_2",
+			Owner:        2222,
+			Type:         "repository",
+			ResourceName: "test_rep/test_2",
+			Action:       "pull",
+		},
+		{
+			Name:         "test_access_3",
+			Owner:        3333,
+			Type:         "repository",
+			ResourceName: "test_per/test_3",
+			Action:       "delete",
+		},
+		{
+			Name:         "test_access_4",
+			Owner:        4444,
+			IsGroup:      true,
+			Type:         "repository",
+			ResourceName: "test_per/test_4",
+			Action:       "delete",
+			Disabled:     true,
+		},
+	}
+	for i, a := range testAccesses {
+		tmpAccess := a
+		err := db.CreateAccess(ctx, &tmpAccess)
+		testAccesses[i].ID = tmpAccess.ID
+		require.NoError(t, err)
+	}
+
+	now := time.Now().Unix()
+	repositoryEntries := []store.RegistryEntry{
+		{
+			RepositoryName: "test_rep/test_1",
+			Tag:            "test_tag_1",
+			Digest:         "sha256:0ea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7cf",
+			Size:           708,
+			PullCounter:    1,
+			Timestamp:      now,
+			Raw:            []byte(`{"some":"json_1"}`),
+		},
+		{
+			RepositoryName: "test_rep/test_2",
+			Tag:            "test_tag_2",
+			Digest:         "sha256:1ea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7cf",
+			Size:           709,
+			PullCounter:    1,
+			Timestamp:      now,
+			Raw:            []byte(`{"some":"json_2"}`),
+		},
+	}
+
+	for _, entry := range repositoryEntries {
+		tmpGr := entry
+		err := db.CreateRepository(ctx, &tmpGr)
+		entry.ID = tmpGr.ID
+		require.NoError(t, err)
+	}
+
+	err := db.AccessGarbageCollector(ctx)
+	assert.NoError(t, err)
+
+	filter := engine.QueryFilter{
+		Sort: []string{"id", "asc"},
+	}
+
+	result, errFind := db.FindRepositories(ctx, filter)
+	assert.NoError(t, errFind)
+	assert.Equal(t, int64(2), result.Total)
+
+	// test with empty result
+	err = db.AccessGarbageCollector(ctx)
+	assert.Equal(t, ErrNotFound, err)
+
+	// try with bad or closed connection
+	badConn := Embedded{}
+	err = badConn.Connect(ctx)
+	require.NoError(t, err)
+	require.NoError(t, badConn.Close(ctx))
+	err = badConn.AccessGarbageCollector(ctx)
+	assert.Error(t, err)
 	ctxCancel()
 	wg.Wait()
 }

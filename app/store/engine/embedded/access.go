@@ -166,5 +166,20 @@ func (e *Embedded) DeleteAccess(ctx context.Context, id int64) (err error) {
 	return err
 }
 
-// AccessGarbageCollector
-// SELECT resource_name from access WHERE resource_name NOT IN (SELECT repository_name from repositories)
+// AccessGarbageCollector check outdated repositories in repositories table and delete ones from access list
+func (e *Embedded) AccessGarbageCollector(ctx context.Context) error {
+	res, err := e.db.ExecContext(ctx, "DELETE FROM access WHERE resource_name NOT IN (SELECT repository_name from repositories)")
+	if err != nil {
+		return errors.Wrapf(err, "failed execute query for execute garbage collector for access ")
+	}
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return ErrNotFound
+	}
+
+	return err
+}
