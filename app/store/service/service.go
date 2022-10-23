@@ -18,6 +18,8 @@ import (
 const defaultPageSize = "50"              // the number of repository items for pagination request when catalog listing
 const defaultGarbageCollectorTimeout = 60 // second
 
+var ErrNoSyncedYet error = errors.New("garbage collector skip because sync required start first")
+
 // registryInterface implement method for access data of a registry instance
 type registryInterface interface {
 	// Catalog return list a set of available repositories in the local registry cluster.
@@ -132,7 +134,7 @@ func (ds *DataService) doSyncRepositories(ctx context.Context) {
 
 						// if repositories with specific tag already exist the service try update dynamic field and set a new timestamp.
 						// Then timestamp using for garbage collector for detect outdated data and remove one from repository store
-						log.Printf("[WARN] entry already exist and will update : repo: '%s', tag: '%s'", repo, tag)
+						log.Printf("[DEBUG] entry already exist and will update : repo: '%s', tag: '%s'", repo, tag)
 
 						condition := map[string]interface{}{
 							store.RegistryRepositoryNameField: repo,
@@ -182,8 +184,9 @@ func (ds *DataService) doSyncRepositories(ctx context.Context) {
 	ds.lastSyncDate = now
 }
 
-// RepositoriesMaintaining check repositories for outdated or updated data in repository storage with 'lastSyncDate' value
-// Timestamp field update at every sync call in repository storage and compare with 'lastSyncDate' variable.
+// RepositoriesMaintaining check repositories for outdated or updated data in repository storage
+// with 'lastSyncDate' value. Timestamp field update at every sync call in repository storage
+// and compare with 'lastSyncDate' variable.
 // If values above is different garbage collector will remove all outdated entries
 func (ds *DataService) RepositoriesMaintaining(ctx context.Context, timeout int64) {
 
@@ -211,9 +214,6 @@ func (ds *DataService) RepositoriesMaintaining(ctx context.Context, timeout int6
 
 func (ds *DataService) doGarbageCollector(ctx context.Context) error {
 	ds.mutex.Lock()
-	if ds.isWorking {
-		return fmt.Errorf("[DEBUG] garbage collector skip while syncing in progress")
-	}
 
 	ds.isWorking = true
 	defer func() {
@@ -222,7 +222,7 @@ func (ds *DataService) doGarbageCollector(ctx context.Context) error {
 	}()
 
 	if ds.lastSyncDate == 0 {
-		return fmt.Errorf("garbage collector skip because sync required start first")
+		return ErrNoSyncedYet
 	}
 
 	if err := ds.Storage.RepositoryGarbageCollector(ctx, ds.lastSyncDate); err != nil {

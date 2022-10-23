@@ -17,15 +17,27 @@ import (
 	"time"
 )
 
-var repositoryStore = make(map[string]store.RegistryEntry)
-var errs = &errorsEmulator{} // fake errors emitter
+const (
+	keyGcValue       = "ctx_gc_value"
+	keyRepoGcError   = "repo_gc_error"
+	keyAccessGcError = "access_gc_error"
+)
+
+type ctxKeyGC string
+type ctxValueGC map[string]bool
+
+var (
+	ctxKey          ctxKeyGC = keyGcValue
+	repositoryStore          = make(map[string]store.RegistryEntry)
+	errs                     = &errorsEmulator{} // fake errors emitter
+)
 
 func TestDataService_SyncExistedRepositories(t *testing.T) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
 
-	generator := rand.New(rand.NewSource(time.Now().UnixNano()))
+	generator := rand.New(rand.NewSource(time.Now().UnixNano())) // #nosec
 	n := generator.Intn(55-10) + 10
 	t.Logf("test data count is: %d | required repositories count: %d", n, n*n)
 	testSize := n
@@ -39,8 +51,8 @@ func TestDataService_SyncExistedRepositories(t *testing.T) {
 	require.NoError(t, err)
 
 	time.Sleep(time.Millisecond * 10)
-	err = testDS.SyncExistedRepositories(ctx)
-	assert.Error(t, err)
+	errExisted := testDS.SyncExistedRepositories(ctx)
+	assert.Nil(t, errExisted)
 
 	// wait until synced
 	for testDS.isWorking {
@@ -91,8 +103,8 @@ func TestDataService_RepositoriesMaintaining(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
 
-	generator := rand.New(rand.NewSource(time.Now().UnixNano()))
-	n := generator.Intn(55-10) + 10
+	generator := rand.New(rand.NewSource(time.Now().UnixNano())) // #nosec
+	n := generator.Intn(20-10) + 10
 	t.Logf("test data count is: %d | required repositories count: %d", n, n*n)
 	testSize := n
 
@@ -101,9 +113,21 @@ func TestDataService_RepositoriesMaintaining(t *testing.T) {
 		Storage:  prepareStorageMock(repositoryStore, errs),
 	}
 
+	ctx = context.WithValue(ctx, ctxKey, ctxValueGC{keyRepoGcError: false, keyAccessGcError: false})
 	testDS.RepositoriesMaintaining(ctx, 3)
 	<-ctx.Done()
-	time.Sleep(time.Second)
+
+	ctxValue := ctx.Value(ctxKey)
+	require.NotNil(t, ctxValue)
+	require.IsType(t, ctxValueGC{}, ctxValue)
+
+	ctxValue.(ctxValueGC)[keyRepoGcError] = false
+	err := testDS.doGarbageCollector(ctx)
+	assert.NotNil(t, err)
+
+	testDS.lastSyncDate = 0
+	err = testDS.doGarbageCollector(ctx)
+	assert.Equal(t, ErrNoSyncedYet, err)
 }
 
 var (
@@ -167,7 +191,7 @@ func prepareRegistryMock(size int, errs *errorsEmulator) *registryInterfaceMock 
 			}
 			return repos, nil
 		},
-		ListingImageTagsFunc: func(ctx context.Context, repoName string, n string, last string) (tags registry.ImageTags, err error) {
+		ListingImageTagsFunc: func(ctx context.Context, repoName, n, last string) (tags registry.ImageTags, err error) {
 
 			// emit fake error
 			if errs.listError != nil {
@@ -223,7 +247,7 @@ func prepareStorageMock(repositoryStore map[string]store.RegistryEntry, errs *er
 			return nil
 		},
 
-		UpdateRepositoryFunc: func(ctx context.Context, conditionClause map[string]interface{}, data map[string]interface{}) error {
+		UpdateRepositoryFunc: func(ctx context.Context, conditionClause map[string]interface{}, data map[string]interface{}) error { //nolint:lll
 			// search entry first
 			repoName := conditionClause[store.RegistryRepositoryNameField].(string)
 			tagName := conditionClause[store.RegistryTagField].(string)
@@ -239,11 +263,31 @@ func prepareStorageMock(repositoryStore map[string]store.RegistryEntry, errs *er
 		},
 
 		RepositoryGarbageCollectorFunc: func(ctx context.Context, syncDate int64) error {
-			return nil
+			ctxValue := ctx.Value(ctxKey)
+			if ctxValue != nil {
+				switch val := ctxValue.(type) { // nolint
+				case ctxValueGC:
+					if ok := val[keyRepoGcError]; !ok {
+						val[keyRepoGcError] = true // invert value for emit error at next call
+						return nil
+					}
+				}
+			}
+			return errors.New("no task for repositories garbage collector")
 		},
 
 		AccessGarbageCollectorFunc: func(ctx context.Context) error {
-			return nil
+			ctxValue := ctx.Value(ctxKey)
+			if ctxValue != nil {
+				switch val := ctxValue.(type) { // nolint
+				case ctxValueGC:
+					if ok := val[keyAccessGcError]; !ok {
+						val[keyAccessGcError] = true // invert value for emit error at next call
+						return nil
+					}
+				}
+			}
+			return errors.New("no task for access garbage collector")
 		},
 	}
 }
