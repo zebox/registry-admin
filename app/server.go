@@ -69,14 +69,15 @@ func run() error {
 	}
 
 	srv := server.Server{
-		Hostname:        checkHostnameForURL(opts.HostName, opts.SSL.Type),
-		Listen:          opts.Listen,
-		Port:            opts.Port,
-		AccessLog:       accessLogger,
-		L:               log.Default(),
-		SSLConfig:       sslConfig,
-		Storage:         dataStore,
-		RegistryService: registryService,
+		Hostname:                 checkHostnameForURL(opts.HostName, opts.SSL.Type),
+		Listen:                   opts.Listen,
+		Port:                     opts.Port,
+		AccessLog:                accessLogger,
+		L:                        log.Default(),
+		SSLConfig:                sslConfig,
+		Storage:                  dataStore,
+		RegistryService:          registryService,
+		GarbageCollectorInterval: opts.Registry.GarbageCollectorInterval,
 	}
 
 	authOptions := auth.Opts{
@@ -100,10 +101,9 @@ func run() error {
 	authService := auth.NewService(authOptions)
 	authService.AddDirectProvider("local", &srv)
 	srv.Authenticator = authService
-
 	go func() {
 		if x := recover(); x != nil {
-			log.Printf("[WARN] run time panic:\n%v", x)
+			log.Printf("[WARN] runtime panic:\n%v", x)
 			panic(x)
 		}
 

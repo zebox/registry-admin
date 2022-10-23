@@ -29,15 +29,16 @@ import (
 
 // Server the main service instance
 type Server struct {
-	Hostname        string
-	Listen          string // listen on host:port scope
-	Port            int    // main service port, default 80 on
-	SSLConfig       SSLConfig
-	Authenticator   *auth.Service     // portal access authenticator
-	AccessLog       io.Writer         // access logger
-	L               log.L             // system logger
-	Storage         engine.Interface  // main storage instance interface
-	RegistryService registryInterface // main instance for connection to registry service
+	Hostname                 string
+	Listen                   string // listen on host:port scope
+	Port                     int    // main service port, default 80 on
+	SSLConfig                SSLConfig
+	Authenticator            *auth.Service     // portal access authenticator
+	AccessLog                io.Writer         // access logger
+	L                        log.L             // system logger
+	Storage                  engine.Interface  // main storage instance interface
+	RegistryService          registryInterface // main instance for connection to registry service
+	GarbageCollectorInterval int64
 
 	ctx         context.Context
 	httpsServer *http.Server
@@ -68,7 +69,8 @@ type registryInterface interface {
 	// UpdateHtpasswd update user access list in .htpasswd file every time when users entries add/update/delete
 	UpdateHtpasswd(users []store.User) error
 
-	// ApiVersionCheck a minimal endpoint, mounted at /v2/ will provide version support information based on its response statuses.
+	// ApiVersionCheck a minimal endpoint, mounted at /v2/ will provide version support information
+	// based on its response statuses.
 	ApiVersionCheck(ctx context.Context) error
 
 	// Catalog return list a set of available repositories in the local registry cluster.
@@ -80,7 +82,8 @@ type registryInterface interface {
 	// Manifest will fetch the manifest identified by 'name' and 'reference' where 'reference' can be a tag or digest.
 	Manifest(ctx context.Context, repoName, tag string) (registry.ManifestSchemaV2, error)
 
-	// DeleteTag will delete the manifest identified by name and reference. Note that a manifest can only be deleted by digest.
+	// DeleteTag will delete the manifest identified by name and reference. Note that a manifest can only be deleted
+	// by digest.
 	DeleteTag(ctx context.Context, repoName, digest string) error
 }
 
@@ -303,6 +306,9 @@ func (s *Server) routes() chi.Router {
 					Storage:  s.Storage,
 				},
 			}
+
+			// starting Data Service maintenance tasks such as garbage collector and repositories auto sync
+			rh.dataService.RepositoriesMaintenance(s.ctx, s.GarbageCollectorInterval)
 			rootRoute.Route("/registry", func(routeRegistry chi.Router) {
 
 				routeRegistry.Get("/auth", rh.tokenAuth)
@@ -407,7 +413,7 @@ func (s *Server) Check(user, password string) (ok bool, err error) {
 }
 
 // Validate will validate token calaims for OAuth provider
-func (s *Server) Validate(token string, claims token.Claims) bool {
+func (s *Server) Validate(_ string, claims token.Claims) bool {
 	if claims.User == nil {
 		return false
 	}

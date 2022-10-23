@@ -184,11 +184,11 @@ func (ds *DataService) doSyncRepositories(ctx context.Context) {
 	ds.lastSyncDate = now
 }
 
-// RepositoriesMaintaining check repositories for outdated or updated data in repository storage
+// RepositoriesMaintenance check repositories for outdated or updated data in repository storage
 // with 'lastSyncDate' value. Timestamp field update at every sync call in repository storage
 // and compare with 'lastSyncDate' variable.
 // If values above is different garbage collector will remove all outdated entries
-func (ds *DataService) RepositoriesMaintaining(ctx context.Context, timeout int64) {
+func (ds *DataService) RepositoriesMaintenance(ctx context.Context, timeout int64) {
 
 	if timeout == 0 {
 		timeout = defaultGarbageCollectorTimeout

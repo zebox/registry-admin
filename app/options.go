@@ -69,18 +69,19 @@ type StoreGroup struct {
 }
 
 type RegistryGroup struct {
-	Host               string `long:"host" env:"RA_REGISTRY_HOST" required:"true" description:"Main host or address to docker registry service" json:"host"`
-	IP                 string `long:"ip" env:"RA_REGISTRY_IP" description:"Address which appends Subject Alternative Name for requested IP to certificate" json:"ip"`
-	Port               uint   `long:"port" env:"RA_REGISTRY_PORT" description:"Port which registry accept requests. Default:5000" default:"5000" json:"port"`
-	AuthType           string `long:"auth-type" env:"RA_REGISTRY_AUTH_TYPE" description:"Type for auth to docker registry service. Available 'basic' and 'self_token'. Default 'basic'" choice:"basic" choice:"self-token" default:"basic" json:"auth_type"`
-	Secret             string `long:"token-secret" env:"RA_REGISTRY_TOKEN_SECRET" description:"Token secret for sign token when using 'self-token' auth type"  json:"token_secret"`
-	Login              string `long:"login" env:"RA_REGISTRY_LOGIN" description:"Username is a credential for access to registry service using basic auth type" json:"login"`
-	Password           string `long:"password" env:"RA_REGISTRY_PASSWORD" description:"Password is a credential for access to registry service using basic auth type" json:"password"`
-	Htpasswd           string `long:"htpasswd" env:"RA_REGISTRY_HTPASSWD" description:"Path to htpasswd file when basic auth type selected" json:"htpasswd"`
-	InsecureConnection bool   `long:"https-insecure" env:"RA_REGISTRY_HTTPS_INSECURE" description:"Set https connection to registry insecure" json:"https_insecure"`
-	Service            string `long:"service" env:"RA_REGISTRY_SERVICE" description:"A service name which defined in registry settings" json:"service"`
-	Issuer             string `long:"issuer" env:"RA_REGISTRY_TOKEN_ISSUER" description:"A token issuer name which defined in registry settings" json:"token_issuer"`
-	Certs              struct {
+	Host                     string `long:"host" env:"RA_REGISTRY_HOST" required:"true" description:"Main host or address to docker registry service" json:"host"`
+	IP                       string `long:"ip" env:"RA_REGISTRY_IP" description:"Address which appends Subject Alternative Name for requested IP to certificate" json:"ip"`
+	Port                     uint   `long:"port" env:"RA_REGISTRY_PORT" description:"Port which registry accept requests. Default:5000" default:"5000" json:"port"`
+	AuthType                 string `long:"auth-type" env:"RA_REGISTRY_AUTH_TYPE" description:"Type for auth to docker registry service. Available 'basic' and 'self_token'. Default 'basic'" choice:"basic" choice:"self-token" default:"basic" json:"auth_type"`
+	Secret                   string `long:"token-secret" env:"RA_REGISTRY_TOKEN_SECRET" description:"Token secret for sign token when using 'self-token' auth type"  json:"token_secret"`
+	Login                    string `long:"login" env:"RA_REGISTRY_LOGIN" description:"Username is a credential for access to registry service using basic auth type" json:"login"`
+	Password                 string `long:"password" env:"RA_REGISTRY_PASSWORD" description:"Password is a credential for access to registry service using basic auth type" json:"password"`
+	Htpasswd                 string `long:"htpasswd" env:"RA_REGISTRY_HTPASSWD" description:"Path to htpasswd file when basic auth type selected" json:"htpasswd"`
+	InsecureConnection       bool   `long:"https-insecure" env:"RA_REGISTRY_HTTPS_INSECURE" description:"Set https connection to registry insecure" json:"https_insecure"`
+	Service                  string `long:"service" env:"RA_REGISTRY_SERVICE" description:"A service name which defined in registry settings" json:"service"`
+	Issuer                   string `long:"issuer" env:"RA_REGISTRY_TOKEN_ISSUER" description:"A token issuer name which defined in registry settings" json:"token_issuer"`
+	GarbageCollectorInterval int64  `long:"gc-interval" env:"RA_REGISTRY_GC_INTERVAL" description:"Use for define custom time interval for garbage collector call (in second)" json:"gc_interval"`
+	Certs                    struct {
 		Path      string `long:"path" env:"RA_REGISTRY_CERT_PATH" description:"A path where will be stored new self-signed cert,keys and CA files, when 'self-token' auth type is used" json:"certs_path"`
 		Key       string `long:"key" env:"RA_REGISTRY_KEY_PATH" description:"A path where will be stored new self-signed private key file, when 'self-token' auth type is used" json:"key"`
 		PublicKey string `long:"public-key" env:"RA_REGISTRY_PUBLIC_KEY_PATH" description:"A path where will be stored new self-signed public key file, when 'self-token' auth type is used" json:"public_key"`

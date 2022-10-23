@@ -18,6 +18,7 @@ import (
 
 // dataServiceInterface implement dataService instance
 type dataServiceInterface interface {
+	RepositoriesMaintenance(ctx context.Context, timeout int64)
 	RepositoryEventsProcessing(ctx context.Context, envelope notifications.Envelope) (err error)
 	SyncExistedRepositories(ctx context.Context) error
 }
