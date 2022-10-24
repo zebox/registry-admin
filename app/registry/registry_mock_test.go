@@ -68,6 +68,10 @@ type MockRegistry struct {
 
 type MockRegistryOptions func(option *MockRegistry)
 
+type ctxKeyType string
+
+const ctxKey ctxKeyType = "test_ctx_key"
+
 func TokenAuth(tokenFn tokenProcessing) MockRegistryOptions {
 	return func(mr *MockRegistry) {
 		mr.auth = SelfToken
@@ -168,6 +172,7 @@ func (mr *MockRegistry) prepareRegistryMockEndpoints() {
 	mr.handlers[regexp.MustCompile(`/v2/_catalog+`)] = http.HandlerFunc(mr.getCatalog)
 	mr.handlers[regexp.MustCompile(`/v2/(.*)/tags/+`)] = http.HandlerFunc(mr.getImageTags)
 	mr.handlers[regexp.MustCompile(`/v2/(.*)/manifests/(.*)`)] = http.HandlerFunc(mr.getManifest)
+	mr.handlers[regexp.MustCompile(`/v2/(.*)/blobs/+`)] = http.HandlerFunc(mr.getBlobs)
 
 }
 
@@ -252,6 +257,22 @@ func (mr *MockRegistry) apiVersionCheck(w http.ResponseWriter, _ *http.Request) 
 	w.Header().Set("content-type", "application/json; charset=utf-8")
 	w.Header().Set("docker-distribution-api-version", "registry/2.0")
 	_, err := w.Write([]byte("{}"))
+	assert.NoError(mr.t, err)
+}
+
+func (mr *MockRegistry) getBlobs(w http.ResponseWriter, r *http.Request) {
+
+	if r.Method != "GET" {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	ctxValue := r.Context().Value(ctxKey)
+	if ctxValue == nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	data := []byte(`{"architecture":"amd64","config":{"Hostname":"","Domainname":"","User":"","AttachStdin":false,"AttachStdout":false,"AttachStderr":false,"Tty":false,"OpenStdin":false,"StdinOnce":false,"Env":["PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"],"Cmd":["/bin/sh"],"Image":"sha256:ba31c26876f2e444fc30cbe8b50673f3595f34cc4a51f327f265bed3cd281d89","Volumes":null,"WorkingDir":"","Entrypoint":null,"OnBuild":null,"Labels":null},"container":"b459276b6e0fe01b58020c8700475a6fa846e1f915e23573d5588ab96673fc20","container_config":{"Hostname":"b459276b6e0f","Domainname":"","User":"","AttachStdin":false,"AttachStdout":false,"AttachStderr":false,"Tty":false,"OpenStdin":false,"StdinOnce":false,"Env":["PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"],"Cmd":["/bin/sh","-c","#(nop) ","CMD [\"/bin/sh\"]"],"Image":"sha256:ba31c26876f2e444fc30cbe8b50673f3595f34cc4a51f327f265bed3cd281d89","Volumes":null,"WorkingDir":"","Entrypoint":null,"OnBuild":null,"Labels":{}},"created":"2021-11-12T17:19:45.079013213Z","docker_version":"20.10.7","history":[{"created":"2021-11-12T17:19:44.795237917Z","created_by":"/bin/sh -c #(nop) ADD file:762c899ec0505d1a32930ee804c5b008825f41611161be104076cba33b7e5b2b in / "},{"created":"2021-11-12T17:19:45.079013213Z","created_by":"/bin/sh -c #(nop)  CMD [\"/bin/sh\"]","empty_layer":true}],"os":"linux","rootfs":{"type":"layers","diff_ids":["sha256:1a058d5342cc722ad5439cacae4b2b4eedde51d8fe8800fcf28444302355c16d"]}}`)
+	_, err := w.Write(data)
 	assert.NoError(mr.t, err)
 }
 

@@ -278,6 +278,24 @@ func (r *Registry) ApiVersionCheck(ctx context.Context) error {
 	return nil
 }
 
+// GetBlob retrieve the blob from the registry identified by digest. A HEAD request can also be issued to this endpoint
+// to obtain resource information without receiving all data.
+func (r *Registry) GetBlob(ctx context.Context, name, digest string) (blob []byte, err error) {
+	baseUrl := fmt.Sprintf("%s:%d/v2/%s/blobs/%s", r.settings.Host, r.settings.Port, name, digest)
+
+	resp, err := r.newHttpRequest(ctx, baseUrl, "GET", nil)
+	if err != nil {
+		return nil, err
+	}
+	if resp != nil {
+		defer func() {
+			_ = resp.Body.Close()
+		}()
+	}
+
+	return blob, nil
+}
+
 // Catalog return list a set of available repositories in the local registry cluster.
 func (r *Registry) Catalog(ctx context.Context, n, last string) (Repositories, error) {
 	var repos Repositories

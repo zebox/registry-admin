@@ -99,6 +99,10 @@ func TestRegistry_ApiCheck(t *testing.T) {
 	assert.Equal(t, fmt.Sprintf(`parse ":%d/v2/": missing protocol scheme`, testPort), err.Error())
 }
 
+func TestRegistry_GetBlob(t *testing.T) {
+
+}
+
 func TestRegistry_Catalog(t *testing.T) {
 	testPort := chooseRandomUnusedPort()
 	reposNumbers := 100
