@@ -287,13 +287,19 @@ func (r *Registry) GetBlob(ctx context.Context, name, digest string) (blob []byt
 	if err != nil {
 		return nil, err
 	}
+
 	if resp != nil {
 		defer func() {
 			_ = resp.Body.Close()
 		}()
 	}
 
-	return blob, nil
+	blob, err = ioutil.ReadAll(resp.Body)
+	if resp.StatusCode >= 300 {
+		return nil, fmt.Errorf("api return error code: %d\n %s", resp.StatusCode, blob)
+	}
+
+	return blob, err
 }
 
 // Catalog return list a set of available repositories in the local registry cluster.

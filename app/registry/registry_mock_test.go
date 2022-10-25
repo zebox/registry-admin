@@ -172,7 +172,7 @@ func (mr *MockRegistry) prepareRegistryMockEndpoints() {
 	mr.handlers[regexp.MustCompile(`/v2/_catalog+`)] = http.HandlerFunc(mr.getCatalog)
 	mr.handlers[regexp.MustCompile(`/v2/(.*)/tags/+`)] = http.HandlerFunc(mr.getImageTags)
 	mr.handlers[regexp.MustCompile(`/v2/(.*)/manifests/(.*)`)] = http.HandlerFunc(mr.getManifest)
-	mr.handlers[regexp.MustCompile(`/v2/(.*)/blobs/+`)] = http.HandlerFunc(mr.getBlobs)
+	mr.handlers[regexp.MustCompile(`/v2/(.*)/blobs/(.*)`)] = http.HandlerFunc(mr.getBlobs)
 
 }
 
@@ -266,12 +266,30 @@ func (mr *MockRegistry) getBlobs(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	ctxValue := r.Context().Value(ctxKey)
-	if ctxValue == nil {
+
+	url := r.URL.Path
+	pathRegExp := regexp.MustCompile(`(?m)/v2/(.*)/blobs/(.*)`)
+	matches := pathRegExp.FindStringSubmatch(url)
+	names := pathRegExp.SubexpNames()
+	var params []string
+
+	for i, match := range matches {
+		if i != 0 {
+			fmt.Println(names[i], match)
+			params = append(params, match)
+		}
+	}
+	if len(params) != 2 {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	data := []byte(`{"architecture":"amd64","config":{"Hostname":"","Domainname":"","User":"","AttachStdin":false,"AttachStdout":false,"AttachStderr":false,"Tty":false,"OpenStdin":false,"StdinOnce":false,"Env":["PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"],"Cmd":["/bin/sh"],"Image":"sha256:ba31c26876f2e444fc30cbe8b50673f3595f34cc4a51f327f265bed3cd281d89","Volumes":null,"WorkingDir":"","Entrypoint":null,"OnBuild":null,"Labels":null},"container":"b459276b6e0fe01b58020c8700475a6fa846e1f915e23573d5588ab96673fc20","container_config":{"Hostname":"b459276b6e0f","Domainname":"","User":"","AttachStdin":false,"AttachStdout":false,"AttachStderr":false,"Tty":false,"OpenStdin":false,"StdinOnce":false,"Env":["PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"],"Cmd":["/bin/sh","-c","#(nop) ","CMD [\"/bin/sh\"]"],"Image":"sha256:ba31c26876f2e444fc30cbe8b50673f3595f34cc4a51f327f265bed3cd281d89","Volumes":null,"WorkingDir":"","Entrypoint":null,"OnBuild":null,"Labels":{}},"created":"2021-11-12T17:19:45.079013213Z","docker_version":"20.10.7","history":[{"created":"2021-11-12T17:19:44.795237917Z","created_by":"/bin/sh -c #(nop) ADD file:762c899ec0505d1a32930ee804c5b008825f41611161be104076cba33b7e5b2b in / "},{"created":"2021-11-12T17:19:45.079013213Z","created_by":"/bin/sh -c #(nop)  CMD [\"/bin/sh\"]","empty_layer":true}],"os":"linux","rootfs":{"type":"layers","diff_ids":["sha256:1a058d5342cc722ad5439cacae4b2b4eedde51d8fe8800fcf28444302355c16d"]}}`)
+
+	if params[1] != "sha256:ba31c26876f2e444fc30cbe8b50673f3595f34cc4a51f327f265bed3cd281d89" {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	data := []byte(`{"architecture":"amd64","config":{"Hostname":"","Domain_name":"","User":"","AttachStdin":false,"AttachStdout":false,"AttachStderr":false,"Tty":false,"OpenStdin":false,"StdinOnce":false,"Env":["PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"],"Cmd":["/bin/sh"],"Image":"sha256:ba31c26876f2e444fc30cbe8b50673f3595f34cc4a51f327f265bed3cd281d89","Volumes":null,"WorkingDir":"","Entrypoint":null,"OnBuild":null,"Labels":null},"container":"b459276b6e0fe01b58020c8700475a6fa846e1f915e23573d5588ab96673fc20","container_config":{"Hostname":"b459276b6e0f","Domainname":"","User":"","AttachStdin":false,"AttachStdout":false,"AttachStderr":false,"Tty":false,"OpenStdin":false,"StdinOnce":false,"Env":["PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"],"Cmd":["/bin/sh","-c","#(nop) ","CMD [\"/bin/sh\"]"],"Image":"sha256:ba31c26876f2e444fc30cbe8b50673f3595f34cc4a51f327f265bed3cd281d89","Volumes":null,"WorkingDir":"","Entrypoint":null,"OnBuild":null,"Labels":{}},"created":"2021-11-12T17:19:45.079013213Z","docker_version":"20.10.7","history":[{"created":"2021-11-12T17:19:44.795237917Z","created_by":"/bin/sh -c #(nop) ADD file:762c899ec0505d1a32930ee804c5b008825f41611161be104076cba33b7e5b2b in / "},{"created":"2021-11-12T17:19:45.079013213Z","created_by":"/bin/sh -c #(nop)  CMD [\"/bin/sh\"]","empty_layer":true}],"os":"linux","rootfs":{"type":"layers","diff_ids":["sha256:1a058d5342cc722ad5439cacae4b2b4eedde51d8fe8800fcf28444302355c16d"]}}`)
 	_, err := w.Write(data)
 	assert.NoError(mr.t, err)
 }

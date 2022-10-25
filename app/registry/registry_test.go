@@ -100,7 +100,26 @@ func TestRegistry_ApiCheck(t *testing.T) {
 }
 
 func TestRegistry_GetBlob(t *testing.T) {
+	testPort := chooseRandomUnusedPort()
+	testRegistry := NewMockRegistry(t, "127.0.0.1", testPort, 0, 0)
+	defer testRegistry.Close()
 
+	testSetting := Settings{
+		Host: "http://127.0.0.1",
+		Port: testPort,
+	}
+	r, err := NewRegistry("test_admin", "test_password", "test_secret", testSetting)
+	require.NoError(t, err)
+	require.NotNil(t, r)
+
+	blob, err := r.GetBlob(context.Background(), "test", "sha256:ba31c26876f2e444fc30cbe8b50673f3595f34cc4a51f327f265bed3cd281d89")
+	assert.NotNil(t, blob)
+	assert.NoError(t, err)
+
+	// test with bad request
+	blob, err = r.GetBlob(context.Background(), "test", "wrong_digest")
+	assert.Nil(t, blob)
+	assert.Error(t, err)
 }
 
 func TestRegistry_Catalog(t *testing.T) {
