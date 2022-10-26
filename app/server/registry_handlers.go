@@ -146,6 +146,19 @@ func (rh *registryHandlers) events(w http.ResponseWriter, r *http.Request) {
 	rest.RenderJSON(w, responseMessage{Message: "ok"})
 }
 
+func (rh *registryHandlers) imageDescription(w http.ResponseWriter, r *http.Request) {
+	name := chi.URLParam(r, "repository_name")
+	digest := chi.URLParam(r, "digest")
+
+	blob, err := rh.registryService.GetBlob(r.Context(), name, digest)
+	if err != nil {
+		err = fmt.Errorf("failed to retrieve blobs data for repo: %s digest: %s err: %v", name, digest, err)
+		SendErrorJSON(w, r, rh.l, http.StatusInternalServerError, err, "failed to retrieve blobs data")
+		return
+	}
+	rest.RenderJSON(w, responseMessage{Data: blob, Message: "ok"})
+}
+
 func (rh *registryHandlers) delete(w http.ResponseWriter, r *http.Request) {
 	digest := r.URL.Query()["digest"]
 	name := r.URL.Query()["name"]

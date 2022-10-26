@@ -82,6 +82,9 @@ type registryInterface interface {
 	// Manifest will fetch the manifest identified by 'name' and 'reference' where 'reference' can be a tag or digest.
 	Manifest(ctx context.Context, repoName, tag string) (registry.ManifestSchemaV2, error)
 
+	// GetBlob retrieve information about image from config blob
+	GetBlob(ctx context.Context, name, digest string) (blob []byte, err error)
+
 	// DeleteTag will delete the manifest identified by name and reference. Note that a manifest can only be deleted
 	// by digest.
 	DeleteTag(ctx context.Context, repoName, digest string) error
@@ -326,7 +329,8 @@ func (s *Server) routes() chi.Router {
 					registryApiAccess.Get("/sync", rh.syncRepositories)
 					registryApiAccess.Delete("/catalog/*", rh.delete)
 					registryApiAccess.Get("/catalog", rh.catalogList)
-					registryApiAccess.Get("/catalog/{repository_name}", rh.repositoryEntry)
+					registryApiAccess.Get("/catalog/*}", rh.repositoryEntry)
+					// registryApiAccess.Get("/catalog/{repository_name}/", rh.imageDescription)
 
 				})
 			})

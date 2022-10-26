@@ -29,6 +29,9 @@ var _ registryInterface = &registryInterfaceMock{}
 // 			DeleteTagFunc: func(ctx context.Context, repoName string, digest string) error {
 // 				panic("mock out the DeleteTag method")
 // 			},
+// 			GetBlobFunc: func(ctx context.Context, name string, digest string) ([]byte, error) {
+// 				panic("mock out the GetBlob method")
+// 			},
 // 			ListingImageTagsFunc: func(ctx context.Context, repoName string, n string, last string) (registry.ImageTags, error) {
 // 				panic("mock out the ListingImageTags method")
 // 			},
@@ -62,6 +65,9 @@ type registryInterfaceMock struct {
 
 	// DeleteTagFunc mocks the DeleteTag method.
 	DeleteTagFunc func(ctx context.Context, repoName string, digest string) error
+
+	// GetBlobFunc mocks the GetBlob method.
+	GetBlobFunc func(ctx context.Context, name string, digest string) ([]byte, error)
 
 	// ListingImageTagsFunc mocks the ListingImageTags method.
 	ListingImageTagsFunc func(ctx context.Context, repoName string, n string, last string) (registry.ImageTags, error)
@@ -103,6 +109,15 @@ type registryInterfaceMock struct {
 			Ctx context.Context
 			// RepoName is the repoName argument value.
 			RepoName string
+			// Digest is the digest argument value.
+			Digest string
+		}
+		// GetBlob holds details about calls to the GetBlob method.
+		GetBlob []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// Name is the name argument value.
+			Name string
 			// Digest is the digest argument value.
 			Digest string
 		}
@@ -150,6 +165,7 @@ type registryInterfaceMock struct {
 	lockApiVersionCheck                sync.RWMutex
 	lockCatalog                        sync.RWMutex
 	lockDeleteTag                      sync.RWMutex
+	lockGetBlob                        sync.RWMutex
 	lockListingImageTags               sync.RWMutex
 	lockLogin                          sync.RWMutex
 	lockManifest                       sync.RWMutex
@@ -264,6 +280,45 @@ func (mock *registryInterfaceMock) DeleteTagCalls() []struct {
 	mock.lockDeleteTag.RLock()
 	calls = mock.calls.DeleteTag
 	mock.lockDeleteTag.RUnlock()
+	return calls
+}
+
+// GetBlob calls GetBlobFunc.
+func (mock *registryInterfaceMock) GetBlob(ctx context.Context, name string, digest string) ([]byte, error) {
+	if mock.GetBlobFunc == nil {
+		panic("registryInterfaceMock.GetBlobFunc: method is nil but registryInterface.GetBlob was just called")
+	}
+	callInfo := struct {
+		Ctx    context.Context
+		Name   string
+		Digest string
+	}{
+		Ctx:    ctx,
+		Name:   name,
+		Digest: digest,
+	}
+	mock.lockGetBlob.Lock()
+	mock.calls.GetBlob = append(mock.calls.GetBlob, callInfo)
+	mock.lockGetBlob.Unlock()
+	return mock.GetBlobFunc(ctx, name, digest)
+}
+
+// GetBlobCalls gets all the calls that were made to GetBlob.
+// Check the length with:
+//     len(mockedregistryInterface.GetBlobCalls())
+func (mock *registryInterfaceMock) GetBlobCalls() []struct {
+	Ctx    context.Context
+	Name   string
+	Digest string
+} {
+	var calls []struct {
+		Ctx    context.Context
+		Name   string
+		Digest string
+	}
+	mock.lockGetBlob.RLock()
+	calls = mock.calls.GetBlob
+	mock.lockGetBlob.RUnlock()
 	return calls
 }
 

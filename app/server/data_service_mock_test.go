@@ -19,6 +19,9 @@ var _ dataServiceInterface = &dataServiceInterfaceMock{}
 //
 // 		// make and configure a mocked dataServiceInterface
 // 		mockeddataServiceInterface := &dataServiceInterfaceMock{
+// 			RepositoriesMaintenanceFunc: func(ctx context.Context, timeout int64)  {
+// 				panic("mock out the RepositoriesMaintenance method")
+// 			},
 // 			RepositoryEventsProcessingFunc: func(ctx context.Context, envelope notifications.Envelope) error {
 // 				panic("mock out the RepositoryEventsProcessing method")
 // 			},
@@ -32,6 +35,9 @@ var _ dataServiceInterface = &dataServiceInterfaceMock{}
 //
 // 	}
 type dataServiceInterfaceMock struct {
+	// RepositoriesMaintenanceFunc mocks the RepositoriesMaintenance method.
+	RepositoriesMaintenanceFunc func(ctx context.Context, timeout int64)
+
 	// RepositoryEventsProcessingFunc mocks the RepositoryEventsProcessing method.
 	RepositoryEventsProcessingFunc func(ctx context.Context, envelope notifications.Envelope) error
 
@@ -40,6 +46,13 @@ type dataServiceInterfaceMock struct {
 
 	// calls tracks calls to the methods.
 	calls struct {
+		// RepositoriesMaintenance holds details about calls to the RepositoriesMaintenance method.
+		RepositoriesMaintenance []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// Timeout is the timeout argument value.
+			Timeout int64
+		}
 		// RepositoryEventsProcessing holds details about calls to the RepositoryEventsProcessing method.
 		RepositoryEventsProcessing []struct {
 			// Ctx is the ctx argument value.
@@ -53,8 +66,44 @@ type dataServiceInterfaceMock struct {
 			Ctx context.Context
 		}
 	}
+	lockRepositoriesMaintenance    sync.RWMutex
 	lockRepositoryEventsProcessing sync.RWMutex
 	lockSyncExistedRepositories    sync.RWMutex
+}
+
+// RepositoriesMaintenance calls RepositoriesMaintenanceFunc.
+func (mock *dataServiceInterfaceMock) RepositoriesMaintenance(ctx context.Context, timeout int64) {
+	if mock.RepositoriesMaintenanceFunc == nil {
+		panic("dataServiceInterfaceMock.RepositoriesMaintenanceFunc: method is nil but dataServiceInterface.RepositoriesMaintenance was just called")
+	}
+	callInfo := struct {
+		Ctx     context.Context
+		Timeout int64
+	}{
+		Ctx:     ctx,
+		Timeout: timeout,
+	}
+	mock.lockRepositoriesMaintenance.Lock()
+	mock.calls.RepositoriesMaintenance = append(mock.calls.RepositoriesMaintenance, callInfo)
+	mock.lockRepositoriesMaintenance.Unlock()
+	mock.RepositoriesMaintenanceFunc(ctx, timeout)
+}
+
+// RepositoriesMaintenanceCalls gets all the calls that were made to RepositoriesMaintenance.
+// Check the length with:
+//     len(mockeddataServiceInterface.RepositoriesMaintenanceCalls())
+func (mock *dataServiceInterfaceMock) RepositoriesMaintenanceCalls() []struct {
+	Ctx     context.Context
+	Timeout int64
+} {
+	var calls []struct {
+		Ctx     context.Context
+		Timeout int64
+	}
+	mock.lockRepositoriesMaintenance.RLock()
+	calls = mock.calls.RepositoriesMaintenance
+	mock.lockRepositoriesMaintenance.RUnlock()
+	return calls
 }
 
 // RepositoryEventsProcessing calls RepositoryEventsProcessingFunc.
