@@ -62,6 +62,7 @@ const customRussianMessages: TranslationMessages = {
             tag_digest:"Подпись: ",
             tag_media_type:"Тип: ",
             message_empty_page:"Ни одной записи не найдено. Список репозиториев пуст.",
+            message_config_data_not_loading:"Данные конфига не загружены",
             message_sync_repo:"Синхронизировать репозитории из реестра",
             message_syncing_repo:"Синхронизация репозиториев запущена",
             message_error_syncing_repo:"Попытка синхронизации завершилась ошибкой",

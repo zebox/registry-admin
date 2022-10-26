@@ -1,15 +1,17 @@
 import * as React from "react";
 import { useParams, useLocation } from 'react-router-dom';
-import { useGetOne, useGetList, useDelete, useTranslate, Datagrid, useRecordContext, DeleteButton, Title, ListBase, ListToolbar, Pagination, TextField, ShowContextProvider, RecordContextProvider, Loading, ListContextProvider } from 'react-admin';
-import { Box, Card, CardContent, Stack, Typography, Button } from '@mui/material';
+import {  useDelete, useTranslate, Datagrid, useRecordContext, Title, ListBase, ListToolbar, Pagination, TextField, Loading } from 'react-admin';
+import { Card, CardContent, Typography, Button } from '@mui/material';
+
 import { ConvertUnixTimeToDate, ParseSizeToReadable, SearchFieldTranslated } from "../helpers/Helpers";
 import { SizeFieldReadable } from "./RepositoryList";
+import ImageConfigPage from './ImageConfig';
 
 /**
  * Fetch a repository entry from the API and display it
  */
 
-const repositoryBaseResource = 'registry/catalog';
+export const repositoryBaseResource = 'registry/catalog';
 
 const RepositoryShow = () => {
     const translate = useTranslate();
@@ -20,7 +22,8 @@ const RepositoryShow = () => {
             <TagDescription source="digest" />
             <DateFieldFormatted source="timestamp" />
             <SizeFieldReadable source="size" />
-            <TagDeleteButton source={"digest"} />
+            <TagDeleteButton />
+            <ShowImageDetail />
         </Datagrid>
     </TagList>
 }
@@ -60,6 +63,15 @@ const TagDescription = ({ source }: any) => {
     </Card>
 }
 
+const ShowImageDetail = ({ source }: any) => {
+    const record = useRecordContext();
+    return (
+        <>
+            <ImageConfigPage record={record} />
+        </>
+    )
+}
+
 const TagDeleteButton = ({ source }: any) => {
     const record = useRecordContext();
     const [deleteOne, { isLoading, error }] = useDelete();
@@ -75,8 +87,8 @@ const TagDeleteButton = ({ source }: any) => {
     if (isLoading) return <Loading />
     if (error) {
         console.error(error);
-    } 
-    
+    }
+
 
     return <Button onClick={() => deleteTag()}>DELETE</Button>
 

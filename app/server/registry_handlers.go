@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/docker/distribution/notifications"
-	"github.com/go-chi/chi/v5"
 	"github.com/go-pkgz/rest"
 	"github.com/zebox/registry-admin/app/registry"
 	"github.com/zebox/registry-admin/app/store"
@@ -146,17 +145,17 @@ func (rh *registryHandlers) events(w http.ResponseWriter, r *http.Request) {
 	rest.RenderJSON(w, responseMessage{Message: "ok"})
 }
 
-func (rh *registryHandlers) imageDescription(w http.ResponseWriter, r *http.Request) {
-	name := chi.URLParam(r, "repository_name")
-	digest := chi.URLParam(r, "digest")
+func (rh *registryHandlers) imageConfig(w http.ResponseWriter, r *http.Request) {
+	name := r.URL.Query()["name"]
+	digest := r.URL.Query()["digest"]
 
-	blob, err := rh.registryService.GetBlob(r.Context(), name, digest)
+	blob, err := rh.registryService.GetBlob(r.Context(), name[0], digest[0])
 	if err != nil {
 		err = fmt.Errorf("failed to retrieve blobs data for repo: %s digest: %s err: %v", name, digest, err)
 		SendErrorJSON(w, r, rh.l, http.StatusInternalServerError, err, "failed to retrieve blobs data")
 		return
 	}
-	rest.RenderJSON(w, responseMessage{Data: blob, Message: "ok"})
+	rest.RenderJSON(w, responseMessage{Data: map[string]interface{}{"id": 0, "value": blob}, Message: "ok"})
 }
 
 func (rh *registryHandlers) delete(w http.ResponseWriter, r *http.Request) {
@@ -195,22 +194,6 @@ func (rh *registryHandlers) catalogList(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	w.Header().Add("Content-Range", fmt.Sprintf("registry/catalog %d-%d/%d", filter.Range[0], filter.Range[1], repoList.Total))
-	rest.RenderJSON(w, repoList)
-
-}
-
-// catalogList returns list of repositories entry
-func (rh *registryHandlers) repositoryEntry(w http.ResponseWriter, r *http.Request) {
-	repositoryName := chi.URLParam(r, "repository_name")
-	filter := engine.QueryFilter{Filters: map[string]interface{}{"repository_name": repositoryName}}
-
-	filter.GroupByField = true
-	repoList, errReposList := rh.dataStore.FindRepositories(r.Context(), filter)
-	if errReposList != nil {
-		SendErrorJSON(w, r, rh.l, http.StatusInternalServerError, errReposList, "failed to fetch list of repositories")
-		return
-	}
-
 	rest.RenderJSON(w, repoList)
 
 }

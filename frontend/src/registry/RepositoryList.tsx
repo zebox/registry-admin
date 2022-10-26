@@ -22,7 +22,6 @@ import {
     useRedirect
 } from 'react-admin';
 
-
 const EmptyList = () => {
     const translate = useTranslate();
     return (

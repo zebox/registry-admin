@@ -1,0 +1,207 @@
+import * as React from 'react';
+import Box from '@mui/material/Box';
+import { styled } from '@mui/material/styles';
+import Button from '@mui/material/Button';
+import Dialog from '@mui/material/Dialog';
+import Grid from '@mui/material/Grid';
+import ListItemText from '@mui/material/ListItemText';
+import ListItem from '@mui/material/ListItem';
+import List from '@mui/material/List';
+import Divider from '@mui/material/Divider';
+import AppBar from '@mui/material/AppBar';
+import Toolbar from '@mui/material/Toolbar';
+import IconButton from '@mui/material/IconButton';
+import Typography from '@mui/material/Typography';
+import Paper from '@mui/material/Paper';
+import CloseIcon from '@mui/icons-material/Close';
+import Slide from '@mui/material/Slide';
+import { TransitionProps } from '@mui/material/transitions';
+import InfoIcon from '@mui/icons-material/Info';
+import { useGetOne, useTranslate, Loading } from 'react-admin';
+import { repositoryBaseResource } from './RepositoryShow';
+import { Buffer } from 'buffer';
+
+const Transition = React.forwardRef(function Transition(
+    props: TransitionProps & {
+        children: React.ReactElement;
+    },
+    ref: React.Ref<unknown>,
+) {
+    return <Slide direction="up" ref={ref} {...props} />;
+});
+
+
+export default function ImageConfigPage({ record }: any) {
+    const [dense, setDense] = React.useState(false);
+    const [open, setOpen] = React.useState(false);
+    // const [config, setConfig] = React.useState(Object);
+    const translate = useTranslate();
+
+    const { data, isLoading, error, refetch } = useGetOne(
+        repositoryBaseResource,
+        { id: 'blobs', meta: { name: record.repository_name, digest: record.raw.config.digest } }
+    );
+
+
+    const decodeConfig = (data: any): any => {
+        const cfg = Buffer.from(data.value, 'base64').toString('ascii');
+        console.log(JSON.parse(cfg));
+        return JSON.parse(cfg);
+    }
+
+    const MainData = () => {
+        const config = decodeConfig(data);
+        return config && (
+            <List dense={dense}>
+                <ListItemText
+                    disableTypography
+                    primary="Arch: "
+                    secondary={config.architecture}
+
+                />
+                <ListItemText disableTypography primary="CreatedAt: " secondary={config.created} />
+                <ListItemText disableTypography primary="OS: " secondary={config.os} />
+            </List>
+        );
+    }
+
+    const ConfigData = () => {
+        const { config } = decodeConfig(data);
+        return config && (
+            <List dense={dense}>
+                {config.ExposedPorts ? <ListItemText disableTypography primary={<div style={{ fontWeight: "bolder", float: "left" }}>Exposed port:</div>} secondary={JSON.stringify(config.ExposedPorts)} /> : null}
+                {config.Env ? <ListItemText disableTypography primary={<div style={{ fontWeight: "bolder", float: "left" }}>ENV:</div>} secondary={JSON.stringify(config.Env)} /> : null}
+                {config.Cmd ? <ListItemText disableTypography primary={<div style={{ fontWeight: "bolder", float: "left" }}>CMD:</div>} secondary={JSON.stringify(config.Cmd)} /> : null}
+                {config.Labels ? <ListItemText disableTypography primary={<div style={{ fontWeight: "bolder", float: "left" }}>Labels:</div>} secondary={JSON.stringify(config.Labels)} /> : null}
+                {config.ArgsEscaped ? <ListItemText disableTypography primary={<div style={{ fontWeight: "bolder", float: "left" }}>ArgsEscaped:</div>} secondary={JSON.stringify(config.ArgsEscaped)} /> : null}
+                {config.OnBuild ? <ListItemText disableTypography primary={<div style={{ fontWeight: "bolder", float: "left" }}>OnBuild:</div>} secondary={JSON.stringify(config.OnBuild)} /> : null}
+            </List>
+        );
+    }
+
+    const HistoryData = () => {
+        const config = decodeConfig(data);
+        const imageHistory = config.history
+        return imageHistory && (
+            < List dense={dense} >
+                {imageHistory.map((item: any) => {
+                    return (
+                        < div key={item.created}>
+                            {
+                            item.created ? <ListItemText
+                            disableTypography
+                            primary={<div style={{ fontWeight: "bolder", float: "left" }}>
+                                Created:</div>
+                            }
+                            secondary={item.created} />
+                            : null}
+
+                            {item.created_by ? <ListItemText
+                            disableTypography
+                            primary={<div style={{ fontWeight: "bolder", float: "left" }}>
+                                Created by:</div>
+                            }
+                            secondary={item.created_by} />
+                            : null}
+
+                           {item.comment ? <ListItemText 
+                            disableTypography
+                            primary={<div style={{ fontWeight: "bolder", float: "left" }}>
+                                Comment:</div>
+                            }
+                            secondary={item.comment} />
+                            : null
+                            }
+                            <Divider/>
+                        </div>
+                    )
+
+                })}
+            </List >
+        );
+    }
+
+    const handleClickOpen = () => {
+        setOpen(true);
+        console.log(record)
+    };
+
+    const handleClose = () => {
+        setOpen(false);
+    };
+    // if (open && isLoading) { return <Loading />; }
+    if (!open) {
+        return <Button variant="outlined" onClick={handleClickOpen}>
+            <InfoIcon />
+        </Button>
+    }
+
+    return (
+        <div>
+            <Dialog
+                fullScreen
+                open={open}
+                onClose={handleClose}
+
+                TransitionComponent={Transition}
+            >
+                <AppBar sx={{ position: 'relative' }}>
+                    <Toolbar>
+                        <IconButton
+                            edge="start"
+                            color="inherit"
+                            onClick={handleClose}
+                            aria-label="close"
+                        >
+                            <CloseIcon />
+                        </IconButton>
+                        <Typography sx={{ ml: 2, flex: 1 }} variant="h6" component="div">
+                            {record.repository_name}:{record.tag}
+                        </Typography>
+                    </Toolbar>
+                </AppBar>
+                {!isLoading && error === null ?
+                    <Box sx={{ flexGrow: 1,  padding: 2 }}>
+                        <Grid container spacing={2}>
+                            {/* ----------- MAIN SECTION ----------- */}
+                            <Grid item xs={12} md={6}>
+                                <Typography sx={{ mt: 4, mb: 2 }} variant="h6" component="div">
+                                    Main data
+                                </Typography>
+                                <Paper elevation={3} sx={{ paddingLeft: 1 }}>
+                                    {<MainData />}
+                                </Paper>
+                            </Grid>
+
+                            {/* ----------- CONFIG SECTION ----------- */}
+
+                            <Grid item xs={12} md={6}>
+                                <Typography sx={{ mt: 4, mb: 2 }} variant="h6" component="div">
+                                    CONFIG
+                                </Typography>
+                                <Paper elevation={3} sx={{ paddingLeft: 1 }}>
+                                    {<ConfigData />}
+                                </Paper>
+                            </Grid>
+
+                            {/* ----------- HISTORY SECTION ----------- */}
+
+                            <Grid item xs={12} md={8}>
+                                <Typography sx={{ mt: 4, mb: 2 }} variant="h6" component="div">
+                                    IMAGE HISTORY
+                                </Typography>
+                                <Paper elevation={3} sx={{ paddingLeft: 1 }}>
+                                    {<HistoryData />}
+                                </Paper>
+                            </Grid>
+                        </Grid>
+                    </Box>
+                    :
+                    (
+                        console.log(error),
+                        console.log(isLoading),
+                        translate('resources.repository.message_config_data_not_loading'))}
+            </Dialog>
+        </div >
+    );
+}

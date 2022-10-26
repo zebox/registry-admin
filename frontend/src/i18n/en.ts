@@ -64,6 +64,7 @@ const customEnglishMessages: TranslationMessages = {
             tag_digest:"Digest: ",
             tag_media_type:"Type: ",
             message_empty_page:"Repositories entry not found.",
+            message_config_data_not_loading:"Config data not loading",
             message_sync_repo:"Synchronize repositories from registry",
             message_syncing_repo:"Repositories sync in progress...",
             message_error_syncing_repo:"Synchronization error",

@@ -375,7 +375,7 @@ func (e *Embedded) getTotalRecordsExcludeRange(tableName string, filter engine.Q
 // castValueTypeToString will select appropriate type to formatting string
 func castValueTypeToString(value interface{}) string {
 	switch v := value.(type) {
-	case string:
+	case string, []uint8:
 		return fmt.Sprintf("'%s'", v)
 	case int, int64:
 		return fmt.Sprintf("%d", v)

@@ -329,8 +329,8 @@ func (s *Server) routes() chi.Router {
 					registryApiAccess.Get("/sync", rh.syncRepositories)
 					registryApiAccess.Delete("/catalog/*", rh.delete)
 					registryApiAccess.Get("/catalog", rh.catalogList)
-					registryApiAccess.Get("/catalog/*}", rh.repositoryEntry)
-					// registryApiAccess.Get("/catalog/{repository_name}/", rh.imageDescription)
+					registryApiAccess.Get("/catalog/blobs", rh.imageConfig)
+					// registryApiAccess.Get("/catalog/*", rh.repositoryEntry)
 
 				})
 			})

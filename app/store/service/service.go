@@ -18,7 +18,7 @@ import (
 const defaultPageSize = "50"              // the number of repository items for pagination request when catalog listing
 const defaultGarbageCollectorTimeout = 60 // second
 
-var ErrNoSyncedYet error = errors.New("garbage collector skip because sync required start first")
+var ErrNoSyncedYet = errors.New("garbage collector skip because sync required start first")
 
 // registryInterface implement method for access data of a registry instance
 type registryInterface interface {
@@ -96,62 +96,65 @@ func (ds *DataService) doSyncRepositories(ctx context.Context) {
 			for {
 				tags, errTags := ds.Registry.ListingImageTags(ctx, repo, defaultPageSize, lastTag)
 				if errTags != nil && !errors.Is(errTags, registry.ErrNoMorePages) {
-					log.Printf("[ERROR] failed to repository tags at repository '%s': %v", repo, errTags)
+					log.Printf("[ERROR] failed to get repository tags at repository '%s': %v", repo, errTags)
 					log.Printf("[ERROR] sync operation aborted")
 					return
 				}
 
 				totalTags += uint64(len(tags.Tags))
 
-				for _, tag := range tags.Tags {
-					log.Printf("[DEBUG] Tag name: %s\n", tag)
-					manifest, errManifest := ds.Registry.Manifest(ctx, repo, tag)
-					if errManifest != nil {
-						log.Printf("[ERROR] failed to fetch manifest from repo '%s' for tag '%s' errCatalog: %s", repo, tag, errManifest)
-						log.Printf("[ERROR] sync operation aborted")
-						return
-					}
-					log.Printf("[DEBUG] Manifest: %v\n", manifest)
-					rawManifestData, errMarshal := json.Marshal(&manifest)
-					if errMarshal != nil {
-						log.Printf("[ERROR] failed to marshal manifest data from repo '%s' for tag '%s' errCatalog: %s", repo, tag, errMarshal)
-					}
-
-					entry := &store.RegistryEntry{
-						RepositoryName: repo,
-						Tag:            tag,
-						Digest:         manifest.ContentDigest,
-						Size:           manifest.TotalSize,
-						Timestamp:      now,
-						Raw:            rawManifestData,
-					}
-					if errCreate := ds.Storage.CreateRepository(ctx, entry); errCreate != nil {
-						if !strings.HasPrefix(errCreate.Error(), "UNIQUE") {
-							log.Printf("[ERROR] failed to marshal manifest data from repo '%s' for tag '%s' err: %s", repo, tag, errCreate)
+				if tags.Tags != nil {
+					for _, tag := range tags.Tags {
+						log.Printf("[DEBUG] Tag name: %s\n", tag)
+						manifest, errManifest := ds.Registry.Manifest(ctx, repo, tag)
+						if errManifest != nil {
+							log.Printf("[ERROR] failed to fetch manifest from repo '%s' for tag '%s' errCatalog: %s", repo, tag, errManifest)
 							log.Printf("[ERROR] sync operation aborted")
 							return
 						}
-
-						// if repositories with specific tag already exist the service try update dynamic field and set a new timestamp.
-						// Then timestamp using for garbage collector for detect outdated data and remove one from repository store
-						log.Printf("[DEBUG] entry already exist and will update : repo: '%s', tag: '%s'", repo, tag)
-
-						condition := map[string]interface{}{
-							store.RegistryRepositoryNameField: repo,
-							store.RegistryTagField:            tag}
-
-						fieldForUpdate := map[string]interface{}{
-							store.RegistrySizeNameField:  manifest.TotalSize,
-							store.RegistryTimestampField: ds.lastSyncDate,
-							store.RegistryRawField:       rawManifestData}
-
-						if errUpdate := ds.Storage.UpdateRepository(ctx, condition, fieldForUpdate); errUpdate != nil {
-							log.Printf("[ERROR] sync operation aborted: repo '%s' for tag '%s' err: %s", repo, tag, errUpdate)
-							return
+						log.Printf("[DEBUG] Manifest: %v\n", manifest)
+						rawManifestData, errMarshal := json.Marshal(&manifest)
+						if errMarshal != nil {
+							log.Printf("[ERROR] failed to marshal manifest data from repo '%s' for tag '%s' errCatalog: %s", repo, tag, errMarshal)
 						}
-						continue
+
+						entry := &store.RegistryEntry{
+							RepositoryName: repo,
+							Tag:            tag,
+							Digest:         manifest.ContentDigest,
+							Size:           manifest.TotalSize,
+							Timestamp:      now,
+							Raw:            rawManifestData,
+						}
+						if errCreate := ds.Storage.CreateRepository(ctx, entry); errCreate != nil {
+							if !strings.HasPrefix(errCreate.Error(), "UNIQUE") {
+								log.Printf("[ERROR] failed to marshal manifest data from repo '%s' for tag '%s' err: %s", repo, tag, errCreate)
+								log.Printf("[ERROR] sync operation aborted")
+								return
+							}
+
+							// if repositories with specific tag already exist the service try update dynamic field and set a new timestamp.
+							// Then timestamp using for garbage collector for detect outdated data and remove one from repository store
+							log.Printf("[DEBUG] entry already exist and will update : repo: '%s', tag: '%s'", repo, tag)
+
+							condition := map[string]interface{}{
+								store.RegistryRepositoryNameField: repo,
+								store.RegistryTagField:            tag,
+							}
+
+							fieldForUpdate := map[string]interface{}{
+								store.RegistrySizeNameField:  manifest.TotalSize,
+								store.RegistryTimestampField: now,
+							}
+
+							if errUpdate := ds.Storage.UpdateRepository(ctx, condition, fieldForUpdate); errUpdate != nil {
+								log.Printf("[ERROR] sync operation aborted: repo '%s' for tag '%s' err: %s", repo, tag, errUpdate)
+								return
+							}
+							continue
+						}
+						log.Printf("[DEBUG] New entry added: repo: '%s', tag: '%s'", repo, tag)
 					}
-					log.Printf("[DEBUG] New entry added: repo: '%s', tag: '%s'", repo, tag)
 				}
 
 				if errors.Is(errTags, registry.ErrNoMorePages) {
@@ -232,6 +235,6 @@ func (ds *DataService) doGarbageCollector(ctx context.Context) error {
 	if err := ds.Storage.AccessGarbageCollector(ctx); err != nil {
 		return fmt.Errorf("access garbage collector aborted with error: %v", err)
 	}
-
+	log.Printf("[DEBUG] garbage collector task complete")
 	return nil
 }

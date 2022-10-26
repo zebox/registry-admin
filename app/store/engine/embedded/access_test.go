@@ -363,10 +363,6 @@ func TestEmbedded_AccessGarbageCollector(t *testing.T) {
 	assert.NoError(t, errFind)
 	assert.Equal(t, int64(2), result.Total)
 
-	// test with empty result
-	err = db.AccessGarbageCollector(ctx)
-	assert.Equal(t, ErrNotFound, err)
-
 	// try with bad or closed connection
 	badConn := Embedded{}
 	err = badConn.Connect(ctx)

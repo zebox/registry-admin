@@ -432,9 +432,6 @@ func TestEmbedded_RepositoryGarbageCollector(t *testing.T) {
 	assert.NoError(t, errFind)
 	assert.Equal(t, int64(2), result.Total)
 
-	err = db.RepositoryGarbageCollector(ctx, outdated)
-	assert.Equal(t, ErrNotFound, err)
-
 	// try with  bad or closed connection
 	badConn := Embedded{}
 	err = badConn.Connect(ctx)

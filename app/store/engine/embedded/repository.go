@@ -7,6 +7,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/zebox/registry-admin/app/store"
 	"github.com/zebox/registry-admin/app/store/engine"
+	"log"
 	"strings"
 )
 
@@ -163,19 +164,17 @@ func (e *Embedded) DeleteRepository(ctx context.Context, key string, id interfac
 // RepositoryGarbageCollector deletes outdated repositories
 func (e *Embedded) RepositoryGarbageCollector(ctx context.Context, syncDate int64) (err error) {
 
-	deleteSql := fmt.Sprintf("DELETE FROM %s WHERE %s<?", repositoriesTable, store.RegistryTimestampField) //nolint:gosec
-	res, err := e.db.ExecContext(ctx, deleteSql, syncDate)
+	deleteSQL := fmt.Sprintf("DELETE FROM %s WHERE %s<?", repositoriesTable, store.RegistryTimestampField) //nolint:gosec
+	res, err := e.db.ExecContext(ctx, deleteSQL, syncDate)
 	if err != nil {
 		return errors.Wrapf(err, "failed execute query for user delete")
 	}
-	rowsAffected, err := res.RowsAffected()
+	rows, err := res.RowsAffected()
 	if err != nil {
 		return err
 	}
-
-	if rowsAffected == 0 {
-		return ErrNotFound
+	if rows > 0 {
+		log.Printf("repositories deleted: %d", rows)
 	}
-
 	return err
 }

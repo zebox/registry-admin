@@ -172,13 +172,9 @@ func (e *Embedded) AccessGarbageCollector(ctx context.Context) error {
 	if err != nil {
 		return errors.Wrapf(err, "failed execute query for execute garbage collector for access ")
 	}
-	rowsAffected, err := res.RowsAffected()
+	_, err = res.RowsAffected()
 	if err != nil {
 		return err
-	}
-
-	if rowsAffected == 0 {
-		return ErrNotFound
 	}
 
 	return err
