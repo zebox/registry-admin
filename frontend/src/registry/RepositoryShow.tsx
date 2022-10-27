@@ -1,12 +1,12 @@
 import * as React from "react";
 import { useParams, useLocation } from 'react-router-dom';
-import {  useDelete, useTranslate, Datagrid, useRecordContext, Title, ListBase, ListToolbar, Pagination, TextField, Loading } from 'react-admin';
+import { useDelete, useTranslate, Datagrid, useRecordContext, Title, ListBase, ListToolbar, Pagination, TextField, Loading } from 'react-admin';
 import { Card, CardContent, Typography, Button } from '@mui/material';
 
 import { ConvertUnixTimeToDate, ParseSizeToReadable, SearchFieldTranslated } from "../helpers/Helpers";
 import { SizeFieldReadable } from "./RepositoryList";
 import ImageConfigPage from './ImageConfig';
-
+import InfoIcon from '@mui/icons-material/Info';
 /**
  * Fetch a repository entry from the API and display it
  */
@@ -25,6 +25,7 @@ const RepositoryShow = () => {
             <TagDeleteButton />
             <ShowImageDetail />
         </Datagrid>
+
     </TagList>
 }
 
@@ -65,9 +66,19 @@ const TagDescription = ({ source }: any) => {
 
 const ShowImageDetail = ({ source }: any) => {
     const record = useRecordContext();
+    const [open, setOpen] = React.useState(false);
+
+    const handleClickOpen =()=>{
+        setOpen(true);
+    }
     return (
-        <>
-            <ImageConfigPage record={record} />
+        <>{open ?
+            <ImageConfigPage record={record} isOpen={open} handleShowFn={setOpen} />
+            :
+            <Button variant="outlined" onClick={handleClickOpen}>
+                <InfoIcon />
+            </Button>
+        }
         </>
     )
 }

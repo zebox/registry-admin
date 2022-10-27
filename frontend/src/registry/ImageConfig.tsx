@@ -16,7 +16,7 @@ import Paper from '@mui/material/Paper';
 import CloseIcon from '@mui/icons-material/Close';
 import Slide from '@mui/material/Slide';
 import { TransitionProps } from '@mui/material/transitions';
-import InfoIcon from '@mui/icons-material/Info';
+
 import { useGetOne, useTranslate, Loading } from 'react-admin';
 import { repositoryBaseResource } from './RepositoryShow';
 import { Buffer } from 'buffer';
@@ -31,42 +31,55 @@ const Transition = React.forwardRef(function Transition(
 });
 
 
-export default function ImageConfigPage({ record }: any) {
+export default function ImageConfigPage({ record, isOpen, handleShowFn }: any) {
     const [dense, setDense] = React.useState(false);
     const [open, setOpen] = React.useState(false);
-    // const [config, setConfig] = React.useState(Object);
+    const [manifest, setManifest] = React.useState(Object);
     const translate = useTranslate();
 
-    const { data, isLoading, error, refetch } = useGetOne(
+    const { data, isLoading, error } = useGetOne(
         repositoryBaseResource,
         { id: 'blobs', meta: { name: record.repository_name, digest: record.raw.config.digest } }
     );
 
-
     const decodeConfig = (data: any): any => {
         const cfg = Buffer.from(data.value, 'base64').toString('ascii');
-        console.log(JSON.parse(cfg));
         return JSON.parse(cfg);
     }
 
+    React.useEffect(() => {
+        setOpen(isOpen);
+    }, [isOpen])
+
+
+    React.useEffect(() => {
+        if (isLoading) { return }
+        const cfg = decodeConfig(data);
+        if (cfg && cfg !== null) {
+            setManifest(cfg);
+        }
+    }, [isLoading])
+
+    if (isLoading) { return <Loading />; }
+
     const MainData = () => {
-        const config = decodeConfig(data);
-        return config && (
+        // const config = decodeConfig(data);
+        return manifest && (
             <List dense={dense}>
                 <ListItemText
                     disableTypography
                     primary="Arch: "
-                    secondary={config.architecture}
+                    secondary={manifest.architecture}
 
                 />
-                <ListItemText disableTypography primary="CreatedAt: " secondary={config.created} />
-                <ListItemText disableTypography primary="OS: " secondary={config.os} />
+                <ListItemText disableTypography primary="CreatedAt: " secondary={manifest.created} />
+                <ListItemText disableTypography primary="OS: " secondary={manifest.os} />
             </List>
         );
     }
 
     const ConfigData = () => {
-        const { config } = decodeConfig(data);
+        const  config: any  = manifest.config;
         return config && (
             <List dense={dense}>
                 {config.ExposedPorts ? <ListItemText disableTypography primary={<div style={{ fontWeight: "bolder", float: "left" }}>Exposed port:</div>} secondary={JSON.stringify(config.ExposedPorts)} /> : null}
@@ -80,39 +93,39 @@ export default function ImageConfigPage({ record }: any) {
     }
 
     const HistoryData = () => {
-        const config = decodeConfig(data);
-        const imageHistory = config.history
+        // const config = decodeConfig(data);
+        const imageHistory = manifest.history
         return imageHistory && (
             < List dense={dense} >
-                {imageHistory.map((item: any) => {
+                {imageHistory.map((item: any, index: number) => {
                     return (
-                        < div key={item.created}>
+                        < div key={index}>
                             {
-                            item.created ? <ListItemText
-                            disableTypography
-                            primary={<div style={{ fontWeight: "bolder", float: "left" }}>
-                                Created:</div>
-                            }
-                            secondary={item.created} />
-                            : null}
+                                item.created ? <ListItemText
+                                    disableTypography
+                                    primary={<div style={{ fontWeight: "bolder", float: "left" }}>
+                                        Created:</div>
+                                    }
+                                    secondary={item.created} />
+                                    : null}
 
                             {item.created_by ? <ListItemText
-                            disableTypography
-                            primary={<div style={{ fontWeight: "bolder", float: "left" }}>
-                                Created by:</div>
-                            }
-                            secondary={item.created_by} />
-                            : null}
+                                disableTypography
+                                primary={<div style={{ fontWeight: "bolder", float: "left" }}>
+                                    Created by:</div>
+                                }
+                                secondary={item.created_by} />
+                                : null}
 
-                           {item.comment ? <ListItemText 
-                            disableTypography
-                            primary={<div style={{ fontWeight: "bolder", float: "left" }}>
-                                Comment:</div>
+                            {item.comment ? <ListItemText
+                                disableTypography
+                                primary={<div style={{ fontWeight: "bolder", float: "left" }}>
+                                    Comment:</div>
+                                }
+                                secondary={item.comment} />
+                                : null
                             }
-                            secondary={item.comment} />
-                            : null
-                            }
-                            <Divider/>
+                            <Divider />
                         </div>
                     )
 
@@ -127,14 +140,9 @@ export default function ImageConfigPage({ record }: any) {
     };
 
     const handleClose = () => {
-        setOpen(false);
+        handleShowFn(false);
     };
-    // if (open && isLoading) { return <Loading />; }
-    if (!open) {
-        return <Button variant="outlined" onClick={handleClickOpen}>
-            <InfoIcon />
-        </Button>
-    }
+
 
     return (
         <div>
@@ -161,7 +169,7 @@ export default function ImageConfigPage({ record }: any) {
                     </Toolbar>
                 </AppBar>
                 {!isLoading && error === null ?
-                    <Box sx={{ flexGrow: 1,  padding: 2 }}>
+                    <Box sx={{ flexGrow: 1, padding: 2 }}>
                         <Grid container spacing={2}>
                             {/* ----------- MAIN SECTION ----------- */}
                             <Grid item xs={12} md={6}>
