@@ -66,14 +66,9 @@ export default function ImageConfigPage({ record, isOpen, handleShowFn }: any) {
         // const config = decodeConfig(data);
         return manifest && (
             <List dense={dense}>
-                <ListItemText
-                    disableTypography
-                    primary="Arch: "
-                    secondary={manifest.architecture}
-
-                />
-                <ListItemText disableTypography primary="CreatedAt: " secondary={manifest.created} />
-                <ListItemText disableTypography primary="OS: " secondary={manifest.os} />
+                {manifest.architecture ? <ListItemText disableTypography primary={<div style={{ fontWeight: "bolder", float: "left" }}>{"Arch: "}</div>} secondary={manifest.architecture} /> : null}
+                {manifest.created ? <ListItemText disableTypography primary={<div style={{ fontWeight: "bolder", float: "left" }}>{"CreatedAt: "}</div>} secondary={manifest.created} /> : null}
+                {manifest.os ? <ListItemText disableTypography primary={<div style={{ fontWeight: "bolder", float: "left" }}>{"OS: "}</div>} secondary={manifest.os} /> : null}
             </List>
         );
     }
