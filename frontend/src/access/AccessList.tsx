@@ -7,12 +7,20 @@ import {
     TextField,
     EditButton,
     DeleteButton,
-    ReferenceField
+    ReferenceField,
+    useRecordContext
 
 } from 'react-admin';
+import DoDisturbIcon from '@mui/icons-material/DoDisturb';
 
-
-
+const DisabledField = ({ source }: any) => {
+    const record = useRecordContext();
+    return (
+        <>
+            {record[source] ? <DoDisturbIcon sx={{color:"red"}}/> : ""}
+        </>
+    )
+}
 const AccessList = () => (
     <List
         sort={{ field: 'name', order: 'ASC' }}
@@ -27,7 +35,7 @@ const AccessList = () => (
             <TextField source="type" />
             <TextField source="resource_name" />
             <TextField source="action" />
-            <BooleanField source="disabled" />
+            <DisabledField source="disabled" />
             <EditButton alignIcon="right" />
             <DeleteButton alignIcon="right" />
         </Datagrid>

@@ -38,7 +38,7 @@ const dataProvider: DataProvider = {
 
             return httpClient(url, createOptions("GET")).then(({ status, json }) => {
 
-                if (!Object.hasOwn(json, 'total') || json.total==0) {
+                if (!Object.hasOwn(json, 'total') || json.total == 0) {
                     json.total = 0;
                     json.data = [];
                 }
@@ -53,7 +53,7 @@ const dataProvider: DataProvider = {
                     json
                 ));
             }).catch(error => {
-                 if (Object.hasOwn(error, 'body')) {
+                if (Object.hasOwn(error, 'body')) {
                     let json = error.body;
                     // throw new Error(json.message);
                     return reject(new HttpError(
@@ -73,7 +73,15 @@ const dataProvider: DataProvider = {
             filter: JSON.stringify({ ids: params.ids }),
         };
         const url = `${apiUrl}/${resource}?${stringify(query)}`;
-        return httpClient(url, createOptions("GET")).then(({ json }) => (json));
+        return new Promise((resolve, reject): Promise<GetManyResult<any> | any> => {
+            return httpClient(url, createOptions("GET")).then(({ json }) => {
+                if (!Object.hasOwn(json, 'total') || json.total == 0) {
+                    json.total = 0;
+                    json.data = [];
+                }
+                return resolve(json);
+            })
+        });
     },
     getManyReference: function <RecordType extends RaRecord = any>(resource: string, params: GetManyReferenceParams): Promise<GetManyReferenceResult<RecordType>> {
         const { page, perPage } = params.pagination;
