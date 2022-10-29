@@ -7,11 +7,16 @@ import {
     DeleteButton,
     SelectInput,
     TextInput,
-    ReferenceField
+    ReferenceField,
+    useRecordContext,
+    useCreatePath
 
 } from 'react-admin';
-import { DisabledField } from '../components/DisabledField';
+import Button from '@mui/material/Button';
+import { Link } from 'react-router-dom';
+import HttpsIcon from '@mui/icons-material/Https';
 
+import { DisabledField } from '../components/DisabledField';
 import { SearchFieldTranslated } from '../helpers/Helpers'
 
 interface IRoleList {
@@ -35,6 +40,24 @@ const userFilters = [
         choices={RoleList} />
 ];
 
+const AddRepositoryAccess =()=>{
+    const record = useRecordContext();
+    const createPath = useCreatePath();
+
+    return record ? (
+        <Button
+            color="primary"
+            component={Link}
+            to={{
+                pathname: '/access',
+                search: `filter=${JSON.stringify({ owner_id: record.id })}`,
+            }}
+        >
+            <HttpsIcon/>
+        </Button>
+    ) : null;
+
+}
 
 const UserList = () => (
     <List
@@ -55,6 +78,7 @@ const UserList = () => (
             </ReferenceField>
             <TextField source="role" />
             <DisabledField source="blocked" />
+            <AddRepositoryAccess/>
             <EditButton />
             <DeleteButton />
         </Datagrid>
