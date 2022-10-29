@@ -1,26 +1,17 @@
 
 import * as React from "react";
 import {
-    BooleanField,
     List,
     Datagrid,
     TextField,
     EditButton,
     DeleteButton,
     ReferenceField,
-    useRecordContext
-
 } from 'react-admin';
-import DoDisturbIcon from '@mui/icons-material/DoDisturb';
+import { DisabledField } from "../components/DisabledField";
 
-const DisabledField = ({ source }: any) => {
-    const record = useRecordContext();
-    return (
-        <>
-            {record[source] ? <DoDisturbIcon sx={{color:"red"}}/> : ""}
-        </>
-    )
-}
+
+
 const AccessList = () => (
     <List
         sort={{ field: 'name', order: 'ASC' }}

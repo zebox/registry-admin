@@ -3,7 +3,6 @@ import {
     List,
     Datagrid,
     TextField,
-    BooleanField,
     EditButton,
     DeleteButton,
     SelectInput,
@@ -11,6 +10,7 @@ import {
     ReferenceField
 
 } from 'react-admin';
+import { DisabledField } from '../components/DisabledField';
 
 import { SearchFieldTranslated } from '../helpers/Helpers'
 
@@ -54,7 +54,7 @@ const UserList = () => (
                 <TextField source="name" />
             </ReferenceField>
             <TextField source="role" />
-            <BooleanField source="blocked" />
+            <DisabledField source="blocked" />
             <EditButton />
             <DeleteButton />
         </Datagrid>
