@@ -14,7 +14,7 @@ import {
 } from 'react-admin';
 import Button from '@mui/material/Button';
 import { Link } from 'react-router-dom';
-import HttpsIcon from '@mui/icons-material/Https';
+import AccessIcon from '@mui/icons-material/LockOpen';
 
 import { DisabledField } from '../components/DisabledField';
 import { SearchFieldTranslated } from '../helpers/Helpers'
@@ -40,6 +40,25 @@ const userFilters = [
         choices={RoleList} />
 ];
 
+const RepositoryAccessList =()=>{
+    const record = useRecordContext();
+    const createPath = useCreatePath();
+
+    return record ? (
+        <Button
+            color="primary"
+            component={Link}
+            to={{
+                pathname: '/access',
+                search: `filter=${JSON.stringify({ owner_id: record.id })}`,
+            }}
+        >
+            <AccessIcon/>
+        </Button>
+    ) : null;
+
+}
+
 const AddRepositoryAccess =()=>{
     const record = useRecordContext();
     const createPath = useCreatePath();
@@ -53,7 +72,7 @@ const AddRepositoryAccess =()=>{
                 search: `filter=${JSON.stringify({ owner_id: record.id })}`,
             }}
         >
-            <HttpsIcon/>
+            <AccessIcon/>
         </Button>
     ) : null;
 
@@ -78,7 +97,7 @@ const UserList = () => (
             </ReferenceField>
             <TextField source="role" />
             <DisabledField source="blocked" />
-            <AddRepositoryAccess/>
+            <RepositoryAccessList/>
             <EditButton />
             <DeleteButton />
         </Datagrid>

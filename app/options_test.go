@@ -86,7 +86,7 @@ func TestParseArgs(t *testing.T) {
 		testMatcherOptions.Listen = "127.0.0.9"
 		testMatcherOptions.Port = 9999
 		testMatcherOptions.Auth.TokenSecret = "test-super-token-secret"
-		testMatcherOptions.Auth.HostName = "hostname.test"
+		testMatcherOptions.HostName = "hostname.test"
 		testMatcherOptions.Auth.IssuerName = "test-issuer"
 		testMatcherOptions.Auth.TokenDuration = "20s"
 		testMatcherOptions.Auth.CookieDuration = "30d"

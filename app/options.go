@@ -80,7 +80,7 @@ type RegistryGroup struct {
 	InsecureConnection       bool   `long:"https-insecure" env:"RA_REGISTRY_HTTPS_INSECURE" description:"Set https connection to registry insecure" json:"https_insecure"`
 	Service                  string `long:"service" env:"RA_REGISTRY_SERVICE" description:"A service name which defined in registry settings" json:"service"`
 	Issuer                   string `long:"issuer" env:"RA_REGISTRY_TOKEN_ISSUER" description:"A token issuer name which defined in registry settings" json:"token_issuer"`
-	GarbageCollectorInterval int64  `long:"gc-interval" env:"RA_REGISTRY_GC_INTERVAL" description:"Use for define custom time interval for garbage collector call (in second)" json:"gc_interval"`
+	GarbageCollectorInterval int64  `long:"gc-interval" env:"RA_REGISTRY_GC_INTERVAL" description:"Use for define custom time interval for garbage collector call (in hour), default 1 hours" json:"gc_interval"`
 	Certs                    struct {
 		Path      string `long:"path" env:"RA_REGISTRY_CERT_PATH" description:"A path where will be stored new self-signed cert,keys and CA files, when 'self-token' auth type is used" json:"certs_path"`
 		Key       string `long:"key" env:"RA_REGISTRY_KEY_PATH" description:"A path where will be stored new self-signed private key file, when 'self-token' auth type is used" json:"key"`
