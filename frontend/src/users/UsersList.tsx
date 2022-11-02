@@ -9,7 +9,8 @@ import {
     TextInput,
     ReferenceField,
     useRecordContext,
-    useCreatePath
+    useCreatePath,
+    useStore
 
 } from 'react-admin';
 import Button from '@mui/material/Button';
@@ -23,6 +24,8 @@ interface IRoleList {
     id: string;
     name: string;
 }
+
+export const KEY_SELECTED_USER="ctx_key_selected_user_";
 
 export const RoleList: Array<IRoleList> = [
     { id: 'user', name: 'User' },
@@ -42,8 +45,6 @@ const userFilters = [
 
 const RepositoryAccessList =()=>{
     const record = useRecordContext();
-    const createPath = useCreatePath();
-
     return record ? (
         <Button
             color="primary"
@@ -61,9 +62,11 @@ const RepositoryAccessList =()=>{
 
 const AddRepositoryAccess =()=>{
     const record = useRecordContext();
-    const createPath = useCreatePath();
 
-    return record ? (
+    // it require for link to create access view with selected user
+    const [selectedUser, setSelectedUser] = useStore(KEY_SELECTED_USER+record.id,record.id);
+
+     return record ? (
         <Button
             color="primary"
             component={Link}
@@ -97,6 +100,7 @@ const UserList = () => (
             </ReferenceField>
             <TextField source="role" />
             <DisabledField source="blocked" />
+            <AddRepositoryAccess/>
             <RepositoryAccessList/>
             <EditButton />
             <DeleteButton />

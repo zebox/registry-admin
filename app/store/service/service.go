@@ -15,8 +15,7 @@ import (
 	log "github.com/go-pkgz/lgr"
 )
 
-const defaultPageSize = "50"                     // the number of repository items for pagination request when catalog listing
-const defaultGarbageCollectorTimeout = time.Hour // second
+const defaultPageSize = "50" // the number of repository items for pagination request when catalog listing
 
 var ErrNoSyncedYet = errors.New("garbage collector skip because sync required start first")
 
@@ -191,12 +190,12 @@ func (ds *DataService) doSyncRepositories(ctx context.Context) {
 // with 'lastSyncDate' value. Timestamp field update at every sync call in repository storage
 // and compare with 'lastSyncDate' variable.
 // If values above is different garbage collector will remove all outdated entries
-func (ds *DataService) RepositoriesMaintenance(ctx context.Context, timeout time.Duration) {
+func (ds *DataService) RepositoriesMaintenance(ctx context.Context, timeout int64) {
 
 	if timeout == 0 {
-		timeout = defaultGarbageCollectorTimeout
+		timeout = 60
 	}
-	ticker := time.NewTicker(timeout)
+	ticker := time.NewTicker(time.Duration(timeout) * time.Hour)
 
 	// starting garbage collector background task
 	go func() {
