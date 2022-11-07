@@ -1,4 +1,4 @@
-import { AuthProvider, fetchUtils, HttpError  } from 'react-admin';
+import { AuthProvider, fetchUtils } from 'react-admin';
 import { BASE_URL, API_BASE, API_AUTH } from "./constants";
 
 
@@ -6,7 +6,7 @@ const apiAuthUrl: string = `${BASE_URL}${API_AUTH}`;
 const httpClient = fetchUtils.fetchJson;
 
 const authProvider: AuthProvider = {
-   
+
     login: ({ username, password }) => {
 
         const options: fetchUtils.Options = {
@@ -23,7 +23,7 @@ const authProvider: AuthProvider = {
         return httpClient(`${apiAuthUrl}/local/login`, options).then(({ status, json }) => {
 
             if (status === 200) {
-               
+
                 return Promise.resolve(json);
             }
 
@@ -38,42 +38,49 @@ const authProvider: AuthProvider = {
             credentials: "include",
             headers: new Headers({ 'Content-Type': 'application/json' }),
         };
-        
+
         return httpClient(`${apiAuthUrl}/logout`, options).then(({ status }) => {
 
             if (status === 200) {
-               
+
                return Promise.resolve();
-            
+
             }
             return Promise.reject();
+        }).catch(error=>{
+            console.error(error);
+            return Promise.reject({ redirectTo: '/login' });
         });
     },
     checkError: (error) => {
         const status = error.status;
         if (status === 401 || status === 403) {
-
             return Promise.reject();
         }
         return Promise.resolve();
     },
     checkAuth: () => {
+
         const options: fetchUtils.Options =  {
             method: 'GET',
             mode: "cors",
             credentials: "include",
             headers: new Headers({ 'Content-Type': 'application/json' }),
         };
-        
+
         return httpClient(`${apiAuthUrl}/user`, options).then(({ status, json }) => {
 
-            if (status === 401 || status === 403) {     
+            if (status === 401 || status === 403) {
                return Promise.reject();
             }
             if (json.error) {
                return Promise.reject();
             }
-            return Promise.resolve(json);       
+            return Promise.resolve(json);
+        }).catch(error=>{
+
+            console.error(error)
+            return Promise.reject({ redirectTo: '/login' });
         });
     },
     getPermissions: () => Promise.reject('Unknown method'),
@@ -84,21 +91,21 @@ const authProvider: AuthProvider = {
         credentials: "include",
         headers: new Headers({ 'Content-Type': 'application/json' }),
     };
-    
+
     return httpClient(`${apiAuthUrl}/user`, options).then(({ status, json }) => {
 
-        if (status === 401 || status === 403) {     
+        if (status === 401 || status === 403) {
            return Promise.reject();
         }
         if (json.error) {
            return Promise.reject();
         }
-        
+
         return Promise.resolve({
             id: json.id,
             fullName: json.name,
             avatar: json.picture
-        })       
+        })
     });
     }
 };

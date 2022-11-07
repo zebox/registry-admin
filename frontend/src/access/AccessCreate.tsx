@@ -24,7 +24,7 @@ export const AccessCreate = () => {
         <Create title={translate('resources.accesses.add_title')} >
             <SimpleForm>
                 <TextInput sx={{ width: "30%" }} label={translate('resources.accesses.fields.name')} source="name" />
-                <ReferenceInput source="owner_id" reference="users">           
+                <ReferenceInput source="owner_id" reference="users" label={translate('resources.accesses.fields.owner_id')}>
                     <AutocompleteInput sx={{ width: "30%" }} optionText="name" optionValue="id" onReset={onResetHandler} />
                 </ReferenceInput>
                 <ReferenceInput source='resource_name' reference="registry/catalog">

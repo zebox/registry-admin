@@ -9,14 +9,12 @@ import {
     TextInput,
     ReferenceField,
     useRecordContext,
-    useCreatePath,
-    useStore
-
+    useTranslate
 } from 'react-admin';
 import Button from '@mui/material/Button';
 import { Link } from 'react-router-dom';
 import AccessIcon from '@mui/icons-material/LockOpen';
-
+import Tooltip from '@mui/material/Tooltip'
 import { DisabledField } from '../components/DisabledField';
 import { SearchFieldTranslated } from '../helpers/Helpers'
 
@@ -45,7 +43,9 @@ const userFilters = [
 
 const RepositoryAccessList =()=>{
     const record = useRecordContext();
+    const translate=useTranslate();
     return record ? (
+        <Tooltip title={translate('resources.commands.access_name')}>
         <Button
             color="primary"
             component={Link}
@@ -56,30 +56,11 @@ const RepositoryAccessList =()=>{
         >
             <AccessIcon/>
         </Button>
+        </Tooltip>
     ) : null;
 
 }
 
-const AddRepositoryAccess =()=>{
-    const record = useRecordContext();
-
-    // it require for link to create access view with selected user
-    const [selectedUser, setSelectedUser] = useStore(KEY_SELECTED_USER+record.id,record.id);
-
-     return record ? (
-        <Button
-            color="primary"
-            component={Link}
-            to={{
-                pathname: '/access',
-                search: `filter=${JSON.stringify({ owner_id: record.id })}`,
-            }}
-        >
-            <AccessIcon/>
-        </Button>
-    ) : null;
-
-}
 
 const UserList = () => (
     <List
@@ -100,7 +81,6 @@ const UserList = () => (
             </ReferenceField>
             <TextField source="role" />
             <DisabledField source="blocked" />
-            <AddRepositoryAccess/>
             <RepositoryAccessList/>
             <EditButton />
             <DeleteButton />

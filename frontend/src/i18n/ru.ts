@@ -24,7 +24,7 @@ const customRussianMessages: TranslationMessages = {
             edit_title: "Редактирование пользователя",
             fields: {
                 login: "Логин",
-                name: "Имя пользователя",
+                user_name: "Имя пользователя",
                 password: "Пароль",
                 group: "Группа",
                 role: "Роль",
@@ -52,7 +52,7 @@ const customRussianMessages: TranslationMessages = {
                 resource_type: "Тип ресурса",
                 resource_name: "Имя репозитория",
                 action:"Вид операции",
-                disabled:"Отклюен"
+                disabled:"Отключен"
             }
         },
         repository:{

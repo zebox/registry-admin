@@ -33,15 +33,14 @@ const translate = useTranslate();
     ])}
     >
         <Datagrid bulkActionButtons={false} >
-            <TextField source="id" />
-            <TextField source="name" />
-            <ReferenceField source="owner_id" reference="users">
+            <TextField source="name" label={translate('resources.accesses.fields.name')}/>
+            <ReferenceField source="owner_id" reference="users" label={translate('resources.accesses.fields.owner_id')}>
                 <TextField source="name" />
             </ReferenceField>
-            <TextField source="type" />
-            <TextField source="resource_name" />
-            <TextField source="action" />
-            <DisabledField source="disabled" />
+            <TextField source="type" label={translate('resources.accesses.fields.resource_type')}/>
+            <TextField source="resource_name" label={translate('resources.accesses.fields.resource_name')} />
+            <TextField source="action" label={translate('resources.accesses.fields.action')} />
+            <DisabledField source="disabled" label={translate('resources.accesses.fields.disabled')}/>
             <EditButton alignIcon="right" />
             <DeleteButton alignIcon="right" />
         </Datagrid>
