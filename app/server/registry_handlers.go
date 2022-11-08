@@ -141,14 +141,17 @@ func (rh *registryHandlers) events(w http.ResponseWriter, r *http.Request) {
 	if err := rh.dataService.RepositoryEventsProcessing(r.Context(), eventsEnvelope); err != nil {
 		SendErrorJSON(w, r, rh.l, http.StatusInternalServerError, err, "failed to processing event message from registry")
 	}
-	// rh.l.Logf("%s", eventsEnvelope.Events[0].Action)
 	rest.RenderJSON(w, responseMessage{Message: "ok"})
 }
 
 func (rh *registryHandlers) imageConfig(w http.ResponseWriter, r *http.Request) {
 	name := r.URL.Query()["name"]
 	digest := r.URL.Query()["digest"]
-
+	if len(name) < 1 || len(digest) < 1 {
+		err := fmt.Errorf("params name and digest must be set")
+		SendErrorJSON(w, r, rh.l, http.StatusBadRequest, err, err.Error())
+		return
+	}
 	blob, err := rh.registryService.GetBlob(r.Context(), name[0], digest[0])
 	if err != nil {
 		err = fmt.Errorf("failed to retrieve blobs data for repo: %s digest: %s err: %v", name, digest, err)
