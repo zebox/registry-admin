@@ -161,12 +161,20 @@ func (rh *registryHandlers) imageConfig(w http.ResponseWriter, r *http.Request) 
 	rest.RenderJSON(w, responseMessage{Data: map[string]interface{}{"id": 0, "value": blob}, Message: "ok"})
 }
 
-func (rh *registryHandlers) delete(w http.ResponseWriter, r *http.Request) {
+func (rh *registryHandlers) deleteDigest(w http.ResponseWriter, r *http.Request) {
 	digest := r.URL.Query()["digest"]
 	name := r.URL.Query()["name"]
 
+	if len(name) < 1 || len(digest) < 1 {
+		err := fmt.Errorf("params name and digest must be set")
+		SendErrorJSON(w, r, rh.l, http.StatusBadRequest, err, err.Error())
+		return
+	}
+
 	if err := rh.registryService.DeleteTag(r.Context(), name[0], digest[0]); err != nil {
 		rh.l.Logf("%v", err)
+		err = fmt.Errorf("delete digest fail: %v", err)
+		SendErrorJSON(w, r, rh.l, http.StatusInternalServerError, err, err.Error())
 	}
 }
 
@@ -192,6 +200,7 @@ func (rh *registryHandlers) catalogList(w http.ResponseWriter, r *http.Request) 
 
 	filter.GroupByField = !isGroupBy || (groupBy != nil && groupBy[0] != "none")
 	repoList, errReposList := rh.dataStore.FindRepositories(r.Context(), filter)
+
 	if errReposList != nil {
 		SendErrorJSON(w, r, rh.l, http.StatusInternalServerError, errReposList, "failed to fetch list of repositories")
 		return

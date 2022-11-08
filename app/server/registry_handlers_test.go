@@ -264,6 +264,44 @@ func TestRegistryHandlers_imageConfig(t *testing.T) {
 		requestWithCredentials(t, test.ctx, "bar", "bar_password", "GET", test.url, testRegistryHandlers.imageConfig, nil, test.expectedStatus)
 	}
 }
+
+func TestRegistryHandlers_deleteDigest(t *testing.T) {
+	testRegistryHandlers := registryHandlers{}
+	testRegistryHandlers.l = log.Default()
+
+	testRegistryHandlers.registryService = prepareRegistryMock(t)
+	ctx := context.Background()
+	testTable := []struct {
+		name           string
+		url            string
+		ctx            context.Context
+		expectedStatus int
+	}{
+		{
+			name:           "request with empty name and digest params",
+			url:            "/api/v1/registry/catalog/delete",
+			ctx:            ctx,
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
+			name:           "successful request",
+			url:            "/api/v1/registry/catalog/delete?name=n_test&digest=d_test",
+			ctx:            ctx,
+			expectedStatus: http.StatusOK,
+		},
+		{
+			name:           "request with error response",
+			url:            "/api/v1/registry/catalog/delete?name=n_test&digest=d_test",
+			ctx:            context.WithValue(ctx, ctxKey, true),
+			expectedStatus: http.StatusInternalServerError,
+		},
+	}
+	for _, test := range testTable {
+		t.Log(test.name)
+		requestWithCredentials(t, test.ctx, "bar", "bar_password", "GET", test.url, testRegistryHandlers.deleteDigest, nil, test.expectedStatus)
+	}
+}
+
 func filledTestEntries(t *testing.T, testRegistryHandlers *registryHandlers) {
 	var testUsersList = []store.User{
 		{
@@ -369,6 +407,12 @@ func prepareRegistryMock(_ *testing.T) *registryInterfaceMock {
 			return nil, nil
 		},
 
+		DeleteTagFunc: func(ctx context.Context, repoName string, digest string) error {
+			if value := ctx.Value(ctxKey); value != nil {
+				return errors.New("failed to delete image blob data")
+			}
+			return nil
+		},
 		LoginFunc: func(user store.User) (string, error) {
 			if _, ok := testUsers[user.ID]; !ok {
 				return "", errors.New("user not allowed here")

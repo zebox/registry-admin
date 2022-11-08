@@ -118,7 +118,7 @@ func (g *groupHandlers) groupDeleteCtrl(w http.ResponseWriter, r *http.Request) 
 	}
 
 	if err := g.dataStore.DeleteGroup(r.Context(), id); err != nil {
-		SendErrorJSON(w, r, g.l, http.StatusInternalServerError, err, "failed to delete group with api")
+		SendErrorJSON(w, r, g.l, http.StatusInternalServerError, err, "failed to deleteDigest group with api")
 		return
 	}
 

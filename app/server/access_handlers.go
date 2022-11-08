@@ -117,7 +117,7 @@ func (ah *accessHandlers) accessDeleteCtrl(w http.ResponseWriter, r *http.Reques
 	}
 
 	if err := ah.dataStore.DeleteAccess(r.Context(), id); err != nil {
-		SendErrorJSON(w, r, ah.l, http.StatusInternalServerError, err, "failed to delete access with api")
+		SendErrorJSON(w, r, ah.l, http.StatusInternalServerError, err, "failed to deleteDigest access with api")
 		return
 	}
 

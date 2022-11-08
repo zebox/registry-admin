@@ -380,7 +380,7 @@ func Test_groupDeleteCtrl(t *testing.T) {
 		handler.ServeHTTP(testWriter, req)
 		assert.Equal(t, http.StatusOK, testWriter.Code)
 
-		// try to delete not existed group
+		// try to deleteDigest not existed group
 		req, errReq = http.NewRequest("DELETE", "/api/v1/groups/2", http.NoBody)
 		require.NoError(t, errReq)
 
@@ -392,7 +392,7 @@ func Test_groupDeleteCtrl(t *testing.T) {
 		handler.ServeHTTP(testWriter, req)
 		assert.Equal(t, http.StatusInternalServerError, testWriter.Code)
 
-		// try to delete with wrong group id
+		// try to deleteDigest with wrong group id
 		req, errReq = http.NewRequest("DELETE", "/api/v1/groups/abc", http.NoBody)
 		require.NoError(t, errReq)
 

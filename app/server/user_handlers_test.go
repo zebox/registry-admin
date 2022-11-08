@@ -276,7 +276,7 @@ func Test_userDeleteCtr(t *testing.T) {
 		handler.ServeHTTP(testWriter, req)
 		assert.Equal(t, http.StatusOK, testWriter.Code)
 
-		// delete existed item
+		// deleteDigest existed item
 		req, errReq = http.NewRequest("DELETE", `/api/v1/users/wrong_id`, http.NoBody)
 		require.NoError(t, errReq)
 		req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
@@ -287,7 +287,7 @@ func Test_userDeleteCtr(t *testing.T) {
 	}
 
 	{
-		// try delete already deleted item
+		// try deleteDigest already deleted item
 
 		req, errReq = http.NewRequest("DELETE", `/api/v1/users/10001`, http.NoBody)
 		require.NoError(t, errReq)

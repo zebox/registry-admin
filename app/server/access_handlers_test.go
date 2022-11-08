@@ -223,10 +223,10 @@ func Test_accessDeleteCtrl(t *testing.T) {
 	// create access first
 	request(t, "POST", "/api/v1/access", testAccessHandlers.accessAddCtrl, accessData, http.StatusOK)
 
-	// try to delete access
+	// try to deleteDigest access
 	request(t, "DELETE", "/api/v1/access/1", testAccessHandlers.accessDeleteCtrl, accessData, http.StatusOK)
 
-	// try to delete not existed access
+	// try to deleteDigest not existed access
 	request(t, "DELETE", "/api/v1/access/1", testAccessHandlers.accessDeleteCtrl, accessData, http.StatusInternalServerError)
 
 	// check for unparsed id

@@ -126,7 +126,7 @@ func (u *userHandlers) userDeleteCtrl(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := u.dataStore.DeleteUser(r.Context(), id); err != nil {
-		SendErrorJSON(w, r, u.l, http.StatusInternalServerError, err, "failed to delete user with api")
+		SendErrorJSON(w, r, u.l, http.StatusInternalServerError, err, "failed to deleteDigest user with api")
 		return
 	}
 

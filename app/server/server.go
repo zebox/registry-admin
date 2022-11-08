@@ -66,7 +66,7 @@ type registryInterface interface {
 	// ParseAuthenticateHeaderRequest will parse 'Www-Authenticate' header for extract token authorization data.
 	ParseAuthenticateHeaderRequest(headerValue string) (authRequest registry.TokenRequest, err error)
 
-	// UpdateHtpasswd update user access list in .htpasswd file every time when users entries add/update/delete
+	// UpdateHtpasswd update user access list in .htpasswd file every time when users entries add/update/deleteDigest
 	UpdateHtpasswd(users []store.User) error
 
 	// ApiVersionCheck a minimal endpoint, mounted at /v2/ will provide version support information
@@ -85,7 +85,7 @@ type registryInterface interface {
 	// GetBlob retrieve information about image from config blob
 	GetBlob(ctx context.Context, name, digest string) (blob []byte, err error)
 
-	// DeleteTag will delete the manifest identified by name and reference. Note that a manifest can only be deleted
+	// DeleteTag will deleteDigest the manifest identified by name and reference. Note that a manifest can only be deleted
 	// by digest.
 	DeleteTag(ctx context.Context, repoName, digest string) error
 }
@@ -253,7 +253,7 @@ func (s *Server) routes() chi.Router {
 				routeUser.Get("/{id}", uh.userInfoCtrl)
 				routeUser.Get("/", uh.userFindCtrl)
 
-				// operation create/update/delete with User items allow for admin only
+				// operation create/update/deleteDigest with User items allow for admin only
 				routeUser.Group(func(routeAdminUser chi.Router) {
 					routeAdminUser.Use(authMiddleware.RBAC("admin"))
 
@@ -272,7 +272,7 @@ func (s *Server) routes() chi.Router {
 				routeGroup.Get("/{id}", gh.groupInfoCtrl)
 				routeGroup.Get("/", gh.groupFindCtrl)
 
-				// operation create/update/delete with Group items allow for admins only
+				// operation create/update/deleteDigest with Group items allow for admins only
 				routeGroup.Group(func(routeAdminGroup chi.Router) {
 					routeAdminGroup.Use(authMiddleware.RBAC("admin"))
 
@@ -291,7 +291,7 @@ func (s *Server) routes() chi.Router {
 				routeAccess.Get("/{id}", ah.accessInfoCtrl)
 				routeAccess.Get("/", ah.accessFindCtrl)
 
-				// operation create/update/delete with Access items allow for admins only
+				// operation create/update/deleteDigest with Access items allow for admins only
 				routeAccess.Group(func(routeAdminAccess chi.Router) {
 					routeAdminAccess.Use(authMiddleware.RBAC("admin"))
 					routeAdminAccess.Post("/", ah.accessAddCtrl)
@@ -322,12 +322,12 @@ func (s *Server) routes() chi.Router {
 					registryApiAccess.Get("/health", rh.health)
 				})
 
-				// manipulations registry entries (catalog/tags/manifest/delete)
+				// manipulations registry entries (catalog/tags/manifest/deleteDigest)
 				routeRegistry.Group(func(registryApiAccess chi.Router) {
 					registryApiAccess.Use(authMiddleware.Auth, middleware.NoCache)
 					registryApiAccess.Use(authMiddleware.RBAC("admin", "manager"))
 					registryApiAccess.Get("/sync", rh.syncRepositories)
-					registryApiAccess.Delete("/catalog/*", rh.delete)
+					registryApiAccess.Delete("/catalog/*", rh.deleteDigest)
 					registryApiAccess.Get("/catalog", rh.catalogList)
 					registryApiAccess.Get("/catalog/blobs", rh.imageConfig)
 					// registryApiAccess.Get("/catalog/*", rh.repositoryEntry)
