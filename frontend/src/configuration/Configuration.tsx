@@ -7,16 +7,25 @@ import { useTranslate, useLocaleState, useTheme, Title, RaThemeOptions } from 'r
 
 import { darkTheme, lightTheme } from '../layout/themes';
 
-export const themeSettingKey = "RaCurrentTheme";
+export const uiConfig = "current_ui_config";
 
 const Configuration = () => {
     const translate = useTranslate();
     const [locale, setLocale] = useLocaleState();
     const [theme, setTheme] = useTheme();
+    var config = {theme:"light", language:"en"};
 
     const themeSwitching = (themeValue: RaThemeOptions) => {
-        localStorage.setItem(themeSettingKey, themeValue === darkTheme ? "dark" : "light");
+
+        config.theme= themeValue === darkTheme ? "dark" : "light";
+        localStorage.setItem(uiConfig,JSON.stringify(config));
         setTheme(themeValue);
+    }
+
+    const languageSwitching = (language: string) => {
+        config.language=language;
+        localStorage.setItem(uiConfig,JSON.stringify(config));
+        setLocale(language);
     }
 
     return (
@@ -59,7 +68,7 @@ const Configuration = () => {
                     variant="contained"
                     sx={{ margin: '1em' }}
                     color={locale === 'en' ? 'primary' : 'secondary'}
-                    onClick={() => setLocale('en')}
+                    onClick={() => languageSwitching('en')}
                 >
                     en
                 </Button>
@@ -67,7 +76,7 @@ const Configuration = () => {
                     variant="contained"
                     sx={{ margin: '1em' }}
                     color={locale === 'ru' ? 'primary' : 'secondary'}
-                    onClick={() => setLocale('ru')}
+                    onClick={() => languageSwitching('ru')}
                 >
                     ru
                 </Button>

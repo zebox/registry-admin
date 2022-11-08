@@ -6,9 +6,10 @@ import polyglotI18nProvider from 'ra-i18n-polyglot';
 
 import authProvider from './providers/authProviders';
 import { Login, Layout } from './layout';
-import Configuration, { themeSettingKey } from './configuration/Configuration';
+import Configuration, { uiConfig } from './configuration/Configuration';
 
 import englishMessages from './i18n/en';
+import russianMessages from './i18n/ru';
 import { lightTheme, darkTheme } from './layout/themes';
 
 import dataProvider from './providers/dataProvider';
@@ -21,8 +22,16 @@ import repository from './registry';
 
 const history = createBrowserHistory();
 const i18nProvider = polyglotI18nProvider(locale => {
-  if (locale === 'ru') {
-    return import('./i18n/ru').then(messages => messages.default);
+
+  const configString = localStorage.getItem(uiConfig);
+  if (configString===null) {
+    return englishMessages;
+  };
+
+  const  config = JSON.parse(configString);
+  const {language}:any = config;
+  if (language && language === 'ru') {
+    return russianMessages;
   }
 
   // Always fallback on english
@@ -31,6 +40,14 @@ const i18nProvider = polyglotI18nProvider(locale => {
 
 
 function App() {
+  const configString = localStorage.getItem(uiConfig);
+  var currentTheme:string='light';
+  if (configString!==null) {
+    const  config = JSON.parse(configString);
+    const {theme}:any = localStorage.getItem(uiConfig);
+    currentTheme=theme;
+  };
+
   return (
     <Admin
       title="Registry Admin Portal"
@@ -41,7 +58,7 @@ function App() {
       loginPage={Login}
       layout={Layout}
       i18nProvider={i18nProvider}
-      theme={localStorage.getItem(themeSettingKey) === "light" ? lightTheme : darkTheme}
+      theme={currentTheme && currentTheme === "light" ? lightTheme : darkTheme}
       history={history}
     >
 
