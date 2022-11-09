@@ -1,12 +1,12 @@
 import React from 'react';
-import { Admin, CustomRoutes, memoryStore, Resource } from 'react-admin';
+import { Admin, CustomRoutes, memoryStore, Resource, TranslationMessages } from 'react-admin';
 import { createBrowserHistory } from 'history';
 import { Route } from 'react-router';
 import polyglotI18nProvider from 'ra-i18n-polyglot';
 
 import authProvider from './providers/authProviders';
 import { Login, Layout } from './layout';
-import Configuration, { uiConfig } from './configuration/Configuration';
+import Configuration, { UiConfig, uiConfig } from './configuration/Configuration';
 
 import englishMessages from './i18n/en';
 import russianMessages from './i18n/ru';
@@ -21,21 +21,33 @@ import access from './access';
 import repository from './registry';
 
 const history = createBrowserHistory();
+
+interface ITranslation {
+  [key: string]: TranslationMessages;
+}
+
+const messages:ITranslation = {
+  ru: russianMessages,
+  en: englishMessages,
+};
+
 const i18nProvider = polyglotI18nProvider(locale => {
 
   const configString = localStorage.getItem(uiConfig);
-  if (configString===null) {
-    return englishMessages;
-  };
 
-  const  config = JSON.parse(configString);
-  const {language}:any = config;
-  if (language && language === 'ru') {
-    return russianMessages;
+  if (configString===null) {
+    return messages.en;
   }
 
-  // Always fallback on english
-  return englishMessages;
+  const  config = JSON.parse(configString);
+  const {language}:UiConfig = config;
+
+  if (language!=="" && messages[language]) {
+    return messages[language];
+  }
+
+  return messages[locale] ? messages[locale] : messages.en;
+
 }, 'en', { allowMissing: true });
 
 

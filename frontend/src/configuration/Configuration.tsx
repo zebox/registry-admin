@@ -9,11 +9,16 @@ import { darkTheme, lightTheme } from '../layout/themes';
 
 export const uiConfig = "current_ui_config";
 
+export type UiConfig = {
+    theme: string,
+    language: string
+}
+
 const Configuration = () => {
     const translate = useTranslate();
     const [locale, setLocale] = useLocaleState();
     const [theme, setTheme] = useTheme();
-    var config = {theme:"light", language:"en"};
+    var config:UiConfig = {theme:"light", language:"en"};
 
     const themeSwitching = (themeValue: RaThemeOptions) => {
 
