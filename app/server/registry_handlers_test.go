@@ -302,6 +302,45 @@ func TestRegistryHandlers_deleteDigest(t *testing.T) {
 	}
 }
 
+func TestRegistryHandlers_catalogList(t *testing.T) {
+	testRegistryHandlers := registryHandlers{}
+	testRegistryHandlers.l = log.Default()
+
+	testRegistryHandlers.dataStore = prepareAccessStoreMock(t)
+	filledTestEntries(t, &testRegistryHandlers)
+
+	ctx := context.Background()
+	testTable := []struct {
+		name           string
+		url            string
+		ctx            context.Context
+		expectedStatus int
+	}{
+		{
+			name:           "request with bad filter",
+			url:            `/api/v1/registry/catalog?&range=[0,A]`,
+			ctx:            ctx,
+			expectedStatus: http.StatusInternalServerError,
+		},
+		{
+			name:           "successful request",
+			url:            "/api/v1/registry/catalog",
+			ctx:            ctx,
+			expectedStatus: http.StatusOK,
+		},
+		{
+			name:           "request with error response",
+			url:            "/api/v1/registry/catalog",
+			ctx:            context.WithValue(ctx, ctxKey, true),
+			expectedStatus: http.StatusInternalServerError,
+		},
+	}
+	for _, test := range testTable {
+		t.Log(test.name)
+		requestWithCredentials(t, test.ctx, "bar", "bar_password", "GET", test.url, testRegistryHandlers.catalogList, nil, test.expectedStatus)
+	}
+}
+
 func filledTestEntries(t *testing.T, testRegistryHandlers *registryHandlers) {
 	var testUsersList = []store.User{
 		{
@@ -513,6 +552,9 @@ func prepareAccessStoreMock(t *testing.T) *engine.InterfaceMock {
 		},
 
 		FindRepositoriesFunc: func(ctx context.Context, filter engine.QueryFilter) (result engine.ListResponse, err error) {
+			if value := ctx.Value(ctxKey); value != nil {
+				return result, errors.New("failed to get repository list")
+			}
 			return result, err
 		},
 

@@ -87,7 +87,7 @@ func FilterFromUrlExtractor(url *url.URL) (filters QueryFilter, err error) {
 	}
 
 	// extract and parse range and sort params
-	if isRange && isSort {
+	if isRange || isSort {
 		rng, err := getRange(_range[0])
 		if err != nil {
 			return filters, err
