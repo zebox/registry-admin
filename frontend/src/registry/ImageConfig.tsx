@@ -5,7 +5,6 @@ import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import Grid from '@mui/material/Grid';
 import ListItemText from '@mui/material/ListItemText';
-import ListItem from '@mui/material/ListItem';
 import List from '@mui/material/List';
 import Divider from '@mui/material/Divider';
 import AppBar from '@mui/material/AppBar';
@@ -16,10 +15,10 @@ import Paper from '@mui/material/Paper';
 import CloseIcon from '@mui/icons-material/Close';
 import Slide from '@mui/material/Slide';
 import { TransitionProps } from '@mui/material/transitions';
-
 import { useGetOne, useTranslate, Loading } from 'react-admin';
 import { repositoryBaseResource } from './RepositoryShow';
 import { Buffer } from 'buffer';
+
 
 const Transition = React.forwardRef(function Transition(
     props: TransitionProps & {
@@ -169,7 +168,7 @@ export default function ImageConfigPage({ record, isOpen, handleShowFn }: any) {
                             {/* ----------- MAIN SECTION ----------- */}
                             <Grid item xs={12} md={6}>
                                 <Typography sx={{ mt: 4, mb: 2 }} variant="h6" component="div">
-                                    Main data
+                                {translate('resources.repository.image_platform_details')}
                                 </Typography>
                                 <Paper elevation={3} sx={{ paddingLeft: 1 }}>
                                     {<MainData />}
@@ -180,7 +179,7 @@ export default function ImageConfigPage({ record, isOpen, handleShowFn }: any) {
 
                             <Grid item xs={12} md={6}>
                                 <Typography sx={{ mt: 4, mb: 2 }} variant="h6" component="div">
-                                    CONFIG
+                                {translate('resources.repository.image_config_details')}
                                 </Typography>
                                 <Paper elevation={3} sx={{ paddingLeft: 1 }}>
                                     {<ConfigData />}
@@ -191,7 +190,7 @@ export default function ImageConfigPage({ record, isOpen, handleShowFn }: any) {
 
                             <Grid item xs={12} md={8}>
                                 <Typography sx={{ mt: 4, mb: 2 }} variant="h6" component="div">
-                                    IMAGE HISTORY
+                                {translate('resources.repository.image_history_details')}
                                 </Typography>
                                 <Paper elevation={3} sx={{ paddingLeft: 1 }}>
                                     {<HistoryData />}

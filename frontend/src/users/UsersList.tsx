@@ -1,12 +1,13 @@
 
 import {
+    AutocompleteInput,
     List,
     Datagrid,
     TextField,
     EditButton,
     DeleteButton,
     SelectInput,
-    TextInput,
+    ReferenceInput,
     ReferenceField,
     useRecordContext,
     useTranslate
@@ -31,16 +32,6 @@ export const RoleList: Array<IRoleList> = [
     { id: 'admin', name: 'Admin' }
 ]
 
-
-const userFilters = [
-    <TextInput source="q" label="Search" alwaysOn />,
-    <SelectInput
-        source="role"
-        defaultValue={"user"}
-        emptyValue={null}
-        choices={RoleList} />
-];
-
 const RepositoryAccessList =()=>{
     const record = useRecordContext();
     const translate=useTranslate();
@@ -62,7 +53,9 @@ const RepositoryAccessList =()=>{
 }
 
 
-const UserList = () => (
+const UserList = () => {
+    const translate=useTranslate();
+    return(
     <List
         sort={{ field: 'name', order: 'ASC' }}
         perPage={25}
@@ -70,12 +63,15 @@ const UserList = () => (
             source="role"
             defaultValue={"user"}
             emptyValue={null}
-            choices={RoleList} />])}
+            choices={RoleList} />,
+            <ReferenceInput source="user_group" reference="groups" label={translate('resources.groups.name')}>
+               <AutocompleteInput  optionText="name" optionValue="id" label={translate('resources.groups.name')} />
+           </ReferenceInput>])}
     >
         <Datagrid bulkActionButtons={false}>
             <TextField source="id" />
             <TextField source="login" />
-            <TextField source="name" />
+            <TextField source="name"  label={translate('resources.groups.fields.name')}/>
             <ReferenceField source="group" reference="groups">
                 <TextField source="name" />
             </ReferenceField>
@@ -86,7 +82,7 @@ const UserList = () => (
             <DeleteButton />
         </Datagrid>
     </List>
-);
+)};
 
 
 export default UserList;

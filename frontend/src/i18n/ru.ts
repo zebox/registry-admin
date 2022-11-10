@@ -56,11 +56,23 @@ const customRussianMessages: TranslationMessages = {
             }
         },
         repository:{
+            fields:{
+                name: "Название",
+                size: "Размер",
+                tag:"Тэг",
+                date:"Дата",
+                digest:"Подпись",
+                details:"Поднробнее"
+
+            },
             title:"Информация о репозитории",
             tag_list_title:"Список меток (tags)",
             pull_counter:"Количество загрузок: ",
             tag_digest:"Подпись: ",
             tag_media_type:"Тип: ",
+            image_platform_details:"Платформа",
+            image_config_details:"Параметры",
+            image_history_details:"История",
             message_empty_page:"Ни одной записи не найдено. Список репозиториев пуст.",
             message_config_data_not_loading:"Данные конфига не загружены",
             message_sync_repo:"Синхронизировать репозитории из реестра",

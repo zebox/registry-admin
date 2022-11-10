@@ -18,10 +18,10 @@ const RepositoryShow = () => {
 
     return <TagList title={translate('resources.repository.tag_list_title')}>
         <Datagrid bulkActionButtons={false}>
-            <TextField source="tag" />
-            <TagDescription source="digest" />
-            <DateFieldFormatted source="timestamp" />
-            <SizeFieldReadable source="size" />
+            <TextField source="tag" label={translate('resources.repository.fields.tag')} />
+            <TagDescription source="digest" label={translate('resources.repository.fields.digest')}/>
+            <DateFieldFormatted source="timestamp" label={translate('resources.repository.fields.date')}/>
+            <SizeFieldReadable source="size" label={translate('resources.repository.fields.size')}/>
             <TagDeleteButton />
             <ShowImageDetail />
         </Datagrid>
@@ -66,6 +66,7 @@ const TagDescription = ({ source }: any) => {
 
 const ShowImageDetail = ({ source }: any) => {
     const record = useRecordContext();
+    const translate = useTranslate();
     const [open, setOpen] = React.useState(false);
 
     const handleClickOpen =()=>{
@@ -76,6 +77,7 @@ const ShowImageDetail = ({ source }: any) => {
             <ImageConfigPage record={record} isOpen={open} handleShowFn={setOpen} />
             :
             <Button variant="outlined" onClick={handleClickOpen}>
+                  {translate('resources.repository.fields.details')}
                 <InfoIcon />
             </Button>
         }
@@ -85,6 +87,8 @@ const ShowImageDetail = ({ source }: any) => {
 
 const TagDeleteButton = ({ source }: any) => {
     const record = useRecordContext();
+    const translate = useTranslate();
+
     const [deleteOne, { isLoading, error }] = useDelete();
 
     const deleteTag = () => {
@@ -101,7 +105,7 @@ const TagDeleteButton = ({ source }: any) => {
     }
 
 
-    return <Button onClick={() => deleteTag()}>DELETE</Button>
+    return <Button onClick={() => deleteTag()}>{translate('ra.action.delete')}</Button>
 
 }
 const DateFieldFormatted = ({ source }: any) => {

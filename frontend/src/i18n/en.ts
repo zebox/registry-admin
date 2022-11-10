@@ -58,11 +58,22 @@ const customEnglishMessages: TranslationMessages = {
             }
         },
         repository:{
+            fields:{
+                name: "Name",
+                size: "Size",
+                tag:"Tag",
+                date:"Date",
+                digest:"Digest",
+                details:"DETAILS"
+            },
             title:"Repository details",
             tag_list_title:"Tags list",
             pull_counter:"Pull counter: ",
             tag_digest:"Digest: ",
             tag_media_type:"Type: ",
+            image_platform_details:"Platform data",
+            image_config_details:"Configuration",
+            image_history_details:"Histroy",
             message_empty_page:"Repositories entry not found.",
             message_config_data_not_loading:"Config data not loading",
             message_sync_repo:"Synchronize repositories from registry",
@@ -70,7 +81,7 @@ const customEnglishMessages: TranslationMessages = {
             message_error_syncing_repo:"Synchronization error",
             message_repo_syncing_running:"Synchronization currently running. Please wait for complete previous task.",
             button_sync:"Sync"
-           
+
         }
     }
 };

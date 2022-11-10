@@ -56,7 +56,7 @@ function App() {
   var currentTheme:string='light';
   if (configString!==null) {
     const  config = JSON.parse(configString);
-    const {theme}:any = localStorage.getItem(uiConfig);
+    const {theme}:any = config;
     currentTheme=theme;
   };
 

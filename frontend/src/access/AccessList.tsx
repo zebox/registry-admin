@@ -23,8 +23,8 @@ const translate = useTranslate();
         sort={{ field: 'name', order: 'ASC' }}
         perPage={25}
         filters={SearchFieldTranslated([
-        <ReferenceInput source="owner_id" reference="users" label="OWNER">
-            <AutocompleteInput  optionText="name" optionValue="id"  />
+        <ReferenceInput source="owner_id" reference="users" label={translate('resources.accesses.fields.owner_id')}>
+            <AutocompleteInput  optionText="name" optionValue="id" label={translate('resources.accesses.fields.owner_id')} />
         </ReferenceInput>,
         <SelectInput
         label={translate('resources.accesses.fields.action')}

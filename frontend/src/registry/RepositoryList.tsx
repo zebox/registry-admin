@@ -8,7 +8,6 @@ import {
     Button,
     ExportButton,
     ShowButton,
-    DeleteButton,
     List,
     Loading,
     Datagrid,
@@ -49,7 +48,7 @@ const SyncButton = () =>{
 
     const doRepoSync = () => {
         setLoading(true);
-        dataProvider.getList('registry/sync', { 
+        dataProvider.getList('registry/sync', {
             pagination: { page: 1, perPage: 10 },
             sort: { field: 'id', order: 'DESC' },
             filter:{}
@@ -71,8 +70,8 @@ const SyncButton = () =>{
         setLoading(false);
     }
 
-    if (isLoading) { 
-        return <Loading />; 
+    if (isLoading) {
+        return <Loading />;
     }
 
     return (
@@ -109,24 +108,26 @@ const RepositoryActions = () => (
     </TopToolbar>
 );
 
-const RepositoryList = (props:any) => (
-    <List 
+const RepositoryList = (props:any) => {
+    const translate = useTranslate();
+    return(
+    <List
         {...props}
         empty={<EmptyList/>}
         actions={<RepositoryActions/>}
-        title={useTranslate()(`resources.commands.repository_name`)}
+        title={translate(`resources.commands.repository_name`)}
         sort={{ field: 'repository_name', order: 'ASC' }}
         perPage={25}
         filters={SearchFieldTranslated()}
     >
         <Datagrid bulkActionButtons={false}>
            {/*  <TextField source="id" /> */}
-            <TextField source="repository_name" />
-            <SizeFieldReadable source="size" />
+            <TextField source="repository_name" label={translate('resources.repository.fields.name')} />
+            <SizeFieldReadable source="size" label={translate('resources.repository.fields.size')} />
             <RepositoryShowButton/>
         </Datagrid>
     </List>
-);
+)};
 
 export const SizeFieldReadable= ({ source }: any) => {
     const record = useRecordContext();
