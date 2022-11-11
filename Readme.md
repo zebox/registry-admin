@@ -10,7 +10,7 @@ UI tools to it.
 
 Web user interface build with [React-Admin](https://marmelab.com/react-admin) framework and [MUI](https://mui.com/) components.
 
-###Features
+### Features
 * Management users and access to registry
 * Restrict access to repository by user action (`pull`/`push`, only for `token` auth scheme)
 
