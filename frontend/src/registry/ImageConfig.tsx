@@ -35,10 +35,12 @@ export default function ImageConfigPage({ record, isOpen, handleShowFn }: any) {
     const [open, setOpen] = React.useState(false);
     const [manifest, setManifest] = React.useState(Object);
     const translate = useTranslate();
+    
+    const raw = JSON.parse(record.raw);
 
     const { data, isLoading, error } = useGetOne(
         repositoryBaseResource,
-        { id: 'blobs', meta: { name: record.repository_name, digest: record.raw.config.digest } }
+        { id: 'blobs', meta: { name: record.repository_name, digest: record.digest } }
     );
 
     const decodeConfig = (data: any): any => {
@@ -127,11 +129,6 @@ export default function ImageConfigPage({ record, isOpen, handleShowFn }: any) {
             </List >
         );
     }
-
-    const handleClickOpen = () => {
-        setOpen(true);
-        console.log(record)
-    };
 
     const handleClose = () => {
         handleShowFn(false);

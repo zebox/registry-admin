@@ -52,7 +52,7 @@ const customEnglishMessages: TranslationMessages = {
                 name: "Access name",
                 owner_id: "User",
                 resource_type: "Resource type",
-                resource_name: "Repositry name",
+                resource_name: "Repository name",
                 action:"Allowed action",
                 disabled:"Disabled"
             }

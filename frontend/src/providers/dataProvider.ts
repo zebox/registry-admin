@@ -9,12 +9,9 @@ import {
 import { stringify } from 'query-string';
 
 import { BASE_URL, API_BASE } from "./constants";
-import { fetcherJson } from './fetcher';
-
 
 const apiUrl: string = `${BASE_URL}${API_BASE}`;
 const httpClient = fetchUtils.fetchJson;
-// const httpClient = fetcherJson;
 
 const dataProvider: DataProvider = {
 
@@ -38,7 +35,7 @@ const dataProvider: DataProvider = {
 
             return httpClient(url, createOptions("GET")).then(({ status, json }) => {
 
-                if (!Object.hasOwn(json, 'total') || json.total == 0) {
+                if (!Object.hasOwn(json, 'total') || json.total === 0) {
                     json.total = 0;
                     json.data = [];
                 }
@@ -75,7 +72,7 @@ const dataProvider: DataProvider = {
         const url = `${apiUrl}/${resource}?${stringify(query)}`;
         return new Promise((resolve, reject): Promise<GetManyResult<any> | any> => {
             return httpClient(url, createOptions("GET")).then(({ json }) => {
-                if (!Object.hasOwn(json, 'total') || json.total == 0) {
+                if (!Object.hasOwn(json, 'total') || json.total === 0) {
                     json.total = 0;
                     json.data = [];
                 }

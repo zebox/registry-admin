@@ -1,9 +1,9 @@
 import * as React from "react";
-import { useParams, useLocation } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useDelete, useTranslate, Datagrid, useRecordContext, Title, ListBase, ListToolbar, Pagination, TextField, Loading } from 'react-admin';
 import { Card, CardContent, Typography, Button } from '@mui/material';
 
-import { ConvertUnixTimeToDate, ParseSizeToReadable, SearchFieldTranslated } from "../helpers/Helpers";
+import { ConvertUnixTimeToDate, SearchFieldTranslated } from "../helpers/Helpers";
 import { SizeFieldReadable } from "./RepositoryList";
 import ImageConfigPage from './ImageConfig';
 import InfoIcon from '@mui/icons-material/Info';
@@ -25,7 +25,6 @@ const RepositoryShow = () => {
             <TagDeleteButton />
             <ShowImageDetail />
         </Datagrid>
-
     </TagList>
 }
 

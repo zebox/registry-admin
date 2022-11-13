@@ -16,9 +16,7 @@ import {
     useNotify,
     useDataProvider,
     useTranslate,
-    useRecordContext,
-    useCreatePath,
-    useRedirect
+    useRecordContext
 } from 'react-admin';
 
 const EmptyList = () => {
@@ -87,17 +85,9 @@ const SyncButton = () =>{
 
 const RepositoryShowButton = ()=> {
     const record = useRecordContext();
-    const createPath = useCreatePath();
-    const redirect = useRedirect();
-
-    const doShow = () =>{
-       console.log("click...");
-       redirect(createPath({ resource: 'registry/catalog', type: 'show', id: record.repository_name }))
-    }
     if (record) {
         record.id=record.repository_name;
     }
-   //  return <p onClick={()=>doShow()}>fsdf</p>
    return record && <ShowButton record={record} />
 }
 
