@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/hashicorp/go-multierror"
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/opencontainers/go-digest"
 	"github.com/pkg/errors"
 	"github.com/zebox/registry-admin/app/store"
 	"github.com/zebox/registry-admin/app/store/engine"
@@ -182,7 +183,7 @@ func (e *Embedded) initAccessTable(ctx context.Context) (err error) {
 		resource_name TEXT,
 		action TEXT,
 		disabled INTEGER,
-		UNIQUE(owner_id,name,resource_type,resource_name,action))`, accessTable)
+		UNIQUE(owner_id,resource_type,resource_name,action))`, accessTable)
 
 	_, err = e.db.Exec(sqlText)
 	if err != nil {
@@ -204,7 +205,7 @@ func (e *Embedded) initRepositoriesTable(ctx context.Context) (err error) {
 		size INTEGER,
 		pull_counter INTEGER,
 		timestamp INTEGER,
-		raw BLOB,
+		raw TEXT,
 		UNIQUE(repository_name,tag))`, repositoriesTable)
 
 	_, err = e.db.Exec(sqlText)
@@ -375,8 +376,12 @@ func (e *Embedded) getTotalRecordsExcludeRange(tableName string, filter engine.Q
 // castValueTypeToString will select appropriate type to formatting string
 func castValueTypeToString(value interface{}) string {
 	switch v := value.(type) {
-	case string, []uint8:
+	case string, digest.Digest, []uint8:
 		return fmt.Sprintf("'%s'", v)
+	case []string:
+		if len(v) > 0 {
+			return fmt.Sprintf("'%s'", v[0])
+		}
 	case int, int64:
 		return fmt.Sprintf("%d", v)
 	case float32, float64:

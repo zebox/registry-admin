@@ -29,6 +29,12 @@ type registryHandlers struct {
 	dataService     dataServiceInterface
 }
 
+// registryErrors when registry response is failure, covered in detail in their relevant sections, are reported as part of 4xx responses, in a json response body.
+// One or more errors will be returned in this format
+type registryErrors struct {
+	Errors []registry.ApiError `json:"errors"`
+}
+
 func (rh *registryHandlers) tokenAuth(w http.ResponseWriter, r *http.Request) {
 	username, password, ok := r.BasicAuth()
 	if !ok || password == "" {
@@ -82,8 +88,12 @@ func (rh *registryHandlers) tokenAuth(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if allow, errCheck := rh.checkUserAccess(r.Context(), user, tokenRequest); !allow || errCheck != nil {
-			rh.l.Logf("[ERROR] access to registry resource not allowed for user %s: %v", user.Login, err)
-			w.WriteHeader(http.StatusForbidden)
+			errMsg := fmt.Errorf("[ERROR] access to registry resource not allowed for user %s: %v", user.Login, errCheck)
+			rh.l.Logf("%v", errMsg)
+			regErrs := registryErrors{Errors: []registry.ApiError{
+				{Code: "", Message: errMsg.Error()},
+			}}
+			renderJSONWithStatus(w, regErrs, http.StatusNotFound)
 			return
 		}
 

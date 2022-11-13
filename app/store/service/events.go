@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/docker/distribution/notifications"
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
@@ -55,13 +56,24 @@ func (ds *DataService) updateRepositoryEntry(ctx context.Context, event notifica
 	}
 
 	if result.Total == 0 {
+		digest := ""
+		for _, ref := range event.Target.References {
+			if ref.MediaType == "application/vnd.docker.container.image.v1+json" {
+				digest = ref.Digest.String()
+				break
+			}
+		}
+		if digest == "" {
+			return fmt.Errorf("digest not found for repo: %s and tag %s", event.Target.Repository, event.Target.Tag)
+		}
+
 		repositoryEntry := &store.RegistryEntry{
 			RepositoryName: event.Target.Repository,
 			Tag:            event.Target.Tag,
-			Digest:         event.Target.Digest.String(),
+			Digest:         digest,
 			Size:           event.Target.Size,
 			Timestamp:      event.Timestamp.Unix(),
-			Raw:            eventRawBytes,
+			Raw:            string(eventRawBytes),
 		}
 		err = ds.Storage.CreateRepository(ctx, repositoryEntry)
 		return err
@@ -72,8 +84,8 @@ func (ds *DataService) updateRepositoryEntry(ctx context.Context, event notifica
 
 		err = ds.Storage.UpdateRepository(
 			ctx,
-			map[string]interface{}{"id": repositoryEntry.ID}, // condition
-			map[string]interface{}{"digest": event.Target.Digest, "size": event.Target.Size, "timestamp": event.Timestamp.Unix(), "raw": eventRawBytes}, // data for update
+			map[string]interface{}{"id": repositoryEntry.ID},                                                             // condition
+			map[string]interface{}{"size": event.Target.Size, "timestamp": event.Timestamp.Unix(), "raw": eventRawBytes}, // data for update
 		)
 		return err
 	}
@@ -84,7 +96,7 @@ func (ds *DataService) updateRepositoryEntry(ctx context.Context, event notifica
 // deleteRepositoryEntry will delete repository entry
 func (ds *DataService) deleteRepositoryEntry(ctx context.Context, event notifications.Event) error {
 	filter := engine.QueryFilter{
-		Filters: map[string]interface{}{"repository_name": event.Target.Repository, "tag": event.Target.Tag},
+		Filters: map[string]interface{}{"repository_name": event.Target.Repository, "digest": event.Target.Descriptor.Digest},
 	}
 
 	result, err := ds.Storage.FindRepositories(ctx, filter)
@@ -97,7 +109,7 @@ func (ds *DataService) deleteRepositoryEntry(ctx context.Context, event notifica
 	}
 
 	entry := result.Data[0].(store.RegistryEntry)
-	if err = ds.Storage.DeleteRepository(ctx, "id", entry.ID); err != nil {
+	if err = ds.Storage.DeleteRepository(ctx, "digest", entry.Digest); err != nil {
 		return errors.Errorf("failed to delete repository, entry %v", err)
 	}
 	return nil

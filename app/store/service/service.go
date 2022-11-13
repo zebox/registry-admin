@@ -120,10 +120,10 @@ func (ds *DataService) doSyncRepositories(ctx context.Context) {
 						entry := &store.RegistryEntry{
 							RepositoryName: repo,
 							Tag:            tag,
-							Digest:         manifest.ContentDigest,
+							Digest:         manifest.ConfigDescriptor.Digest,
 							Size:           manifest.TotalSize,
 							Timestamp:      now,
-							Raw:            rawManifestData,
+							Raw:            string(rawManifestData),
 						}
 						if errCreate := ds.Storage.CreateRepository(ctx, entry); errCreate != nil {
 							if !strings.HasPrefix(errCreate.Error(), "UNIQUE") {
