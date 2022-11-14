@@ -1,6 +1,6 @@
 
 import * as React from "react";
-import { AutocompleteInput, BooleanInput, Edit, TextInput, SimpleForm, ReferenceInput, SelectInput, useTranslate, useRecordContext, useDataProvider } from 'react-admin';
+import { AutocompleteInput, BooleanInput, Edit, TextInput, SimpleForm, ReferenceInput, SelectInput,useInput, useTranslate, useRecordContext, useDataProvider } from 'react-admin';
 import { ActionList } from "./AccessCreate";
 import TextField from '@mui/material/TextField';
 import Autocomplete from '@mui/material/Autocomplete';
@@ -51,11 +51,18 @@ interface RepositoryRecord {
 
 }
 
-const RepositoryAutocomplete = ({ source }: any) => {
+const RepositoryAutocomplete = (props:any) => {
+    const {source} = props;
     const translate = useTranslate();
     const record = useRecordContext();
-    const dataProvider = useDataProvider()
-    const [option, setOptions] = React.useState<any>([]);
+    const dataProvider = useDataProvider();
+    const [option, setOptions] = React.useState<RepositoryRecord[] | never[] >([]);
+    const {
+        field,
+        fieldState: { isTouched, error },
+        formState: { isSubmitted }
+    } = useInput(props);
+
     const fetchRepositoryData = (event: any): void => {
         const searchValue = event.target.value;
         dataProvider.getList(
@@ -81,7 +88,7 @@ const RepositoryAutocomplete = ({ source }: any) => {
         getOptionLabel={(option: RepositoryRecord) => option.repository_name}
         id="clear-on-escape"
         renderInput={(params) => (
-            <TextField {...params} value={record[source]} label={translate('resources.accesses.fields.resource_name')} variant="standard" />
+            <TextField {...params} {...field} value={record[source]} label={translate('resources.accesses.fields.resource_name')} variant="standard" />
         )}
     />
 }
