@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/docker/distribution/manifest/schema2"
 	"github.com/docker/distribution/notifications"
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
@@ -58,7 +59,7 @@ func (ds *DataService) updateRepositoryEntry(ctx context.Context, event notifica
 	if result.Total == 0 {
 		digest := ""
 		for _, ref := range event.Target.References {
-			if ref.MediaType == "application/vnd.docker.container.image.v1+json" {
+			if ref.MediaType == schema2.MediaTypeImageConfig {
 				digest = ref.Digest.String()
 				break
 			}
@@ -93,24 +94,41 @@ func (ds *DataService) updateRepositoryEntry(ctx context.Context, event notifica
 	return errors.Errorf("query filter returned multiple result: %v+", filter.Filters)
 }
 
-// deleteRepositoryEntry will delete repository entry
+// deleteRepositoryEntry deletes repository entry by an event delete
 func (ds *DataService) deleteRepositoryEntry(ctx context.Context, event notifications.Event) error {
-	filter := engine.QueryFilter{
-		Filters: map[string]interface{}{"repository_name": event.Target.Repository, "digest": event.Target.Descriptor.Digest},
+
+	/*
+
+		filter := engine.QueryFilter{
+			Filters: map[string]interface{}{"repository_name": event.Target.Repository, "digest": event.Target.Descriptor.Digest},
+		}
+
+		result, err := ds.Storage.FindRepositories(ctx, filter)
+		if err != nil {
+			return err
+		}
+
+		if result.Total == 0 {
+			return errors.Errorf("failed to delete repository, entry %s not found", event.Target.Repository)
+		}
+
+		entry := result.Data[0].(store.RegistryEntry)
+
+	*/
+	var digest string
+	for _, ref := range event.Target.References {
+		if ref.MediaType == schema2.MediaTypeImageConfig {
+			digest = ref.Digest.String()
+			break
+		}
 	}
 
-	result, err := ds.Storage.FindRepositories(ctx, filter)
-	if err != nil {
-		return err
+	if digest == "" {
+		return errors.Errorf("failed to delete image from repository %s, entry %s not found", event.Target.Repository, digest)
 	}
 
-	if result.Total == 0 {
-		return errors.Errorf("failed to delete repository, entry %s not found", event.Target.Repository)
-	}
-
-	entry := result.Data[0].(store.RegistryEntry)
-	if err = ds.Storage.DeleteRepository(ctx, "digest", entry.Digest); err != nil {
-		return errors.Errorf("failed to delete repository, entry %v", err)
+	if err := ds.Storage.DeleteRepository(ctx, "digest", digest); err != nil {
+		return errors.Errorf("failed to delete image entry digest: %s err: %v", digest, err)
 	}
 	return nil
 }

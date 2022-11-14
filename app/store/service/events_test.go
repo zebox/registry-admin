@@ -4,6 +4,8 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/base64"
+	"github.com/docker/distribution"
+	"github.com/docker/distribution/manifest/schema2"
 	"github.com/docker/distribution/notifications"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
@@ -53,6 +55,10 @@ func TestDataService_RepositoryEventsProcessing(t *testing.T) {
 		testEnvelope.Events[0].Target.Length = 708
 		testEnvelope.Events[0].Target.Size = 708
 		testEnvelope.Events[0].Target.URL = "http://192.168.100.227:5000/v2/hello-world/manifests/sha256:fea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7cf"
+		testEnvelope.Events[0].Target.References = []distribution.Descriptor{{
+			MediaType: schema2.MediaTypeImageConfig,
+			Digest:    "sha256:fea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7cf",
+		}}
 	}
 
 	createTestEvent()
@@ -103,12 +109,7 @@ func TestDataService_RepositoryEventsProcessing(t *testing.T) {
 	assert.NoError(t, err)
 
 	// test delete with not existed repository entry
-	testEnvelopePullEvent.Events[0].Target.Repository = "unknown"
-	err = ds.RepositoryEventsProcessing(ctx, testEnvelope)
-	assert.Error(t, err)
-
-	// test delete with not existed repository entry
-	testEnvelopePullEvent.Events[0].Target.Repository = "unknown"
+	testEnvelopePullEvent.Events[0].Target.References[0].Digest = "unknown"
 	err = ds.RepositoryEventsProcessing(nil, testEnvelope) // nolint
 	assert.Error(t, err)
 }
@@ -125,6 +126,7 @@ func prepareEngineMock() *engine.InterfaceMock {
 			ID:             2,
 			RepositoryName: "test/repo_1",
 			Tag:            "1.2.0",
+			Digest:         "sha256:fea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7cf",
 		},
 		{
 			ID:             3,
@@ -185,7 +187,7 @@ func prepareEngineMock() *engine.InterfaceMock {
 			searchRepo := filter.Filters["repository_name"].(string)
 
 			if _, ok := filter.Filters["tag"]; !ok {
-				return result, errors.New("empty repository name not allowed")
+				return result, errors.New("empty tag not allowed")
 			}
 			searchTag := filter.Filters["tag"].(string)
 
@@ -208,7 +210,7 @@ func prepareEngineMock() *engine.InterfaceMock {
 
 		DeleteRepositoryFunc: func(ctx context.Context, key string, id interface{}) error {
 			for _, val := range testRepositoriesEntries {
-				if val.ID == id.(int64) {
+				if val.Digest == id.(string) {
 					return nil
 				}
 			}
