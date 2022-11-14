@@ -1,5 +1,6 @@
 
 import { AutocompleteInput, Create, TextInput, SimpleForm, SelectArrayInput, ReferenceInput, BooleanInput, SelectInput, useTranslate, TextField } from 'react-admin';
+import { RepositoryAutocomplete } from '../components/RepositoryAutocompleteField';
 
 
 interface IActionList {
@@ -27,9 +28,10 @@ export const AccessCreate = () => {
                 <ReferenceInput source="owner_id" reference="users" label={translate('resources.accesses.fields.owner_id')}>
                     <AutocompleteInput sx={{ width: "30%" }} optionText="name" optionValue="id" onReset={onResetHandler} />
                 </ReferenceInput>
-                <ReferenceInput source='resource_name' reference="registry/catalog">
+{/*                 <ReferenceInput source='resource_name' reference="registry/catalog">
                     <AutocompleteInput sx={{ width: "30%" }} isOptionEqualToValue={(o,v)=>{return o===v}} optionText="repository_name"  optionValue="repository_name" label="Repository list" />
-                </ReferenceInput>
+                </ReferenceInput> */}
+                <RepositoryAutocomplete source="resource_name" />
                 <TextInput
                     label={translate('resources.accesses.fields.resource_type')}
                     source="type"
