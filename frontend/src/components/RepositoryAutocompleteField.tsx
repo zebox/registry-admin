@@ -19,38 +19,38 @@ interface RepositoryRecord {
 
 export const RepositoryAutocomplete = (props: any) => {
 
-    const { source } = props;
+    const source_name = 'repository_name';
     const translate = useTranslate();
     const record = useRecordContext();
 
     var defaultValue: RepositoryRecord = {
-        repository_name: record ? record[source] : ""
-  };
+        repository_name: record ? record[source_name] : null
+    };
 
     const dataProvider = useDataProvider();
-    const [repo, setRepo] = useState<RepositoryRecord | undefined>(defaultValue);
-    const [option, setOptions] = useState<RepositoryRecord[] | never[]>([]);
+    const [repoSelectValue, setRepoSelectValue] = React.useState<string | null>(record ? record[source_name] : null);
+    const [repoInputValue, setRepoInputValue] = useState('');
+    const [options, setOptions] = useState<RepositoryRecord[] | never[]>([]);
     const {
         field,
-        fieldState: { isTouched, error },
-        formState: { isSubmitted }
+        fieldState: {isTouched, error},
+        formState: {isSubmitted}
     } = useInput(props);
 
-    
-   
 
-    const fetchRepositoryData = (event: any): void => {
+    const fetchRepositoryData = (event: any, newInputValue: string): void => {
+
+        setRepoInputValue(newInputValue);
         if (!event || event == null) {
             return;
         }
 
-        const searchValue = event.target.value;
         dataProvider.getList(
             repositoryBaseResource,
             {
-                pagination: { page: 1, perPage: 20 },
-                sort: { field: 'repository_name', order: 'DESC' },
-                filter: { q: searchValue }
+                pagination: {page: 1, perPage: 20},
+                sort: {field: 'repository_name', order: 'ASC'},
+                filter: {q: newInputValue}
             }
         ).then(({ data, total }) => {
             if (total && total > 0) {
@@ -59,33 +59,32 @@ export const RepositoryAutocomplete = (props: any) => {
         })
     };
 
-    const handleValueChange=(e:any)=>{
-        console.log(e.target.value);
-        // defaultValue.repository_name=e.target.value;
-        if (e==null) {
-            return;
-        }
-        setRepo(e.target.value);
-
-    }
-
     return <Autocomplete
-        sx={{ width: 300 }}
-        onInputChange={(e) => fetchRepositoryData(e)}
-        options={option}
-        //defaultValue={defaultValue}
-        value={repo}
-       
-        isOptionEqualToValue={(o, v) => { return true }}
-        getOptionLabel={(option: RepositoryRecord) => option.repository_name}
+        sx={{width: 300}}
+        onInputChange={fetchRepositoryData}
+        onChange={async (event: any, newValue: string | null) => {
+            setRepoSelectValue(newValue);
+            if (newValue === null) {
+                return;
+            }
+            await setRepoInputValue(newValue);
+            field.onBlur();
+            record[source_name] = newValue;
+            console.log(newValue);
+        }}
+        options={options.map((item: RepositoryRecord) => item.repository_name)}
+        value={repoSelectValue}
+        inputValue={repoInputValue}
+        isOptionEqualToValue={(o, v) => {
+            return true
+        }}
         id="repository-autocomplete-search"
         renderInput={(params) => (
-            <TextField 
-            {...params} 
-            {...field} 
-            onChange={(e)=>{handleValueChange(e)}}
-            label={translate('resources.accesses.fields.resource_name')}
-            variant="standard" />
+            <TextField
+                {...params}
+                {...field}
+                label={translate('resources.accesses.fields.resource_name')}
+                variant="standard"/>
         )}
     />
 }

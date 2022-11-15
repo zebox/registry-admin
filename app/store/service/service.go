@@ -234,6 +234,7 @@ func (ds *DataService) doGarbageCollector(ctx context.Context) error {
 	if err := ds.Storage.AccessGarbageCollector(ctx); err != nil {
 		return fmt.Errorf("access garbage collector aborted with error: %v", err)
 	}
+
 	log.Printf("[DEBUG] garbage collector task complete")
 	return nil
 }
