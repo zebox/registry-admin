@@ -1,15 +1,13 @@
 
 import * as React from "react";
-import { AutocompleteInput, BooleanInput, Edit, TextInput, SimpleForm, ReferenceInput, SelectInput, useTranslate, required  } from 'react-admin';
+import { AutocompleteInput, BooleanInput, Edit, TextInput, SimpleForm, ReferenceInput, useTranslate, required  } from 'react-admin';
 import { ActionList } from "./AccessCreate";
 import { RepositoryAutocomplete } from "../components/RepositoryAutocompleteField";
-import { repositoryBaseResource } from "../registry/RepositoryShow";
+import RepositoryAction from "../components/RepositoryAction";
 
-
-const AccessEdit = () => {
-
+const AccessEdit = (props:any) => {
+    const { source, ...rest } = props;
     const translate = useTranslate();
-   
 
     return (
         <Edit title={translate('resources.groups.edit_title')}  >
@@ -18,7 +16,7 @@ const AccessEdit = () => {
                 <ReferenceInput source="owner_id" reference="users">
                     <AutocompleteInput sx={{ width: "30%" }} optionText="name" optionValue="id" label={translate('resources.accesses.fields.owner_id')} validate={required()}/>
                 </ReferenceInput>
-                <RepositoryAutocomplete source="resource_name" />
+                <RepositoryAutocomplete source="resource_name"  validate={required()} {...rest} />
                 <TextInput
                     label={translate('resources.accesses.fields.resource_type')}
                     source="type"
@@ -26,10 +24,7 @@ const AccessEdit = () => {
                     disabled
                 />
 
-                <SelectInput
-                    label={translate('resources.accesses.fields.action')}
-                    source="action"
-                    choices={ActionList} />
+                <RepositoryAction source="action"/>
                 <BooleanInput label={translate('resources.accesses.fields.disabled')} source="disabled" />
             </SimpleForm>
 

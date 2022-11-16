@@ -4,8 +4,8 @@ import { repositoryBaseResource } from "../registry/RepositoryShow";
 import TextField from '@mui/material/TextField';
 import Autocomplete from '@mui/material/Autocomplete';
 import { useForm, Controller } from "react-hook-form";
-interface RepositoryRecord {
 
+interface RepositoryRecord {
     id?: Identifier;
     repository_name: string;
     tag?: string;
@@ -14,7 +14,6 @@ interface RepositoryRecord {
     pull_counter?: number;
     timestamp?: number;
     raw?: string
-
 }
 
 export const RepositoryAutocomplete = (props: any) => {
@@ -31,12 +30,17 @@ export const RepositoryAutocomplete = (props: any) => {
     const [repoSelectValue, setRepoSelectValue] = React.useState<string | null>(record ? record[source_name] : null);
     const [repoInputValue, setRepoInputValue] = useState('');
     const [options, setOptions] = useState<readonly RepositoryRecord[] | never[]>([]);
-     const {
+    const { onChange, onBlur, ...rest } = props;
+    const {
          field,
          fieldState: { isTouched, error },
-         formState: { isSubmitted }    
-     } = useInput(props);
-
+         formState: { isSubmitted },
+         isRequired
+     } = useInput({
+        onChange,
+        onBlur,
+        ...props,
+    });
 
     useEffect(() => {
         getRepositoryData();
@@ -83,45 +87,16 @@ export const RepositoryAutocomplete = (props: any) => {
                         {...params}
                         {...field}
                         inputRef={field.ref}
+                        error={(isTouched || isSubmitted) && error}
                         label={translate('resources.accesses.fields.resource_name')}
+                        helperText={(isTouched || isSubmitted) && error ? error.message : ''}
+                        required={isRequired}
+                        {...rest}
                     />
                 )}
             />
         )}
     />
-    /*  <Autocomplete
-         sx={{ width: 300 }}
-         onInputChange={fetchOptionsData}
-        onChange={async (_: any, newValue: string | null) => {
-              setRepoSelectValue(newValue);
-              if (newValue === null) {
-                  return;
-              }
-              setRepoInputValue(newValue);
-              field.onChange(newValue);
-              record[source_name] = newValue;
-              console.log(newValue);
-          }}  
-         //{...field}
- 
-         options={options.map((item: RepositoryRecord) => item.repository_name)}
-         value={repoSelectValue}
-         inputValue={repoInputValue}
-         isOptionEqualToValue={(o, v) => {
-             record[source_name] = v;
-             setRepoSelectValue(v);
-             return true
-         }}
-         renderInput={(params) => (
-             <TextField
-                 {...params}
-                 {...field}
-                 //inputRef={field.ref}
-                 label={translate('resources.accesses.fields.resource_name')}
-                 variant="standard" />
-         )}
-     /> */
-
 }
 
 

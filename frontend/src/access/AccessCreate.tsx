@@ -1,7 +1,7 @@
 
-import { AutocompleteInput, Create, TextInput, SimpleForm, SelectArrayInput, ReferenceInput, BooleanInput, SelectInput, useTranslate, TextField } from 'react-admin';
+import {required, AutocompleteInput, Create, TextInput, SimpleForm, ReferenceInput, BooleanInput, useTranslate } from 'react-admin';
 import { RepositoryAutocomplete } from '../components/RepositoryAutocompleteField';
-
+import RepositoryAction from "../components/RepositoryAction";
 
 interface IActionList {
     id: string;
@@ -24,11 +24,11 @@ export const AccessCreate = () => {
     return (
         <Create title={translate('resources.accesses.add_title')} >
             <SimpleForm>
-                <TextInput sx={{ width: "30%" }} label={translate('resources.accesses.fields.name')} source="name" />
-                <ReferenceInput source="owner_id" reference="users" label={translate('resources.accesses.fields.owner_id')}>
-                    <AutocompleteInput sx={{ width: "30%" }} optionText="name" optionValue="id" onReset={onResetHandler} />
+                <TextInput sx={{ width: "30%" }} label={translate('resources.accesses.fields.name')} source="name" validate={required()}/>
+                <ReferenceInput source="owner_id" reference="users" label={translate('resources.accesses.fields.owner_id')} >
+                    <AutocompleteInput sx={{ width: "30%" }} optionText="name" optionValue="id" onReset={onResetHandler} label={translate('resources.accesses.fields.owner_id')}  validate={required()}/>
                 </ReferenceInput>
-                <RepositoryAutocomplete source="resource_name" />
+                <RepositoryAutocomplete source="resource_name"/>
                 <TextInput
                     label={translate('resources.accesses.fields.resource_type')}
                     source="type"
@@ -36,10 +36,7 @@ export const AccessCreate = () => {
                     disabled
                 />
 
-                <SelectInput
-                    label={translate('resources.accesses.fields.action')}
-                    source="action"
-                    choices={ActionList} />
+                <RepositoryAction source="action" validate={required()}/>
                 <BooleanInput label={translate('resources.accesses.fields.disabled')} source="disabled" />
             </SimpleForm>
 
