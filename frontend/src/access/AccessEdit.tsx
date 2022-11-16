@@ -1,7 +1,5 @@
 
-import * as React from "react";
 import { AutocompleteInput, BooleanInput, Edit, TextInput, SimpleForm, ReferenceInput, useTranslate, required  } from 'react-admin';
-import { ActionList } from "./AccessCreate";
 import { RepositoryAutocomplete } from "../components/RepositoryAutocompleteField";
 import RepositoryAction from "../components/RepositoryAction";
 
@@ -17,14 +15,13 @@ const AccessEdit = (props:any) => {
                     <AutocompleteInput sx={{ width: "30%" }} optionText="name" optionValue="id" label={translate('resources.accesses.fields.owner_id')} validate={required()}/>
                 </ReferenceInput>
                 <RepositoryAutocomplete source="resource_name"  validate={required()} {...rest} />
+                <RepositoryAction source="action"/>
                 <TextInput
                     label={translate('resources.accesses.fields.resource_type')}
                     source="type"
                     defaultValue={"repository"}
                     disabled
                 />
-
-                <RepositoryAction source="action"/>
                 <BooleanInput label={translate('resources.accesses.fields.disabled')} source="disabled" />
             </SimpleForm>
 

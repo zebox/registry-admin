@@ -14,7 +14,13 @@ import {
 } from 'react-admin';
 import { DisabledField } from "../components/DisabledField";
 import { SearchFieldTranslated } from '../helpers/Helpers'
-import { ActionList } from "./AccessCreate";
+
+
+const ActionList: Array<IActionList> = [
+    { id: 'push', name: 'push' },
+    { id: 'pull', name: 'pull' }
+];
+
 
 const AccessList = () => {
 const translate = useTranslate();
@@ -47,5 +53,11 @@ const translate = useTranslate();
     </List>
 };
 
+interface IActionList {
+    id: string;
+    name: string;
+};
+
 
 export default AccessList;
+

@@ -8,24 +8,23 @@ import { useInput, useTranslate, useRecordContext } from 'react-admin';
 
 const RepositoryAction = (props:any) => {
     const translate = useTranslate();
-    const {source} = props;
-    const record = useRecordContext();
     const {
         field,
         fieldState: { isTouched,  error },
-        formState: { isSubmitted }
+        formState: { isSubmitted },
+        isRequired
     } = useInput(props);
 
     return (
-        <FormControl sx={{ m: 1, minWidth: 120 }}>
+        <FormControl sx={{  minWidth: 180 }}>
          <InputLabel id="repository-action-select">{translate('resources.accesses.fields.action')}</InputLabel>
          <Select
             labelId='repository-action-select'
             id='repository-action-select-id'
             label={translate('resources.accesses.fields.action')}
             variant="filled"
-            sx={{ m: 1, minWidth: 120 }}
             {...field}
+            required={isRequired}
         >
             <MenuItem value="pull">Pull</MenuItem>
             <MenuItem value="push">Push</MenuItem>

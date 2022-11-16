@@ -27,8 +27,7 @@ export const RepositoryAutocomplete = (props: any) => {
     };
 
     const dataProvider = useDataProvider();
-    const [repoSelectValue, setRepoSelectValue] = React.useState<string | null>(record ? record[source_name] : null);
-    const [repoInputValue, setRepoInputValue] = useState('');
+    const [repoSelectValue, setRepoSelectValue] = React.useState<string | null>(record ? record[source_name] : undefined);
     const [options, setOptions] = useState<readonly RepositoryRecord[] | never[]>([]);
     const { onChange, onBlur, ...rest } = props;
     const {
@@ -45,15 +44,6 @@ export const RepositoryAutocomplete = (props: any) => {
     useEffect(() => {
         getRepositoryData();
     }, []);
-
-
-    const fetchOptionsData = (event: any, newInputValue: string): void => {
-        setRepoInputValue(newInputValue);
-        if (!event || event == null) {
-            return;
-        }
-        getRepositoryData(newInputValue);
-    };
 
     const getRepositoryData = (searchValue: string | void) => {
         dataProvider.getList(
@@ -82,6 +72,7 @@ export const RepositoryAutocomplete = (props: any) => {
                     setRepoSelectValue(data);
                     field.onChange(data);
                 }}
+                
                 renderInput={(params) => (
                     <TextField
                         {...params}
