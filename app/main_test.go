@@ -34,7 +34,7 @@ func Test_Main(t *testing.T) {
 	port := 40000 + int(rand.Int31n(10000)) //nolint:gosec
 	os.Args = []string{"test",
 		"--listen=*", "--port=" + strconv.Itoa(port),
-		"--auth.token-secret=super-secret", "--auth.hostname=localhost",
+		"--auth.token-secret=super-secret", "--hostname=localhost", "--registry.host=http://test.registry-host.local",
 		"--debug", "--logger.enabled", "--logger.stdout", "--logger.file=" + os.TempDir() + "/registry-admin.log",
 		"--ssl.type=none", "--store.type=embed", "--store.embed.path=" + os.TempDir() + "/test.db",
 	}
@@ -110,7 +110,7 @@ func Test_MainWithSSLAndAuth(t *testing.T) {
 	sslPort := 40000 + int(rand.Int31n(10000)) //nolint:gosec
 	os.Args = []string{"test",
 		"--listen=*", "--port=" + strconv.Itoa(port),
-		"--auth.token-secret=super-secret", "--auth.hostname=localhost",
+		"--auth.token-secret=super-secret", "--hostname=localhost", "--registry.host=http://test.registry-host.local",
 		"--debug", "--logger.enabled", "--logger.stdout", "--logger.file=" + os.TempDir() + "/registry-admin.log",
 		"--ssl.type=static", "--ssl.port=" + strconv.Itoa(sslPort), "--ssl.cert=" + certFile, "--ssl.key=" + keyFile, "--store.type=embed",
 		"--store.embed.path=" + os.TempDir() + "/test.db",
@@ -201,7 +201,7 @@ func Test_MainWithSSLAndAuth(t *testing.T) {
 	goleak.VerifyTestMain(m)
 } */
 
-//initTestKeys will create self-signed test keys pair
+// initTestCertKeys will create self-signed test keys pair
 func initTestCertKeys(ctx context.Context, t *testing.T) (keys *gojwk.Keys, dir string, err error) {
 
 	dir, err = ioutil.TempDir(os.TempDir(), "tk")
