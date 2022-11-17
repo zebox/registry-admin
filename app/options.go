@@ -4,7 +4,10 @@
 package main
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
+	log "github.com/go-pkgz/lgr"
 	"github.com/jessevdk/go-flags"
 	"github.com/pkg/errors"
 	"io/ioutil"
@@ -28,10 +31,10 @@ type Options struct {
 	Registry RegistryGroup `group:"registry" namespace:"registry" env-namespace:"REGISTRY" json:"registry"`
 
 	Auth struct {
-		TokenSecret    string `long:"token-secret" env:"TOKEN_SECRET" required:"true" description:"Main secret for auth token sign" json:"token_secret" `
-		IssuerName     string `long:"jwt-issuer" env:"ISSUER_NAME" required:"true" default:"zebox" description:"Token issuer signature" json:"issuer_name"`
-		TokenDuration  string `long:"jwt-ttl" env:"JWT_TTL" default:"1h" description:"Define JWT expired timeout" json:"jwt_ttl"`
-		CookieDuration string `long:"cookie-ttl" env:"COOKIE_TTL" default:"24h" description:"Define cookies expired timeout" json:"cookie_ttl"`
+		TokenSecret    string `long:"token-secret" env:"RA_AUTH_TOKEN_SECRET" description:"Main secret for auth token sign" json:"token_secret" `
+		IssuerName     string `long:"jwt-issuer" env:"RA_AUH_ISSUER_NAME" required:"true" default:"zebox" description:"Token issuer signature" json:"issuer_name"`
+		TokenDuration  string `long:"jwt-ttl" env:"RA_AUH_JWT_TTL" default:"1h" description:"Define JWT expired timeout" json:"jwt_ttl"`
+		CookieDuration string `long:"cookie-ttl" env:"RA_AUH_COOKIE_TTL" default:"24h" description:"Define cookies expired timeout" json:"cookie_ttl"`
 	} `group:"auth" namespace:"auth" env-namespace:"AUTH" json:"auth"`
 
 	Logger struct {
@@ -101,7 +104,12 @@ func parseArgs() (*Options, error) {
 	if options.Port > 65535 || options.Port < 1 {
 		return nil, errors.New("wrong port value")
 	}
-
+	if options.Auth.TokenSecret == "" {
+		options.Auth.TokenSecret = generateRandomSecureToken(64)
+		log.Print("No TokenSecret secret provided - generated random secret. To provide a TokenSecret, fill in " +
+			"'token_secret' in the configuration file, set the 'RA_AUTH_TOKEN_SECRET' environment variable " +
+			"or use '--auth.token-secret' CLI flag.")
+	}
 	// try read config from config file
 	if options.ConfigPath != "" {
 		ext := filepath.Ext(options.ConfigPath)
@@ -134,4 +142,14 @@ func (j *jsonConfigParser) ReadConfigFromFile(pathToFile string, options *Option
 		return errors.Wrap(err, "failed to unmarshal config data")
 	}
 	return nil
+}
+
+// generateRandomSecureToken generates random secure token for sign JWT for authenticate.
+// It's call if TokenSecret undefined in config parameters.
+func generateRandomSecureToken(length int) string {
+	b := make([]byte, length)
+	if _, err := rand.Read(b); err != nil {
+		return ""
+	}
+	return hex.EncodeToString(b)
 }

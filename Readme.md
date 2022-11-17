@@ -32,6 +32,8 @@ the http endpoint which using for authenticate user by token and check user acce
 For its registry required configure for token authenticate. Only token-based authentication 
 allows you to restrict access for users by they action (`pull`/`push`).
 ```yml
+# in registry config file
+...
 auth:
   token:
   realm: https://{registry-admin-host}/api/v1/registry/auth
@@ -50,7 +52,10 @@ garbage collector for data in embedded storage.
 
 For observe change in registry you should configure registry [notification](https://docs.docker.com/registry/configuration/#notifications) 
 to RegistryAdmin app
+
 ```yml
+# in registry config file
+...
 notifications:
   events:
     includereferences: true
@@ -59,7 +64,7 @@ notifications:
     disabled: false
     url: http://{registry-admin-host}/api/v1/registry/events
     headers:
-      Authorization: [Basic Y2xpZW50MDg6Y0t1cnNrQWdybzA4]  
+      Authorization: [ Basic Y2xpZW50MDg6Y0t1cnNrQWdybzA4 ]
     timeout: 1s
     threshold: 5
     backoff: 3s
