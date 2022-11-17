@@ -13,7 +13,10 @@ const GroupList = () => (
         sort={{ field: 'name', order: 'ASC' }}
         perPage={25}
     >
-        <Datagrid bulkActionButtons={false}>
+        <Datagrid bulkActionButtons={false}
+            sx={{
+                '& .column-name': { width: '80%' },
+            }}>
                 <TextField source="id" />
                 <TextField source="name"  />
                 <EditButton />
