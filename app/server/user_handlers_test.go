@@ -287,8 +287,7 @@ func Test_userDeleteCtr(t *testing.T) {
 	}
 
 	{
-		// try deleteDigest already deleted item
-
+		// try to delete user which already deleted item
 		req, errReq = http.NewRequest("DELETE", `/api/v1/users/10001`, http.NoBody)
 		require.NoError(t, errReq)
 
@@ -414,8 +413,7 @@ func prepareUserMock(t *testing.T) *engine.InterfaceMock {
 					if ids, ok := filter.Filters["ids"]; ok {
 
 						for _, id := range ids.([]interface{}) {
-							switch v := id.(type) {
-							case float64:
+							if v, ok := id.(float64); ok {
 								if int64(v) == user.ID {
 									result.Total += 1
 									result.Data = append(result.Data, user)
@@ -472,6 +470,10 @@ func prepareUserMock(t *testing.T) *engine.InterfaceMock {
 				}
 			}
 			return errors.Errorf("user with id=%d not found", id)
+		},
+
+		DeleteAccessFunc: func(ctx context.Context, id int64) error {
+			return nil
 		},
 	}
 }
