@@ -56,6 +56,13 @@ func (ds *DataService) SyncExistedRepositories(ctx context.Context) error {
 	}
 
 	go ds.doSyncRepositories(ctx)
+
+	go func() {
+		if err := ds.doGarbageCollector(ctx); err != nil {
+			log.Printf("[ERROR] failed to run garbage collector")
+		}
+	}()
+
 	return nil
 }
 
@@ -63,6 +70,7 @@ func (ds *DataService) doSyncRepositories(ctx context.Context) {
 
 	ds.mutex.Lock()
 	ds.isWorking = true
+
 	defer func() {
 		ds.isWorking = false
 		ds.mutex.Unlock()
@@ -81,7 +89,7 @@ func (ds *DataService) doSyncRepositories(ctx context.Context) {
 		repos, errCatalog := ds.Registry.Catalog(context.Background(), n, lastRepo)
 
 		if errCatalog != nil && errCatalog != registry.ErrNoMorePages {
-			log.Printf("failed to fetch catalog list: %v", errCatalog)
+			log.Printf("[ERROR] failed to fetch catalog list: %v", errCatalog)
 			log.Printf("[ERROR] sync operation aborted")
 			break
 		}
@@ -184,6 +192,7 @@ func (ds *DataService) doSyncRepositories(ctx context.Context) {
 	}
 
 	ds.lastSyncDate = now
+
 }
 
 // RepositoriesMaintenance check repositories for outdated or updated data in repository storage
