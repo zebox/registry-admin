@@ -288,12 +288,26 @@ func Test_userDeleteCtr(t *testing.T) {
 
 	{
 		// try to delete user which already deleted item
-		req, errReq = http.NewRequest("DELETE", `/api/v1/users/10001`, http.NoBody)
+		req, errReq = http.NewRequest("DELETE", `/api/v1/users/20001`, http.NoBody)
 		require.NoError(t, errReq)
 
 		rctx := chi.NewRouteContext()
 		req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
 		rctx.URLParams.Add("id", "20001")
+		testWriter = httptest.NewRecorder()
+		handler.ServeHTTP(testWriter, req)
+		assert.Equal(t, http.StatusInternalServerError, testWriter.Code)
+	}
+
+	{
+		// try to delete user with access delete error
+		req, errReq = http.NewRequest("DELETE", `/api/v1/users/10004`, http.NoBody)
+		require.NoError(t, errReq)
+
+		rctx := chi.NewRouteContext()
+		req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
+		req = req.WithContext(context.WithValue(req.Context(), ctxKey, true))
+		rctx.URLParams.Add("id", "10004")
 		testWriter = httptest.NewRecorder()
 		handler.ServeHTTP(testWriter, req)
 		assert.Equal(t, http.StatusInternalServerError, testWriter.Code)
@@ -463,8 +477,8 @@ func prepareUserMock(t *testing.T) *engine.InterfaceMock {
 				return users[:len(users)-1]
 			}
 
-			for i, user := range users {
-				if user.ID == id {
+			for i, u := range users {
+				if u.ID == id {
 					users = removeItem(i)
 					return nil
 				}
@@ -472,8 +486,16 @@ func prepareUserMock(t *testing.T) *engine.InterfaceMock {
 			return errors.Errorf("user with id=%d not found", id)
 		},
 
-		DeleteAccessFunc: func(ctx context.Context, id int64) error {
-			return nil
+		DeleteAccessFunc: func(ctx context.Context, key string, id interface{}) error {
+
+			if value := ctx.Value(ctxKey); value != nil {
+				return errors.New("failed to delete access by user id")
+			}
+
+			if key == "owner_id" {
+				return nil
+			}
+			return errors.New("wrong field name for delete access by user id")
 		},
 	}
 }

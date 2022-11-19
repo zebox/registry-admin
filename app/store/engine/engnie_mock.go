@@ -37,7 +37,7 @@ var _ Interface = &InterfaceMock{}
 // 			CreateUserFunc: func(ctx context.Context, user *store.User) error {
 // 				panic("mock out the CreateUser method")
 // 			},
-// 			DeleteAccessFunc: func(ctx context.Context, id int64) error {
+// 			DeleteAccessFunc: func(ctx context.Context, key string, id interface{}) error {
 // 				panic("mock out the DeleteAccess method")
 // 			},
 // 			DeleteGroupFunc: func(ctx context.Context, id int64) error {
@@ -114,7 +114,7 @@ type InterfaceMock struct {
 	CreateUserFunc func(ctx context.Context, user *store.User) error
 
 	// DeleteAccessFunc mocks the DeleteAccess method.
-	DeleteAccessFunc func(ctx context.Context, id int64) error
+	DeleteAccessFunc func(ctx context.Context, key string, id interface{}) error
 
 	// DeleteGroupFunc mocks the DeleteGroup method.
 	DeleteGroupFunc func(ctx context.Context, id int64) error
@@ -208,8 +208,10 @@ type InterfaceMock struct {
 		DeleteAccess []struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
+			// Key is the key argument value.
+			Key string
 			// ID is the id argument value.
-			ID int64
+			ID interface{}
 		}
 		// DeleteGroup holds details about calls to the DeleteGroup method.
 		DeleteGroup []struct {
@@ -556,21 +558,23 @@ func (mock *InterfaceMock) CreateUserCalls() []struct {
 }
 
 // DeleteAccess calls DeleteAccessFunc.
-func (mock *InterfaceMock) DeleteAccess(ctx context.Context, id int64) error {
+func (mock *InterfaceMock) DeleteAccess(ctx context.Context, key string, id interface{}) error {
 	if mock.DeleteAccessFunc == nil {
 		panic("InterfaceMock.DeleteAccessFunc: method is nil but Interface.DeleteAccess was just called")
 	}
 	callInfo := struct {
 		Ctx context.Context
-		ID  int64
+		Key string
+		ID  interface{}
 	}{
 		Ctx: ctx,
+		Key: key,
 		ID:  id,
 	}
 	mock.lockDeleteAccess.Lock()
 	mock.calls.DeleteAccess = append(mock.calls.DeleteAccess, callInfo)
 	mock.lockDeleteAccess.Unlock()
-	return mock.DeleteAccessFunc(ctx, id)
+	return mock.DeleteAccessFunc(ctx, key, id)
 }
 
 // DeleteAccessCalls gets all the calls that were made to DeleteAccess.
@@ -578,11 +582,13 @@ func (mock *InterfaceMock) DeleteAccess(ctx context.Context, id int64) error {
 //     len(mockedInterface.DeleteAccessCalls())
 func (mock *InterfaceMock) DeleteAccessCalls() []struct {
 	Ctx context.Context
-	ID  int64
+	Key string
+	ID  interface{}
 } {
 	var calls []struct {
 		Ctx context.Context
-		ID  int64
+		Key string
+		ID  interface{}
 	}
 	mock.lockDeleteAccess.RLock()
 	calls = mock.calls.DeleteAccess

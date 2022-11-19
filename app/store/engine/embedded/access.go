@@ -126,7 +126,7 @@ func (e *Embedded) FindAccesses(ctx context.Context, filter engine.QueryFilter) 
 	return accesses, nil
 }
 
-// UpdateAccess will update group records data
+// UpdateAccess will update access record
 func (e *Embedded) UpdateAccess(ctx context.Context, access store.Access) (err error) {
 
 	// fields order: owner_id, is_group, name, resource_type, resource_name, action, disabled
@@ -148,9 +148,10 @@ func (e *Embedded) UpdateAccess(ctx context.Context, access store.Access) (err e
 	return err
 }
 
-// DeleteAccess delete user record by ID
-func (e *Embedded) DeleteAccess(ctx context.Context, id int64) (err error) {
-	res, err := e.db.ExecContext(ctx, "DELETE FROM access WHERE id = ?", id)
+// DeleteAccess delete access record by ID
+func (e *Embedded) DeleteAccess(ctx context.Context, key string, id interface{}) (err error) {
+	query := fmt.Sprintf("DELETE FROM access WHERE %s = ?", key)
+	res, err := e.db.ExecContext(ctx, query, id)
 	if err != nil {
 		return errors.Wrapf(err, "failed execute query for access delete")
 	}

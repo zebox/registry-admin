@@ -125,12 +125,12 @@ func (u *userHandlers) userDeleteCtrl(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := u.dataStore.DeleteUser(r.Context(), id); err != nil {
+	if err = u.dataStore.DeleteUser(r.Context(), id); err != nil {
 		SendErrorJSON(w, r, u.l, http.StatusInternalServerError, err, "failed to delete user with api")
 		return
 	}
 
-	if err := u.dataStore.DeleteAccess(r.Context(), id); err != nil {
+	if err = u.dataStore.DeleteAccess(r.Context(), "owner_id", id); err != nil {
 		SendErrorJSON(w, r, u.l, http.StatusInternalServerError, err, fmt.Sprintf("failed to delete accesses for deleted user with id - '%d'", id))
 		return
 	}

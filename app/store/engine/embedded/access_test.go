@@ -258,13 +258,13 @@ func TestEmbedded_DeleteAccess(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, access, *testAccess)
 
-	err = db.DeleteAccess(ctx, testAccess.ID)
+	err = db.DeleteAccess(ctx, "id", testAccess.ID)
 	assert.NoError(t, err)
 
 	_, err = db.GetAccess(ctx, testAccess.ID)
 	assert.Error(t, err)
 
-	err = db.DeleteAccess(ctx, -1)
+	err = db.DeleteAccess(ctx, "id", -1)
 	assert.Error(t, err)
 
 	// try with bad or closed connection
@@ -272,7 +272,7 @@ func TestEmbedded_DeleteAccess(t *testing.T) {
 	err = badConn.Connect(ctx)
 	require.NoError(t, err)
 	require.NoError(t, badConn.Close(ctx))
-	err = badConn.DeleteAccess(ctx, -1)
+	err = badConn.DeleteAccess(ctx, "id", -1)
 	assert.Error(t, err)
 
 	ctxCancel()
@@ -332,7 +332,7 @@ func TestEmbedded_AccessGarbageCollector(t *testing.T) {
 			Size:           708,
 			PullCounter:    1,
 			Timestamp:      now,
-			Raw:            []byte(`{"some":"json_1"}`),
+			Raw:            `{"some":"json_1"}`,
 		},
 		{
 			RepositoryName: "test_rep/test_2",
@@ -341,7 +341,7 @@ func TestEmbedded_AccessGarbageCollector(t *testing.T) {
 			Size:           709,
 			PullCounter:    1,
 			Timestamp:      now,
-			Raw:            []byte(`{"some":"json_2"}`),
+			Raw:            `{"some":"json_2"}`,
 		},
 	}
 

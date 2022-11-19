@@ -304,11 +304,11 @@ func prepareAccessMock() engine.Interface {
 			return nil
 		},
 
-		DeleteAccessFunc: func(ctx context.Context, id int64) error {
-			if _, ok := testAccessStorage[id]; !ok {
+		DeleteAccessFunc: func(ctx context.Context, key string, id interface{}) error {
+			if _, ok := testAccessStorage[id.(int64)]; !ok {
 				return errors.Errorf("access with id [%d] not found", id)
 			}
-			delete(testAccessStorage, id)
+			delete(testAccessStorage, id.(int64))
 			return nil
 		},
 	}

@@ -25,7 +25,7 @@ func TestEmbedded_CreateRepository(t *testing.T) {
 		Size:           708,
 		PullCounter:    1,
 		Timestamp:      time.Now().Unix(),
-		Raw:            []byte(`{"some":"json"}`),
+		Raw:            `{"some":"json"}`,
 	}
 
 	err := db.CreateRepository(ctx, &testEntry)
@@ -67,7 +67,7 @@ func TestEmbedded_GetRepository(t *testing.T) {
 		Size:           708,
 		PullCounter:    1,
 		Timestamp:      time.Now().Unix(),
-		Raw:            []byte(`{"some":"json"}`),
+		Raw:            `{"some":"json"}`,
 	}
 
 	err := db.CreateRepository(ctx, &testEntry)
@@ -108,7 +108,7 @@ func TestEmbedded_FindRepositories(t *testing.T) {
 			Size:           708,
 			PullCounter:    1,
 			Timestamp:      time.Now().Unix(),
-			Raw:            []byte(`{"some":"json_1"}`),
+			Raw:            `{"some":"json_1"}`,
 		},
 		{
 			RepositoryName: "aHello_test_2",
@@ -117,7 +117,7 @@ func TestEmbedded_FindRepositories(t *testing.T) {
 			Size:           709,
 			PullCounter:    1,
 			Timestamp:      time.Now().Unix(),
-			Raw:            []byte(`{"some":"json_2"}`),
+			Raw:            `{"some":"json_2"}`,
 		},
 		{
 			RepositoryName: "bHello_test_3",
@@ -126,7 +126,7 @@ func TestEmbedded_FindRepositories(t *testing.T) {
 			Size:           710,
 			PullCounter:    1,
 			Timestamp:      time.Now().Unix(),
-			Raw:            []byte(`{"some":"json_3"}`),
+			Raw:            `{"some":"json_3"}`,
 		},
 		{
 			RepositoryName: "bHello_test_4",
@@ -135,7 +135,7 @@ func TestEmbedded_FindRepositories(t *testing.T) {
 			Size:           711,
 			PullCounter:    1,
 			Timestamp:      time.Now().Unix(),
-			Raw:            []byte(`{"some":"json_4"}`),
+			Raw:            `{"some":"json_4"}`,
 		},
 		{
 			RepositoryName: "bHello_test_4",
@@ -144,7 +144,7 @@ func TestEmbedded_FindRepositories(t *testing.T) {
 			Size:           711,
 			PullCounter:    1,
 			Timestamp:      time.Now().Unix(),
-			Raw:            []byte(`{"some":"json_4_1"}`),
+			Raw:            `{"some":"json_4_1"}`,
 		},
 		{
 			RepositoryName: "bHello_test_4",
@@ -153,7 +153,7 @@ func TestEmbedded_FindRepositories(t *testing.T) {
 			Size:           711,
 			PullCounter:    1,
 			Timestamp:      time.Now().Unix(),
-			Raw:            []byte(`{"some":"json_4_2"}`),
+			Raw:            `{"some":"json_4_2"}`,
 		},
 	}
 
@@ -251,7 +251,7 @@ func TestEmbedded_UpdateRepository(t *testing.T) {
 			Size:           708,
 			PullCounter:    1,
 			Timestamp:      time.Now().Unix(),
-			Raw:            []byte(`{"some":"json_1"}`),
+			Raw:            `{"some":"json_1"}`,
 		},
 		{
 			RepositoryName: "aHello_test_2",
@@ -260,7 +260,7 @@ func TestEmbedded_UpdateRepository(t *testing.T) {
 			Size:           709,
 			PullCounter:    1,
 			Timestamp:      time.Now().Unix(),
-			Raw:            []byte(`{"some":"json_2"}`),
+			Raw:            `{"some":"json_2"}`,
 		},
 		{
 			RepositoryName: "bHello_test_3",
@@ -269,7 +269,7 @@ func TestEmbedded_UpdateRepository(t *testing.T) {
 			Size:           710,
 			PullCounter:    1,
 			Timestamp:      time.Now().Unix(),
-			Raw:            []byte(`{"some":"json_3"}`),
+			Raw:            `{"some":"json_3"}`,
 		},
 		{
 			RepositoryName: "bHello_test_4",
@@ -278,7 +278,7 @@ func TestEmbedded_UpdateRepository(t *testing.T) {
 			Size:           711,
 			PullCounter:    1,
 			Timestamp:      time.Now().Unix(),
-			Raw:            []byte(`{"some":"json_4"}`),
+			Raw:            `{"some":"json_4"}`,
 		},
 	}
 
@@ -339,7 +339,7 @@ func TestEmbedded_DeleteRepository(t *testing.T) {
 		Size:           708,
 		PullCounter:    1,
 		Timestamp:      time.Now().Unix(),
-		Raw:            []byte(`{"some":"json"}`),
+		Raw:            `{"some":"json"}`,
 	}
 
 	err := db.CreateRepository(ctx, &testEntry)
@@ -373,7 +373,7 @@ func TestEmbedded_RepositoryGarbageCollector(t *testing.T) {
 	var wg = new(sync.WaitGroup)
 	db := prepareTestDB(ctx, t, wg) // defined mock store
 
-	date_sync := time.Now().Unix()
+	dateSync := time.Now().Unix()
 	outdated := time.Now().Add(-1 * time.Hour).Unix()
 	entries := []store.RegistryEntry{
 		{
@@ -382,8 +382,8 @@ func TestEmbedded_RepositoryGarbageCollector(t *testing.T) {
 			Digest:         "sha256:0ea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7cf",
 			Size:           708,
 			PullCounter:    1,
-			Timestamp:      date_sync,
-			Raw:            []byte(`{"some":"json_1"}`),
+			Timestamp:      dateSync,
+			Raw:            `{"some":"json_1"}`,
 		},
 		{
 			RepositoryName: "aHello_test_2",
@@ -391,8 +391,8 @@ func TestEmbedded_RepositoryGarbageCollector(t *testing.T) {
 			Digest:         "sha256:1ea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7cf",
 			Size:           709,
 			PullCounter:    1,
-			Timestamp:      date_sync,
-			Raw:            []byte(`{"some":"json_2"}`),
+			Timestamp:      dateSync,
+			Raw:            `{"some":"json_2"}`,
 		},
 		{
 			RepositoryName: "bHello_test_3",
@@ -401,7 +401,7 @@ func TestEmbedded_RepositoryGarbageCollector(t *testing.T) {
 			Size:           710,
 			PullCounter:    1,
 			Timestamp:      outdated,
-			Raw:            []byte(`{"some":"json_3"}`),
+			Raw:            `{"some":"json_3"}`,
 		},
 		{
 			RepositoryName: "bHello_test_4",
@@ -410,7 +410,7 @@ func TestEmbedded_RepositoryGarbageCollector(t *testing.T) {
 			Size:           711,
 			PullCounter:    1,
 			Timestamp:      outdated,
-			Raw:            []byte(`{"some":"json_4"}`),
+			Raw:            `{"some":"json_4"}`,
 		},
 	}
 
@@ -421,7 +421,7 @@ func TestEmbedded_RepositoryGarbageCollector(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	err := db.RepositoryGarbageCollector(ctx, date_sync)
+	err := db.RepositoryGarbageCollector(ctx, dateSync)
 	assert.NoError(t, err)
 
 	filter := engine.QueryFilter{
