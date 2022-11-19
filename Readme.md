@@ -87,3 +87,4 @@ and windows_arm.
 Latest stable version has :vX.Y.Z docker tag (with :latest alias) and the current master has :master tag.
 
 ### Configuration
+
