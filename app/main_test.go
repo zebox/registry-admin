@@ -277,7 +277,7 @@ func waitForHTTPServerStart(port int) {
 
 		// allow self-signed certificate
 		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, //nolint:gosec
 		},
 	}
 	for i := 0; i < 100; i++ {
