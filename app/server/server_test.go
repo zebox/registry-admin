@@ -692,7 +692,7 @@ func prepareTestServer(ctx context.Context, t *testing.T, storage engine.Interfa
 
 // prepareTestDB real embedded store for integration testing
 func prepareTestDB(ctx context.Context, t *testing.T) *embedded.Embedded {
-	testDBPath := os.TempDir() + "/test.db"
+	testDBPath := os.TempDir() + "/test.db.tmp"
 
 	_ = os.Remove(testDBPath)
 

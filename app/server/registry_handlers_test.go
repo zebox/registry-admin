@@ -39,84 +39,87 @@ func TestRegistryHandlers_tokenAuth(t *testing.T) {
 	request(t, "GET", "/api/v1/registry/auth", testRegistryHandlers.tokenAuth, nil, http.StatusUnauthorized)
 
 	tests := []struct {
+		name            string
 		login, password string
 		query           string
 		expectedStatus  int
 	}{
 		{
-			// test with empty password
+
+			name:           "test with empty password",
 			login:          "test",
 			password:       "",
 			expectedStatus: http.StatusUnauthorized,
 		},
 		{
-			// test with unknown user
+			name:           "test with unknown user",
 			login:          "no_foo",
 			password:       "foo_password",
 			expectedStatus: http.StatusUnauthorized,
 		},
 		{
-			// test with bad user password
+			name:           "test with bad user password",
 			login:          "foo",
 			password:       "wrong_password",
 			expectedStatus: http.StatusForbidden,
 		},
 		{
-			// test with disabled user
+
+			name:           "test with disabled user",
 			login:          "foo",
 			password:       "password",
 			expectedStatus: http.StatusForbidden,
 		},
 		{
-			// test with no content
+			name:           "test with no content",
 			login:          "bar",
 			password:       "bar_password",
 			expectedStatus: http.StatusNoContent,
 		},
 		{
-			// test with login params
+			name:           "test with login params",
 			login:          "bar",
 			password:       "bar_password",
 			query:          "?account=bar&client_id=docker&offline_token=true&service=container_registry",
 			expectedStatus: http.StatusOK,
 		},
 		{
-			// test with login params with wrong account name
+			name:           "test with login params with wrong account name",
 			login:          "bar",
 			password:       "bar_password",
 			query:          "?account=test&client_id=docker&offline_token=true&service=container_registry",
 			expectedStatus: http.StatusInternalServerError,
 		},
 		{
-			// test with resource fetch params
+			name:           "test with resource fetch params",
 			login:          "bar",
 			password:       "bar_password",
 			query:          "?account=bar&scope=repository:test_resource_2:pull&service=container_registry",
 			expectedStatus: http.StatusOK,
 		},
 		{
-			// test with resource fetch params for user role
+			name:           "test with resource fetch params for user role",
 			login:          "baz",
 			password:       "baz_password",
 			query:          "?account=baz&scope=repository:test_resource_3:pull&service=container_registry",
 			expectedStatus: http.StatusOK,
 		},
 		{
-			// test with resource fetch params for user role with restricted scope
+			name:           "test with resource fetch params for user role, but with denied scope",
 			login:          "baz",
 			password:       "baz_password",
 			query:          "?account=baz&scope=repository:test_resource_3:push&service=container_registry",
 			expectedStatus: http.StatusForbidden,
 		},
 		{
-			// test with resource fetch params for user role with bad scope
+			name:           "test with resource fetch params for user role with bad scope",
 			login:          "baz",
 			password:       "baz_password",
 			query:          "?account=baz&scope=repository&service=container_registry",
 			expectedStatus: http.StatusBadRequest,
 		},
 		{
-			// test for token error with service name is unknown
+			name:           "test for token error with service name is unknown",
 			login:          "baz",
 			password:       "baz_password",
 			query:          "?account=baz&scope=repository:test_resource_3:pull&service=unknown_registry",
@@ -124,13 +127,14 @@ func TestRegistryHandlers_tokenAuth(t *testing.T) {
 		},
 		{
 			// test with expire param
+			name:           "test with expire param",
 			login:          "baz",
 			password:       "baz_password",
 			query:          "?account=baz&scope=repository:test_resource_3:pull&service=container_registry&expire=3600",
 			expectedStatus: http.StatusOK,
 		},
 		{
-			// test with invalid expire param
+			name:           "test with invalid expire param",
 			login:          "baz",
 			password:       "baz_password",
 			query:          "?account=baz&scope=repository:test_resource_3:pull&service=container_registry&expire=NaN",
@@ -140,7 +144,7 @@ func TestRegistryHandlers_tokenAuth(t *testing.T) {
 
 	ctx := context.Background()
 	for _, entry := range tests {
-		t.Logf("test for entry: %v", entry)
+		t.Logf("test entry: %v", entry.name)
 		requestWithCredentials(t, ctx, entry.login, entry.password, "GET", fmt.Sprintf("/api/v1/registry/auth%s", entry.query), testRegistryHandlers.tokenAuth, nil, entry.expectedStatus)
 
 	}
@@ -174,7 +178,13 @@ func TestRegistryHandlers_events(t *testing.T) {
 			"length": 1,
 			"digest": "sha256:fea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7cf",
 			"repository": "library/test",
-			"url": "https://example.com/v2/library/test/manifests/sha256:c3b3692957d439ac1928219a83fac91e7bf96c153725526874673ae1f2023f8d5"
+			"url": "https://example.com/v2/library/test/manifests/sha256:c3b3692957d439ac1928219a83fac91e7bf96c153725526874673ae1f2023f8d5",
+			"references":[
+			{
+				"mediaType":"application/vnd.docker.container.image.v1+json",
+				"digest":"sha256:fea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7cf"
+			}
+			]
 		  }
 		}]
 	}`

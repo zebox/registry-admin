@@ -36,11 +36,16 @@ type registryErrors struct {
 }
 
 func (rh *registryHandlers) tokenAuth(w http.ResponseWriter, r *http.Request) {
+
 	username, password, ok := r.BasicAuth()
 	if !ok || password == "" {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
+
+	// define instance for error response
+	regErrs := registryErrors{Errors: []registry.ApiError{}}
+
 	user, errUser := rh.dataStore.GetUser(r.Context(), username)
 	if errUser != nil {
 		w.WriteHeader(http.StatusUnauthorized)
@@ -89,11 +94,9 @@ func (rh *registryHandlers) tokenAuth(w http.ResponseWriter, r *http.Request) {
 
 		if allow, errCheck := rh.checkUserAccess(r.Context(), user, tokenRequest); !allow || errCheck != nil {
 			errMsg := fmt.Errorf("[ERROR] access to registry resource not allowed for user %s: %v", user.Login, errCheck)
+			regErrs.Errors = append(regErrs.Errors, registry.ApiError{Code: "", Message: errMsg.Error()})
 			rh.l.Logf("%v", errMsg)
-			regErrs := registryErrors{Errors: []registry.ApiError{
-				{Code: "", Message: errMsg.Error()},
-			}}
-			renderJSONWithStatus(w, regErrs, http.StatusNotFound)
+			renderJSONWithStatus(w, regErrs, http.StatusForbidden)
 			return
 		}
 

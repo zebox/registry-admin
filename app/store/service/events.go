@@ -51,9 +51,9 @@ func (ds *DataService) updateRepositoryEntry(ctx context.Context, event notifica
 		return err
 	}
 
-	eventRawBytes, errJson := json.Marshal(event)
-	if errJson != nil {
-		return errors.Wrap(errJson, "failed to marshalling event raw data")
+	eventRawBytes, errJSON := json.Marshal(event)
+	if errJSON != nil {
+		return errors.Wrap(errJSON, "failed to marshalling event raw data")
 	}
 
 	if result.Total == 0 {
