@@ -326,12 +326,14 @@ func (s *Server) routes() chi.Router {
 				routeRegistry.Group(func(registryApiAccess chi.Router) {
 					registryApiAccess.Use(authMiddleware.Auth, middleware.NoCache)
 					registryApiAccess.Use(authMiddleware.RBAC("admin", "manager"))
-					registryApiAccess.Get("/sync", rh.syncRepositories)
-					registryApiAccess.Delete("/catalog/*", rh.deleteDigest)
 					registryApiAccess.Get("/catalog", rh.catalogList)
 					registryApiAccess.Get("/catalog/blobs", rh.imageConfig)
-					// registryApiAccess.Get("/catalog/*", rh.repositoryEntry)
 
+					registryApiAccess.Group(func(registryApiAminAccess chi.Router) {
+						registryApiAminAccess.Use(authMiddleware.RBAC("admin"))
+						registryApiAminAccess.Get("/sync", rh.syncRepositories)
+						registryApiAminAccess.Delete("/catalog/*", rh.deleteDigest)
+					})
 				})
 			})
 
