@@ -13,7 +13,6 @@ import russianMessages from './i18n/ru';
 import { lightTheme, darkTheme } from './layout/themes';
 
 import dataProvider from './providers/dataProvider';
-// import './App.css';
 
 import users from './users';
 import groups from './groups';
@@ -73,15 +72,14 @@ function App() {
       theme={currentTheme && currentTheme === "light" ? lightTheme : darkTheme}
       history={history}
     >
-
       <CustomRoutes>
         <Route path="/configuration" element={<Configuration />} />
-      {/*   <Route path="/registry/catalog/:id/show" element={<RepositoryTags/>} /> */}
       </CustomRoutes>
+      
+      <Resource name="registry/catalog" {...repository} />
+      <Resource name="access" {...access} />
       <Resource name="users" {...users} />
       <Resource name="groups" {...groups} />
-      <Resource name="access" {...access} />
-      <Resource name="registry/catalog" {...repository} />
     </Admin>
   );
 }

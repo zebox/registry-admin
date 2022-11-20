@@ -83,7 +83,29 @@ const authProvider: AuthProvider = {
             return Promise.reject({ redirectTo: '/login' });
         });
     },
-    getPermissions: () => Promise.reject('Unknown method'),
+    getPermissions: () => {
+        
+        const options: fetchUtils.Options =  {
+            method: 'GET',
+            mode: "cors",
+            credentials: "include",
+            headers: new Headers({ 'Content-Type': 'application/json' }),
+        };
+
+        return httpClient(`${apiAuthUrl}/user`, options).then(({ status, json }) => {
+
+            if (status === 401 || status === 403) {
+               return Promise.reject();
+            }
+            if (json.error) {
+               return Promise.reject();
+            }
+            return Promise.resolve(json);
+        }).catch(error=>{
+            console.error(error)
+            return Promise.reject();
+        });
+    },
     getIdentity: () =>{
     const options: fetchUtils.Options =  {
         method: 'GET',

@@ -8,8 +8,6 @@ import RepositoryShow from './RepositoryShow';
 const repository = {
     list: RepositoryList,
     show: RepositoryShow,
-    // edit: RepositoryList,
-    //create: AccessCreate,
     icon: RepositoryIcon
 };
 

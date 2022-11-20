@@ -6,24 +6,31 @@ import {
     TextField,
     EditButton,
     DeleteButton,
+    usePermissions,
+    NotFound
 } from 'react-admin';
+import { requirePermission } from "../components/permissionCheck";
 
-const GroupList = () => (
-    <List
-        sort={{ field: 'name', order: 'ASC' }}
-        perPage={25}
-    >
-        <Datagrid bulkActionButtons={false}
-            sx={{
-                '& .column-name': { width: '80%' },
-            }}>
-                <TextField source="id" />
-                <TextField source="name"  />
-                <EditButton />
-                <DeleteButton  />
-        </Datagrid>
-    </List>
-);
+const GroupList = () => {
+    const { permissions } = usePermissions();
+    return (
+        requirePermission(permissions, 'admin') ?
+            <List
+                sort={{ field: 'name', order: 'ASC' }}
+                perPage={25}
+            >
+                <Datagrid bulkActionButtons={false}
+                    sx={{
+                        '& .column-name': { width: '80%' },
+                    }}>
+                    <TextField source="id" />
+                    <TextField source="name" />
+                    <EditButton />
+                    <DeleteButton />
+                </Datagrid>
+            </List> : <NotFound />
+    )
+};
 
 
 export default GroupList;

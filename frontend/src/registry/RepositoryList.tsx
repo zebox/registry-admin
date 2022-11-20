@@ -1,6 +1,6 @@
 import SyncRepo from '@mui/icons-material/Sync';
-import { Box, Typography,Card,CardContent } from '@mui/material';
-import { useState } from 'react';
+import { Box, Typography, Card, CardContent } from '@mui/material';
+import { useEffect, useState } from 'react';
 
 import { SearchFieldTranslated, ParseSizeToReadable } from '../helpers/Helpers';
 
@@ -16,55 +16,66 @@ import {
     useNotify,
     useDataProvider,
     useTranslate,
-    useRecordContext
+    useRecordContext,
+    usePermissions
 } from 'react-admin';
+import { requirePermission } from '../components/permissionCheck';
 
 const EmptyList = () => {
     const translate = useTranslate();
+    const { permissions } = usePermissions();
+   
+
     return (
         <Box textAlign="center" m={1}>
             <Card>
-            <CardContent>
+                <CardContent>
                     <Typography variant="h4" paragraph>
                         {translate('resources.repository.message_empty_page')}
                     </Typography>
                     <Typography variant="body1">
                         {translate('resources.repository.message_sync_repo')}
                     </Typography>
-                    <SyncButton/>
-            </CardContent>
+                    <SyncButton /> 
+                </CardContent>
             </Card>
-    </Box>
+        </Box>
     )
 };
 
-const SyncButton = () =>{
+const SyncButton = () => {
     const dataProvider = useDataProvider();
     const notify = useNotify();
     const [isLoading, setLoading] = useState(false)
     const translate = useTranslate();
+    const [isAdmin,setIsAdmin] = useState(false);
+    const { permissions } = usePermissions();
+    
+    useEffect(()=>{
+       setIsAdmin(requirePermission(permissions,'admin'));
+   },[permissions]);
 
     const doRepoSync = () => {
         setLoading(true);
         dataProvider.getList('registry/sync', {
             pagination: { page: 1, perPage: 10 },
             sort: { field: 'id', order: 'DESC' },
-            filter:{}
+            filter: {}
         })
-        .then(({ data }) => {
-            setLoading(false);
-            notify(translate('resources.repository.message_syncing_repo', { type: 'success' }))
-        })
-        .catch(error => {
-            setLoading(false);
+            .then(({ data }) => {
+                setLoading(false);
+                notify(translate('resources.repository.message_syncing_repo', { type: 'success' }))
+            })
+            .catch(error => {
+                setLoading(false);
 
-            if (error.body.message.includes("repository sync currently running")) {
-                notify(translate('resources.repository.message_repo_syncing_running'), { type: 'error' })
-                return
-            }
+                if (error.body.message.includes("repository sync currently running")) {
+                    notify(translate('resources.repository.message_repo_syncing_running'), { type: 'error' })
+                    return
+                }
 
-            notify(translate('resources.repository.message_error_syncing_repo')+` ${error.message}`, { type: 'error' })
-        })
+                notify(translate('resources.repository.message_error_syncing_repo') + ` ${error.message}`, { type: 'error' })
+            })
         setLoading(false);
     }
 
@@ -72,59 +83,59 @@ const SyncButton = () =>{
         return <Loading />;
     }
 
-    return (
+    return ( isAdmin ?
         <Button
-        onClick={() => {doRepoSync()}}
-        label={translate('resources.repository.button_sync')}
+            onClick={() => { doRepoSync() }}
+            label={translate('resources.repository.button_sync')}
         >
-            <SyncRepo/>
-        </Button>
+            <SyncRepo />
+        </Button>:null
     )
 
 }
 
-const RepositoryShowButton = ()=> {
+const RepositoryShowButton = () => {
     const record = useRecordContext();
     if (record) {
-        record.id=record.repository_name;
+        record.id = record.repository_name;
     }
-   return record && <ShowButton record={record} />
+    return record && <ShowButton record={record} />
 }
 
 const RepositoryActions = () => (
     <TopToolbar>
-        <ExportButton/>
-        <SyncButton/>
+        <ExportButton />
+        <SyncButton />
     </TopToolbar>
 );
 
-const RepositoryList = (props:any) => {
+const RepositoryList = (props: any) => {
     const translate = useTranslate();
-    return(
-    <List
-        {...props}
-        empty={<EmptyList/>}
-        actions={<RepositoryActions/>}
-        title={translate(`resources.commands.repository_name`)}
-        sort={{ field: 'repository_name', order: 'ASC' }}
-        perPage={25}
-        filters={SearchFieldTranslated()}
-    >
-        <Datagrid bulkActionButtons={false}>
-           {/*  <TextField source="id" /> */}
-            <TextField source="repository_name" label={translate('resources.repository.fields.name')} />
-            <SizeFieldReadable source="size" label={translate('resources.repository.fields.size')} />
-            <RepositoryShowButton/>
-        </Datagrid>
-    </List>
-)};
+    return (
+        <List
+            {...props}
+            empty={<EmptyList />}
+            actions={<RepositoryActions />}
+            title={translate(`resources.commands.repository_name`)}
+            sort={{ field: 'repository_name', order: 'ASC' }}
+            perPage={25}
+            filters={SearchFieldTranslated()}
+        >
+            <Datagrid bulkActionButtons={false}>
+                <TextField source="repository_name" label={translate('resources.repository.fields.name')} />
+                <SizeFieldReadable source="size" label={translate('resources.repository.fields.size')} />
+                <RepositoryShowButton />
+            </Datagrid>
+        </List>
+    )
+};
 
-export const SizeFieldReadable= ({ source }: any) => {
+export const SizeFieldReadable = ({ source }: any) => {
     const record = useRecordContext();
 
     return record ? (
         <>
-            {ParseSizeToReadable(record[source],2)}
+            {ParseSizeToReadable(record[source], 2)}
         </>
     ) : null;
 }

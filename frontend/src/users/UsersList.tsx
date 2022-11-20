@@ -10,7 +10,9 @@ import {
     ReferenceInput,
     ReferenceField,
     useRecordContext,
-    useTranslate
+    useTranslate,
+    usePermissions,
+    NotFound
 } from 'react-admin';
 import Button from '@mui/material/Button';
 import { Link } from 'react-router-dom';
@@ -18,6 +20,7 @@ import AccessIcon from '@mui/icons-material/LockOpen';
 import Tooltip from '@mui/material/Tooltip'
 import { DisabledField } from '../components/DisabledField';
 import { SearchFieldTranslated } from '../helpers/Helpers'
+import { requirePermission } from '../components/permissionCheck';
 
 interface IRoleList {
     id: string;
@@ -35,6 +38,7 @@ export const RoleList: Array<IRoleList> = [
 const RepositoryAccessList =()=>{
     const record = useRecordContext();
     const translate=useTranslate();
+
     return record ? (
         <Tooltip title={translate('resources.commands.access_name')}>
         <Button
@@ -55,7 +59,8 @@ const RepositoryAccessList =()=>{
 
 const UserList = () => {
     const translate=useTranslate();
-    return(
+    const {permissions} = usePermissions();
+    return(requirePermission(permissions,'admin') ?
     <List
         sort={{ field: 'name', order: 'ASC' }}
         perPage={25}
@@ -81,7 +86,7 @@ const UserList = () => {
             <EditButton />
             <DeleteButton />
         </Datagrid>
-    </List>
+    </List>:<NotFound/>
 )};
 
 

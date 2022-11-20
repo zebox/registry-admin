@@ -1,5 +1,5 @@
 
-import * as React from "react";
+import { useState, useEffect } from 'react';
 import {
     List,
     Datagrid,
@@ -10,9 +10,11 @@ import {
     DeleteButton,
     ReferenceField,
     SelectInput,
-    useTranslate
+    useTranslate,
+    usePermissions
 } from 'react-admin';
 import { DisabledField } from "../components/DisabledField";
+import { requirePermission } from '../components/permissionCheck';
 import { SearchFieldTranslated } from '../helpers/Helpers'
 
 
@@ -23,9 +25,11 @@ const ActionList: Array<IActionList> = [
 
 
 const AccessList = () => {
-const translate = useTranslate();
+  const translate = useTranslate();
+  const { permissions } = usePermissions();
 
   return  <List
+        hasCreate={requirePermission(permissions,'admin')}
         sort={{ field: 'name', order: 'ASC' }}
         perPage={25}
         filters={SearchFieldTranslated([
@@ -47,8 +51,10 @@ const translate = useTranslate();
             <TextField source="resource_name" label={translate('resources.accesses.fields.resource_name')} />
             <TextField source="action" label={translate('resources.accesses.fields.action')} />
             <DisabledField source="disabled" label={translate('resources.accesses.fields.disabled')}/>
+            { requirePermission(permissions,'admin') ? <>
             <EditButton alignIcon="right" />
             <DeleteButton alignIcon="right" />
+            </>:null}
         </Datagrid>
     </List>
 };
