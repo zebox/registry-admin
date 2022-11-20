@@ -323,16 +323,16 @@ func (s *Server) routes() chi.Router {
 				})
 
 				// manipulations registry entries (catalog/tags/manifest/deleteDigest)
-				routeRegistry.Group(func(registryApiAccess chi.Router) {
-					registryApiAccess.Use(authMiddleware.Auth, middleware.NoCache)
-					registryApiAccess.Use(authMiddleware.RBAC("admin", "manager"))
-					registryApiAccess.Get("/catalog", rh.catalogList)
-					registryApiAccess.Get("/catalog/blobs", rh.imageConfig)
+				routeRegistry.Group(func(routeApiRegistry chi.Router) {
+					routeApiRegistry.Use(authMiddleware.Auth, middleware.NoCache)
+					routeApiRegistry.Use(authMiddleware.RBAC("admin", "manager"))
+					routeApiRegistry.Get("/catalog", rh.catalogList)
+					routeApiRegistry.Get("/catalog/blobs", rh.imageConfig)
 
-					registryApiAccess.Group(func(registryApiAminAccess chi.Router) {
-						registryApiAminAccess.Use(authMiddleware.RBAC("admin"))
-						registryApiAminAccess.Get("/sync", rh.syncRepositories)
-						registryApiAminAccess.Delete("/catalog/*", rh.deleteDigest)
+					routeApiRegistry.Group(func(routeApiAdminRegistry chi.Router) {
+						routeApiAdminRegistry.Use(authMiddleware.RBAC("admin"))
+						routeApiAdminRegistry.Get("/sync", rh.syncRepositories)
+						routeApiAdminRegistry.Delete("/catalog/*", rh.deleteDigest)
 					})
 				})
 			})
