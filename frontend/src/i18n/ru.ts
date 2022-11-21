@@ -21,6 +21,7 @@ const customRussianMessages: TranslationMessages = {
         },
         users: {
             name: "Пользователи",
+            add_title: "Добавление пользователя",
             edit_title: "Редактирование пользователя",
             fields: {
                 login: "Логин",
