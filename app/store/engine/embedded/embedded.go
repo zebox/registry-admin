@@ -356,7 +356,14 @@ func (e *Embedded) getTotalRecordsExcludeRange(tableName string, filter engine.Q
 	}
 
 	f := filtersBuilder(filter, searchFields...)
-	rows, err := e.db.Query(fmt.Sprintf("SELECT %s FROM %s %s", countType, tableName, f.where))
+	queryString := fmt.Sprintf("SELECT %s FROM %s %s", countType, tableName, f.where)
+
+	// check for select repositories by user access
+	if _, ok := filter.Filters["access.owner_id"]; ok {
+		queryString = fmt.Sprintf("SELECT %s FROM %s INNER JOIN access on repositories.repository_name=access.resource_name %s", countType, tableName, f.all)
+	}
+
+	rows, err := e.db.Query(queryString)
 	if err != nil {
 		return 0
 	}

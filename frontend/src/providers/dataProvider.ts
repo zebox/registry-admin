@@ -34,7 +34,7 @@ const dataProvider: DataProvider = {
             const url = `${apiUrl}/${resource}?${stringify(query)}&${meta}`;
 
             return httpClient(url, createOptions("GET")).then(({ status, json }) => {
-
+                
                 if (!Object.hasOwn(json, 'total') || json.total === 0) {
                     json.total = 0;
                     json.data = [];

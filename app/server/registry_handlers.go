@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/docker/distribution/notifications"
+	"github.com/go-pkgz/auth/token"
 	"github.com/go-pkgz/rest"
 	"github.com/zebox/registry-admin/app/registry"
 	"github.com/zebox/registry-admin/app/store"
@@ -210,6 +211,16 @@ func (rh *registryHandlers) catalogList(w http.ResponseWriter, r *http.Request) 
 
 	groupBy, isGroupBy := r.URL.Query()["group_by"]
 	fmt.Printf("%v %v", isGroupBy, groupBy)
+
+	user, err := token.GetUserInfo(r)
+	if err != nil {
+		SendErrorJSON(w, r, rh.l, http.StatusInternalServerError, err, "failed to get current user")
+		return
+	}
+
+	if user.GetRole() == "user" {
+		filter.Filters = map[string]interface{}{"access.owner_id": user.Attributes["uid"]}
+	}
 
 	filter.GroupByField = !isGroupBy || (groupBy != nil && groupBy[0] != "none")
 	repoList, errReposList := rh.dataStore.FindRepositories(r.Context(), filter)
