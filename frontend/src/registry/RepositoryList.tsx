@@ -19,12 +19,12 @@ import {
     useRecordContext,
     usePermissions
 } from 'react-admin';
-import { requirePermission } from '../components/permissionCheck';
+import {requirePermission} from '../helpers/Helpers';
 
 const EmptyList = () => {
     const translate = useTranslate();
     const { permissions } = usePermissions();
-   
+
 
     return (
         <Box textAlign="center" m={1}>
@@ -36,7 +36,7 @@ const EmptyList = () => {
                     <Typography variant="body1">
                         {translate('resources.repository.message_sync_repo')}
                     </Typography>
-                    <SyncButton /> 
+                    <SyncButton/>
                 </CardContent>
             </Card>
         </Box>
@@ -50,7 +50,7 @@ const SyncButton = () => {
     const translate = useTranslate();
     const [isAdmin,setIsAdmin] = useState(false);
     const { permissions } = usePermissions();
-    
+
     useEffect(()=>{
        setIsAdmin(requirePermission(permissions,'admin'));
    },[permissions]);

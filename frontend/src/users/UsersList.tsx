@@ -19,8 +19,8 @@ import { Link } from 'react-router-dom';
 import AccessIcon from '@mui/icons-material/LockOpen';
 import Tooltip from '@mui/material/Tooltip'
 import { DisabledField } from '../components/DisabledField';
-import { SearchFieldTranslated } from '../helpers/Helpers'
-import { requirePermission } from '../components/permissionCheck';
+import {SearchFieldTranslated} from '../helpers/Helpers'
+import {requirePermission} from '../helpers/Helpers';
 
 interface IRoleList {
     id: string;

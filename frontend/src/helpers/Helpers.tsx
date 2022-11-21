@@ -47,3 +47,8 @@ export const ParseSizeToReadable=(bytes:any,decimals:number=2):string=> {
     return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`
 }
 
+
+// requirePermission call for check user permission for access to features or a UI element
+export const requirePermission = (permissions: any, role: string): boolean => {
+    return permissions && permissions.role && permissions.role === role;
+}

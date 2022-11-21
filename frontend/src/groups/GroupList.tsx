@@ -9,7 +9,7 @@ import {
     usePermissions,
     NotFound
 } from 'react-admin';
-import { requirePermission } from "../components/permissionCheck";
+import {requirePermission} from '../helpers/Helpers';
 
 const GroupList = () => {
     const { permissions } = usePermissions();

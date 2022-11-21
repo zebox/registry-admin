@@ -7,7 +7,7 @@ import { ConvertUnixTimeToDate, SearchFieldTranslated } from "../helpers/Helpers
 import { SizeFieldReadable } from "./RepositoryList";
 import ImageConfigPage from './ImageConfig';
 import InfoIcon from '@mui/icons-material/Info';
-import { requirePermission } from "../components/permissionCheck";
+import {requirePermission} from '../helpers/Helpers';
 /**
  * Fetch a repository entry from the API and display it
  */

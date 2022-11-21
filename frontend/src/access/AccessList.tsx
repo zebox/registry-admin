@@ -13,9 +13,8 @@ import {
     useTranslate,
     usePermissions
 } from 'react-admin';
-import { DisabledField } from "../components/DisabledField";
-import { requirePermission } from '../components/permissionCheck';
-import { SearchFieldTranslated } from '../helpers/Helpers'
+import {DisabledField} from "../components/DisabledField";
+import {SearchFieldTranslated, requirePermission} from '../helpers/Helpers'
 
 
 const ActionList: Array<IActionList> = [
