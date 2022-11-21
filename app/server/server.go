@@ -312,8 +312,8 @@ func (s *Server) routes() chi.Router {
 
 			// starting Data Service maintenance tasks such as garbage collector and repositories auto sync
 			rh.dataService.RepositoriesMaintenance(s.ctx, s.GarbageCollectorInterval)
-			rootRoute.Route("/registry", func(routeRegistry chi.Router) {
 
+			rootRoute.Route("/registry", func(routeRegistry chi.Router) {
 				routeRegistry.Get("/auth", rh.tokenAuth)
 
 				routeRegistry.Group(func(registryApiAccess chi.Router) {
@@ -336,7 +336,6 @@ func (s *Server) routes() chi.Router {
 					})
 				})
 			})
-
 		})
 	})
 
