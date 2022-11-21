@@ -313,27 +313,33 @@ func (s *Server) routes() chi.Router {
 			// starting Data Service maintenance tasks such as garbage collector and repositories auto sync
 			rh.dataService.RepositoriesMaintenance(s.ctx, s.GarbageCollectorInterval)
 
+			// route API for manipulations registry entries (catalog/tags/manifest/deleteDigest)
 			rootRoute.Route("/registry", func(routeRegistry chi.Router) {
 				routeRegistry.Get("/auth", rh.tokenAuth)
 
-				routeRegistry.Group(func(registryApiAccess chi.Router) {
-					registryApiAccess.Use(authMiddleware.Auth, middleware.NoCache)
-					routeRegistry.Post("/events", rh.events)
-					registryApiAccess.Get("/health", rh.health)
+				routeRegistry.Group(func(registryApiEventsRegistry chi.Router) {
+					registryApiEventsRegistry.Use(authMiddleware.Auth, middleware.NoCache)
+					registryApiEventsRegistry.Post("/events", rh.events)
+					registryApiEventsRegistry.Get("/health", rh.health)
 				})
 
-				// manipulations registry entries (catalog/tags/manifest/deleteDigest)
 				routeRegistry.Group(func(routeApiRegistry chi.Router) {
-					routeApiRegistry.Use(authMiddleware.Auth, middleware.NoCache)
-					routeApiRegistry.Use(authMiddleware.RBAC("admin", "manager"))
-					routeApiRegistry.Get("/catalog", rh.catalogList)
-					routeApiRegistry.Get("/catalog/blobs", rh.imageConfig)
 
-					routeApiRegistry.Group(func(routeApiAdminRegistry chi.Router) {
-						routeApiAdminRegistry.Use(authMiddleware.RBAC("admin"))
-						routeApiAdminRegistry.Get("/sync", rh.syncRepositories)
-						routeApiAdminRegistry.Delete("/catalog/*", rh.deleteDigest)
-					})
+					// allows any users list repositories, but user role can see allowed repositories only
+					routeApiRegistry.Use(authMiddleware.Auth, middleware.NoCache)
+					routeApiRegistry.Get("/catalog", rh.catalogList)
+				})
+
+				routeRegistry.Group(func(routeApiManagerRegistry chi.Router) {
+					routeApiManagerRegistry.Use(authMiddleware.Auth, middleware.NoCache)
+					routeApiManagerRegistry.Use(authMiddleware.RBAC("admin", "manager"))
+					routeApiManagerRegistry.Get("/catalog/blobs", rh.imageConfig)
+				})
+
+				routeRegistry.Group(func(routeApiAdminRegistry chi.Router) {
+					routeApiAdminRegistry.Use(authMiddleware.RBAC("admin"))
+					routeApiAdminRegistry.Get("/sync", rh.syncRepositories)
+					routeApiAdminRegistry.Delete("/catalog/*", rh.deleteDigest)
 				})
 			})
 		})
@@ -417,7 +423,7 @@ func (s *Server) Check(user, password string) (ok bool, err error) {
 	return ok, err
 }
 
-// Validate will validate token calaims for OAuth provider
+// Validate will validate token claims for OAuth provider
 func (s *Server) Validate(_ string, claims token.Claims) bool {
 	if claims.User == nil {
 		return false

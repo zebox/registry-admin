@@ -23,10 +23,10 @@ type configReader interface {
 // Options the main parameters for the service
 type Options struct {
 	Version    string
-	Listen     string `short:"l" long:"listen" env:"RA_LISTEN" description:"listen on host:port (127.0.0.1:80/443 without)" json:"listen"`
+	Listen     string `long:"listen" env:"RA_LISTEN" description:"listen on host:port (127.0.0.1:80/443 without)" json:"listen"`
 	HostName   string `long:"hostname" env:"RA_HOST_NAME" default:"localhost" description:"Main hostname of service" json:"host_name"`
-	Port       int    `short:"p" long:"port" env:"RA_PORT" description:"Main web-service port. Default:80" default:"80" json:"port"`
-	ConfigPath string `short:"f" long:"config-file" env:"RA_CONFIG_FILE" description:"Path to config file"`
+	Port       int    `long:"port" env:"RA_PORT" description:"Main web-service port. Default:80" default:"80" json:"port"`
+	ConfigPath string `long:"config-file" env:"RA_CONFIG_FILE" description:"Path to config file"`
 
 	Registry RegistryGroup `group:"registry" namespace:"registry" env-namespace:"RA_REGISTRY" json:"registry"`
 
