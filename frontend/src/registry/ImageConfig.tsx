@@ -35,7 +35,7 @@ export default function ImageConfigPage({ record, isOpen, handleShowFn }: any) {
     const [open, setOpen] = React.useState(false);
     const [manifest, setManifest] = React.useState(Object);
     const translate = useTranslate();
-    
+
     const raw = JSON.parse(record.raw);
 
     const { data, isLoading, error } = useGetOne(
@@ -54,17 +54,18 @@ export default function ImageConfigPage({ record, isOpen, handleShowFn }: any) {
 
 
     React.useEffect(() => {
-        if (isLoading) { return }
+        if (isLoading || !data) {
+            return
+        }
         const cfg = decodeConfig(data);
         if (cfg && cfg !== null) {
             setManifest(cfg);
         }
     }, [isLoading])
 
-    if (isLoading) { return <Loading />; }
+    // if (isLoading) { return <Loading />; }
 
     const MainData = () => {
-        // const config = decodeConfig(data);
         return manifest && (
             <List dense={dense}>
                 {manifest.architecture ? <ListItemText disableTypography primary={<div style={{ fontWeight: "bolder", float: "left" }}>{"Arch: "}</div>} secondary={manifest.architecture} /> : null}
@@ -197,8 +198,6 @@ export default function ImageConfigPage({ record, isOpen, handleShowFn }: any) {
                     </Box>
                     :
                     (
-                        console.log(error),
-                        console.log(isLoading),
                         translate('resources.repository.message_config_data_not_loading'))}
             </Dialog>
         </div >

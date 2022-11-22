@@ -75,7 +75,7 @@ function App() {
       <CustomRoutes>
         <Route path="/configuration" element={<Configuration />} />
       </CustomRoutes>
-      
+
       <Resource name="registry/catalog" {...repository} />
       <Resource name="access" {...access} />
       <Resource name="users" {...users} />

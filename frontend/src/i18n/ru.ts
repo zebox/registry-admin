@@ -66,21 +66,21 @@ const customRussianMessages: TranslationMessages = {
                 details:"Поднробнее"
 
             },
-            title:"Информация о репозитории",
-            tag_list_title:"Список меток (tags)",
-            pull_counter:"Количество загрузок: ",
-            tag_digest:"Подпись: ",
-            tag_media_type:"Тип: ",
-            image_platform_details:"Платформа",
-            image_config_details:"Параметры",
-            image_history_details:"История",
-            message_empty_page:"Ни одной записи не найдено. Список репозиториев пуст.",
-            message_config_data_not_loading:"Данные конфига не загружены",
-            message_sync_repo:"Синхронизировать репозитории из реестра",
-            message_syncing_repo:"Синхронизация репозиториев запущена",
-            message_error_syncing_repo:"Попытка синхронизации завершилась ошибкой",
-            message_repo_syncing_running:"Синхронизация уже запущена. Дождитесь окончания окончания операции.",
-            button_sync:"Синхронизировать"
+            title: "Информация о репозитории",
+            tag_list_title: "Список меток (tags)",
+            pull_counter: "Количество загрузок: ",
+            tag_digest: "Подпись: ",
+            tag_media_type: "Тип: ",
+            image_platform_details: "Платформа",
+            image_config_details: "Параметры",
+            image_history_details: "История",
+            message_empty_page: "Ни одной записи не найдено. Список репозиториев пуст.",
+            message_config_data_not_loading: "Не удалось загрузить данные с конфигурацией образа",
+            message_sync_repo: "Синхронизировать репозитории из реестра",
+            message_syncing_repo: "Синхронизация репозиториев запущена",
+            message_error_syncing_repo: "Попытка синхронизации завершилась ошибкой",
+            message_repo_syncing_running: "Синхронизация уже запущена. Дождитесь окончания окончания операции.",
+            button_sync: "Синхронизировать"
         }
     },
 
