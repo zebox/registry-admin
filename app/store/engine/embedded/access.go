@@ -100,7 +100,7 @@ func (e *Embedded) GetAccess(ctx context.Context, id int64) (access store.Access
 // FindAccesses get list of existed groups
 func (e *Embedded) FindAccesses(ctx context.Context, filter engine.QueryFilter) (accesses engine.ListResponse, err error) {
 	f := filtersBuilder(filter, "name", "resource_name")
-	queryString := fmt.Sprintf("SELECT * FROM %s %s", accessTable, f.where) //nolint:gosec // query sanitizing calling before
+	queryString := fmt.Sprintf("SELECT * FROM %s %s", accessTable, f.allClauses) //nolint:gosec // query sanitizing calling before
 
 	rows, err := e.db.QueryContext(ctx, queryString)
 	if err != nil {

@@ -17,8 +17,8 @@ func TestSQLite_Connect(t *testing.T) {
 
 	_ = os.Remove(dbPath)
 	db := Embedded{Path: dbPath}
-	err := db.Connect(ctx)
 
+	err := db.Connect(ctx)
 	require.NoError(t, err)
 	assert.NotNil(t, db.db)
 
@@ -83,16 +83,16 @@ func TestFilterBuilder(t *testing.T) {
 	{
 		f := filtersBuilder(filter, "role", "login")
 		checkWhere := "WHERE (role LIKE '%test%' OR login LIKE '%test%') AND (disabled = 1) ORDER BY id asc  LIMIT 9 OFFSET 1"
-		assert.Equal(t, checkWhere, f.where)
-		t.Log(f.where)
+		assert.Equal(t, checkWhere, f.allClauses)
+		t.Log(f.allClauses)
 	}
 
 	{
 		filter.Filters = map[string]interface{}{"q": "test"}
 		f1 := filtersBuilder(filter, "role", "login")
 		checkWhere := "WHERE (role LIKE '%test%' OR login LIKE '%test%') ORDER BY id asc  LIMIT 9 OFFSET 1"
-		assert.Equal(t, checkWhere, f1.where)
-		t.Log(f1.where)
+		assert.Equal(t, checkWhere, f1.allClauses)
+		t.Log(f1.allClauses)
 	}
 	{
 
@@ -101,7 +101,7 @@ func TestFilterBuilder(t *testing.T) {
 		filter.Filters["ids"] = ids
 		f2 := filtersBuilder(filter, "role", "login")
 		checkWhere2 := "WHERE id IN (1019101756, 1334517373) AND (role LIKE '%test%' OR login LIKE '%test%') AND (disabled = 1) ORDER BY id asc  LIMIT 9 OFFSET 1"
-		assert.Equal(t, checkWhere2, f2.where)
+		assert.Equal(t, checkWhere2, f2.allClauses)
 	}
 	{
 		delete(filter.Filters, "ids")
@@ -109,7 +109,7 @@ func TestFilterBuilder(t *testing.T) {
 		filter.Filters = map[string]interface{}{"q": 1}
 		f2 := filtersBuilder(filter, "role", "id")
 		checkWhere2 := "WHERE ( role LIKE 1 OR  id LIKE 1) ORDER BY id asc "
-		assert.Equal(t, checkWhere2, f2.where)
+		assert.Equal(t, checkWhere2, f2.allClauses)
 	}
 
 	{
@@ -117,7 +117,7 @@ func TestFilterBuilder(t *testing.T) {
 		filter.Filters = map[string]interface{}{"q select--": "test query WHERE LIKE JOIN search DELETE -- % = string ", "description": "-- LIKE AND SELECT clear_value WHERE OR"}
 		f := filtersBuilder(filter, "role", "login")
 		checkWhere := "WHERE (role LIKE '%test querysearchstring %' OR login LIKE '%test querysearchstring %') AND (description = 'ANDclear_valueOR') ORDER BY id asc "
-		assert.Equal(t, checkWhere, f.where)
+		assert.Equal(t, checkWhere, f.allClauses)
 	}
 
 }

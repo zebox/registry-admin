@@ -72,12 +72,12 @@ func (e *Embedded) GetRepository(ctx context.Context, entryID int64) (entry stor
 // FindRepositories fetch list of existed repositories
 func (e *Embedded) FindRepositories(ctx context.Context, filter engine.QueryFilter) (entries engine.ListResponse, err error) {
 
-	f := filtersBuilder(filter, "repository_name", "tag")                         // set key filed for search query
-	queryString := fmt.Sprintf("SELECT * FROM %s %s", repositoriesTable, f.where) //nolint:gosec // query sanitizing calling before
+	f := filtersBuilder(filter, "repository_name", "tag")                              // set key filed for search query
+	queryString := fmt.Sprintf("SELECT * FROM %s %s", repositoriesTable, f.allClauses) //nolint:gosec // query sanitizing calling before
 
 	// check for select repositories by user access
 	if _, ok := filter.Filters["access.owner_id"]; ok {
-		queryString = fmt.Sprintf("SELECT repositories.id as id,repository_name,tag,digest,size,pull_counter,timestamp,raw FROM %s INNER JOIN access on repositories.repository_name=access.resource_name %s", repositoriesTable, f.where)
+		queryString = fmt.Sprintf("SELECT repositories.id as id,repository_name,tag,digest,size,pull_counter,timestamp,raw FROM %s INNER JOIN access on repositories.repository_name=access.resource_name %s", repositoriesTable, f.allClauses)
 	}
 
 	// avoid error shadowed

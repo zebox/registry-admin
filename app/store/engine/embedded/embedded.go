@@ -33,12 +33,12 @@ type Embedded struct {
 }
 
 type queryFilter struct {
-	skipLimit string // an offset and a limit params
-	order     string // an order by clause
-	in        string // in array values
-	all       string // where without limit and offset params, return all items when math where clause
-	where     string // raw where clause with skip and limit
-	groupBy   string
+	skipLimit  string // an offset and a limit params
+	order      string // an order by clause
+	in         string // in array values
+	where      string // where without limit and offset params, return all items when math where clause
+	allClauses string // raw where clause with skip and limit
+	groupBy    string
 }
 
 func NewEmbedded(pathToDB string) *Embedded {
@@ -301,26 +301,26 @@ func filtersBuilder(filter engine.QueryFilter, fieldsName ...string) (f queryFil
 	}
 
 	if f.in != "" {
-		f.where = fmt.Sprintf("WHERE %s", f.in)
+		f.allClauses = fmt.Sprintf("WHERE %s", f.in)
 	}
 
 	if like != "" {
-		if f.where == "" {
-			f.where = fmt.Sprintf("WHERE (%s)", like)
+		if f.allClauses == "" {
+			f.allClauses = fmt.Sprintf("WHERE (%s)", like)
 		} else {
-			f.where = fmt.Sprintf("%s AND (%s)", f.where, like)
+			f.allClauses = fmt.Sprintf("%s AND (%s)", f.allClauses, like)
 		}
 
 	}
 
 	if strongCondition != "" {
-		if f.where == "" {
-			f.where = fmt.Sprintf("WHERE %s", strongCondition)
+		if f.allClauses == "" {
+			f.allClauses = fmt.Sprintf("WHERE %s", strongCondition)
 		} else {
-			f.where = fmt.Sprintf("%s %s", f.where, strongCondition)
+			f.allClauses = fmt.Sprintf("%s %s", f.allClauses, strongCondition)
 		}
 	}
-	f.all = f.where
+	f.where = f.allClauses
 
 	if filter.Sort == nil {
 		filter.Sort = []string{"id", "asc"} // default sorting
@@ -334,7 +334,7 @@ func filtersBuilder(filter engine.QueryFilter, fieldsName ...string) (f queryFil
 
 	f.order = fmt.Sprintf("%s ORDER BY %s %s ", f.groupBy, filter.Sort[0], filter.Sort[1])
 
-	f.where = f.where + f.order + f.skipLimit
+	f.allClauses = f.allClauses + f.order + f.skipLimit
 
 	return f
 }
@@ -356,11 +356,11 @@ func (e *Embedded) getTotalRecordsExcludeRange(tableName string, filter engine.Q
 	}
 
 	f := filtersBuilder(filter, searchFields...)
-	queryString := fmt.Sprintf("SELECT %s FROM %s %s", countType, tableName, f.where)
+	queryString := fmt.Sprintf("SELECT %s FROM %s %s", countType, tableName, f.allClauses)
 
 	// check for select repositories by user access
 	if _, ok := filter.Filters["access.owner_id"]; ok {
-		queryString = fmt.Sprintf("SELECT %s FROM %s INNER JOIN access on repositories.repository_name=access.resource_name %s", countType, tableName, f.all)
+		queryString = fmt.Sprintf("SELECT %s FROM %s INNER JOIN access on repositories.repository_name=access.resource_name %s", countType, tableName, f.where)
 	}
 
 	rows, err := e.db.Query(queryString)

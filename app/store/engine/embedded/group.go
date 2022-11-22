@@ -74,8 +74,8 @@ func (e *Embedded) GetGroup(ctx context.Context, groupID int64) (group store.Gro
 
 // FindGroups fetch list of existed group
 func (e *Embedded) FindGroups(ctx context.Context, filter engine.QueryFilter) (groups engine.ListResponse, err error) {
-	f := filtersBuilder(filter, "name")                                                       // set key filed for search query
-	queryString := fmt.Sprintf("SELECT id,name,description FROM %s %s", groupsTable, f.where) //nolint:gosec // query sanitizing calling before
+	f := filtersBuilder(filter, "name")                                                            // set key filed for search query
+	queryString := fmt.Sprintf("SELECT id,name,description FROM %s %s", groupsTable, f.allClauses) //nolint:gosec // query sanitizing calling before
 
 	// avoid error shadowed
 	var (

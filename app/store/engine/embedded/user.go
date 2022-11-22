@@ -121,7 +121,7 @@ func (e *Embedded) GetUser(ctx context.Context, id interface{}) (user store.User
 // FindUsers fetch list of user by filter values
 func (e *Embedded) FindUsers(ctx context.Context, filter engine.QueryFilter) (users engine.ListResponse, err error) {
 	f := filtersBuilder(filter, "login", "name")
-	queryString := fmt.Sprintf("SELECT id,login,name,password,role,user_group,disabled,description FROM %s %s", usersTable, f.where) //nolint:gosec // query sanitizing calling before
+	queryString := fmt.Sprintf("SELECT id,login,name,password,role,user_group,disabled,description FROM %s %s", usersTable, f.allClauses) //nolint:gosec // query sanitizing calling before
 
 	// avoid error shadowed
 	var (
