@@ -219,7 +219,11 @@ func (rh *registryHandlers) catalogList(w http.ResponseWriter, r *http.Request) 
 	}
 
 	if user.GetRole() == "user" {
-		filter.Filters = map[string]interface{}{"access.owner_id": user.Attributes["uid"]}
+		if filter.Filters == nil {
+			filter.Filters = map[string]interface{}{"access.owner_id": user.Attributes["uid"]}
+		} else {
+			filter.Filters["access.owner_id"] = user.Attributes["uid"]
+		}
 	}
 
 	filter.GroupByField = !isGroupBy || (groupBy != nil && groupBy[0] != "none")
