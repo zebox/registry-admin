@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { AppBar, Logout, UserMenu, useTranslate } from 'react-admin';
-import { Link } from 'react-router-dom';
+import {Link} from 'react-router-dom';
+import GitHubIcon from '@mui/icons-material/GitHub';
 import {
     Box,
     MenuItem,
@@ -60,8 +61,10 @@ const CustomAppBar = (props: any) => {
                 }}
                 id="react-admin-title"
             />
+
             {isLargeEnough && <Logo />}
             {isLargeEnough && <Box component="span" sx={{ flex: 1 }} />}
+            <a href="https://github.com/zebox/registry-admin"><GitHubIcon/></a>
         </AppBar>
     );
 };
