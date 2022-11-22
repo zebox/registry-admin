@@ -1,7 +1,5 @@
 import * as React from 'react';
 import Box from '@mui/material/Box';
-import { styled } from '@mui/material/styles';
-import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import Grid from '@mui/material/Grid';
 import ListItemText from '@mui/material/ListItemText';
@@ -15,7 +13,7 @@ import Paper from '@mui/material/Paper';
 import CloseIcon from '@mui/icons-material/Close';
 import Slide from '@mui/material/Slide';
 import { TransitionProps } from '@mui/material/transitions';
-import { useGetOne, useTranslate, Loading } from 'react-admin';
+import { useGetOne, useTranslate } from 'react-admin';
 import { repositoryBaseResource } from './RepositoryShow';
 import { Buffer } from 'buffer';
 
@@ -31,12 +29,9 @@ const Transition = React.forwardRef(function Transition(
 
 
 export default function ImageConfigPage({ record, isOpen, handleShowFn }: any) {
-    const [dense, setDense] = React.useState(false);
     const [open, setOpen] = React.useState(false);
     const [manifest, setManifest] = React.useState(Object);
     const translate = useTranslate();
-
-    const raw = JSON.parse(record.raw);
 
     const { data, isLoading, error } = useGetOne(
         repositoryBaseResource,
@@ -61,13 +56,13 @@ export default function ImageConfigPage({ record, isOpen, handleShowFn }: any) {
         if (cfg && cfg !== null) {
             setManifest(cfg);
         }
-    }, [isLoading])
+    }, [isLoading,data])
 
     // if (isLoading) { return <Loading />; }
 
     const MainData = () => {
         return manifest && (
-            <List dense={dense}>
+            <List dense={true}>
                 {manifest.architecture ? <ListItemText disableTypography primary={<div style={{ fontWeight: "bolder", float: "left" }}>{"Arch: "}</div>} secondary={manifest.architecture} /> : null}
                 {manifest.created ? <ListItemText disableTypography primary={<div style={{ fontWeight: "bolder", float: "left" }}>{"CreatedAt: "}</div>} secondary={manifest.created} /> : null}
                 {manifest.os ? <ListItemText disableTypography primary={<div style={{ fontWeight: "bolder", float: "left" }}>{"OS: "}</div>} secondary={manifest.os} /> : null}
@@ -78,7 +73,7 @@ export default function ImageConfigPage({ record, isOpen, handleShowFn }: any) {
     const ConfigData = () => {
         const  config: any  = manifest.config;
         return config && (
-            <List dense={dense}>
+            <List dense={true}>
                 {config.ExposedPorts ? <ListItemText disableTypography primary={<div style={{ fontWeight: "bolder", float: "left" }}>Exposed port:</div>} secondary={JSON.stringify(config.ExposedPorts)} /> : null}
                 {config.Env ? <ListItemText disableTypography primary={<div style={{ fontWeight: "bolder", float: "left" }}>ENV:</div>} secondary={JSON.stringify(config.Env)} /> : null}
                 {config.Cmd ? <ListItemText disableTypography primary={<div style={{ fontWeight: "bolder", float: "left" }}>CMD:</div>} secondary={JSON.stringify(config.Cmd)} /> : null}
@@ -93,7 +88,7 @@ export default function ImageConfigPage({ record, isOpen, handleShowFn }: any) {
         // const config = decodeConfig(data);
         const imageHistory = manifest.history
         return imageHistory && (
-            < List dense={dense} >
+            < List dense={true} >
                 {imageHistory.map((item: any, index: number) => {
                     return (
                         < div key={index}>
