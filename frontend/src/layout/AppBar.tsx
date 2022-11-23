@@ -12,11 +12,12 @@ import {
     Theme,
 } from '@mui/material';
 import SettingsIcon from '@mui/icons-material/Settings';
-
+import { useTheme } from '@mui/material/styles';
 import Logo from './Logo';
 
 const ConfigurationMenu = React.forwardRef((props, ref) => {
     const translate = useTranslate();
+   
     return (
         <MenuItem
             component={Link}
@@ -43,6 +44,7 @@ const CustomAppBar = (props: any) => {
     const isLargeEnough = useMediaQuery<Theme>(theme =>
         theme.breakpoints.up('sm')
     );
+    const theme = useTheme();
     return (
         <AppBar
             {...props}
@@ -64,7 +66,7 @@ const CustomAppBar = (props: any) => {
 
             {isLargeEnough && <Logo />}
             {isLargeEnough && <Box component="span" sx={{ flex: 1 }} />}
-            <a href="https://github.com/zebox/registry-admin"><GitHubIcon/></a>
+            <a href="https://github.com/zebox/registry-admin"><GitHubIcon sx={{color:theme.palette.secondary.light}}/></a>
         </AppBar>
     );
 };

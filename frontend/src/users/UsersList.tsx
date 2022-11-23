@@ -40,7 +40,7 @@ const RepositoryAccessList =()=>{
     const translate=useTranslate();
 
     return record ? (
-        <Tooltip title={translate('resources.commands.access_name')}>
+        <Tooltip title={translate('resources.accesses.messages.access_tooltip')}>
         <Button
             color="primary"
             component={Link}

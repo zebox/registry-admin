@@ -1,13 +1,13 @@
 import * as React from "react";
 import { useParams } from 'react-router-dom';
-import { useDelete, usePermissions, useTranslate, Datagrid, useRecordContext, Title, ListBase, ListToolbar, Pagination, TextField, Loading } from 'react-admin';
+import { useDelete, usePermissions, useTranslate, Datagrid, useRecordContext, Title, ListBase, ListToolbar, Pagination, TextField, Loading, Confirm } from 'react-admin';
 import { Card, CardContent, Typography, Button } from '@mui/material';
 
 import { ConvertUnixTimeToDate, SearchFieldTranslated } from "../helpers/Helpers";
 import { SizeFieldReadable } from "./RepositoryList";
 import ImageConfigPage from './ImageConfig';
 import InfoIcon from '@mui/icons-material/Info';
-import {requirePermission} from '../helpers/Helpers';
+import { requirePermission } from '../helpers/Helpers';
 /**
  * Fetch a repository entry from the API and display it
  */
@@ -88,18 +88,23 @@ const ShowImageDetail = ({ source }: any) => {
     )
 }
 
-const TagDeleteButton = ({ source }: any) => {
+const TagDeleteButton = (props: any) => {
     const record = useRecordContext();
     const translate = useTranslate();
 
     const [deleteOne, { isLoading, error }] = useDelete();
+    const [open, setOpen] = React.useState(false);
 
     const deleteTag = () => {
         deleteOne(
             repositoryBaseResource,
             { id: record["tag"], previousData: record, meta: { name: record["repository_name"], digest: record["digest"] } }
-        );
+        )
+        setOpen(false);
+    }
 
+    const handleDialogClose = () => {
+        setOpen(false);
     }
 
     if (isLoading) return <Loading />
@@ -107,8 +112,23 @@ const TagDeleteButton = ({ source }: any) => {
         console.error(error);
     }
 
+    return <React.Fragment>
+        <Button onClick={() => setOpen(true)}>{translate('ra.action.delete')}</Button>
+        <Confirm
+            isOpen={open}
+            loading={isLoading}
+            title='ra.message.delete_title'
+            content='ra.message.delete_content'
+            translateOptions={{
+                name: record["repository_name"],
+                id: record["tag"]
+            }}
+            onConfirm={deleteTag}
+            onClose={handleDialogClose}
+        />
 
-    return <Button onClick={() => deleteTag()}>{translate('ra.action.delete')}</Button>
+    </React.Fragment>
+
 
 }
 const DateFieldFormatted = ({ source }: any) => {

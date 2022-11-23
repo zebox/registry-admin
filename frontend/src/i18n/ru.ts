@@ -54,6 +54,9 @@ const customRussianMessages: TranslationMessages = {
                 resource_name: "Имя репозитория",
                 action:"Вид операции",
                 disabled:"Отключен"
+            },
+            messages:{
+                access_tooltip:"Показать доступные репозитории"
             }
         },
         repository:{
@@ -76,6 +79,7 @@ const customRussianMessages: TranslationMessages = {
             image_history_details: "История",
             message_empty_page: "Ни одной записи не найдено. Список репозиториев пуст.",
             message_config_data_not_loading: "Не удалось загрузить данные с конфигурацией образа",
+            message_sync_about:"Выполнить синхронизацию данных между RA и Docker Registry",
             message_sync_repo: "Синхронизировать репозитории из реестра",
             message_syncing_repo: "Синхронизация репозиториев запущена",
             message_error_syncing_repo: "Попытка синхронизации завершилась ошибкой",

@@ -55,6 +55,9 @@ const customEnglishMessages: TranslationMessages = {
                 resource_name: "Repository name",
                 action:"Allowed action",
                 disabled:"Disabled"
+            },
+            messages:{
+                access_tooltip:"show repositories access"
             }
         },
         repository:{
@@ -76,6 +79,7 @@ const customEnglishMessages: TranslationMessages = {
             image_history_details:"Histroy",
             message_empty_page:"Repositories entry not found.",
             message_config_data_not_loading:"Config data not loading",
+            message_sync_about:"Run synchronization repositories data with RA and Docker Registry",
             message_sync_repo:"Synchronize repositories from registry",
             message_syncing_repo:"Repositories sync in progress...",
             message_error_syncing_repo:"Synchronization error",

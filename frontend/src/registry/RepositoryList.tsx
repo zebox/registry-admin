@@ -1,5 +1,5 @@
 import SyncRepo from '@mui/icons-material/Sync';
-import { Box, Typography, Card, CardContent } from '@mui/material';
+import { Box, Typography, Card, CardContent, Tooltip } from '@mui/material';
 import { useEffect, useState } from 'react';
 
 import { SearchFieldTranslated, ParseSizeToReadable } from '../helpers/Helpers';
@@ -19,7 +19,7 @@ import {
     useRecordContext,
     usePermissions
 } from 'react-admin';
-import {requirePermission} from '../helpers/Helpers';
+import { requirePermission } from '../helpers/Helpers';
 
 const EmptyList = () => {
     const translate = useTranslate();
@@ -34,7 +34,7 @@ const EmptyList = () => {
                     <Typography variant="body1">
                         {translate('resources.repository.message_sync_repo')}
                     </Typography>
-                    <SyncButton/>
+                    <SyncButton />
                 </CardContent>
             </Card>
         </Box>
@@ -46,12 +46,12 @@ const SyncButton = () => {
     const notify = useNotify();
     const [isLoading, setLoading] = useState(false)
     const translate = useTranslate();
-    const [isAdmin,setIsAdmin] = useState(false);
+    const [isAdmin, setIsAdmin] = useState(false);
     const { permissions } = usePermissions();
 
-    useEffect(()=>{
-       setIsAdmin(requirePermission(permissions,'admin'));
-   },[permissions]);
+    useEffect(() => {
+        setIsAdmin(requirePermission(permissions, 'admin'));
+    }, [permissions]);
 
     const doRepoSync = () => {
         setLoading(true);
@@ -81,13 +81,17 @@ const SyncButton = () => {
         return <Loading />;
     }
 
-    return ( isAdmin ?
+    return (isAdmin ?
+
         <Button
             onClick={() => { doRepoSync() }}
             label={translate('resources.repository.button_sync')}
         >
-            <SyncRepo />
-        </Button>:null
+            <Tooltip title={translate('resources.repository.message_sync_about')}>
+                <SyncRepo />
+            </Tooltip>
+        </Button>
+        : null
     )
 
 }
@@ -100,12 +104,15 @@ const RepositoryShowButton = () => {
     return record && <ShowButton record={record} />
 }
 
-const RepositoryActions = () => (
-    <TopToolbar>
-        <ExportButton />
-        <SyncButton />
-    </TopToolbar>
-);
+const RepositoryActions = () => {
+
+    return (
+        <TopToolbar>
+            <ExportButton />
+            <SyncButton />
+        </TopToolbar>
+    )
+};
 
 const RepositoryList = (props: any) => {
     const translate = useTranslate();
