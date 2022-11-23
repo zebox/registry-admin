@@ -161,7 +161,7 @@ func (e *Embedded) DeleteAccess(ctx context.Context, key string, id interface{})
 	}
 
 	if rowsAffected == 0 {
-		return ErrNotFound
+		return engine.ErrNotFound
 	}
 
 	return err

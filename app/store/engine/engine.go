@@ -5,11 +5,14 @@ package engine
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"github.com/zebox/registry-admin/app/store"
 	"net/url"
 	"regexp"
 	"strconv"
 )
+
+var ErrNotFound = errors.New("record not found")
 
 // RepositoriesByUserAccess allow filtered repositories result list by assigned user access
 // it's relevant only for role 'user' only

@@ -205,7 +205,7 @@ func (e *Embedded) DeleteUser(ctx context.Context, id int64) (err error) {
 	}
 
 	if rowsAffected == 0 {
-		return ErrNotFound
+		return engine.ErrNotFound
 	}
 
 	return err

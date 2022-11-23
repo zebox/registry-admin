@@ -160,7 +160,7 @@ func (e *Embedded) DeleteRepository(ctx context.Context, key string, id interfac
 	}
 
 	if rowsAffected == 0 {
-		return ErrNotFound
+		return engine.ErrNotFound
 	}
 
 	return err

@@ -97,37 +97,13 @@ func (ds *DataService) updateRepositoryEntry(ctx context.Context, event notifica
 // deleteRepositoryEntry deletes repository entry by an event delete
 func (ds *DataService) deleteRepositoryEntry(ctx context.Context, event notifications.Event) error {
 
-	/*
-
-		filter := engine.QueryFilter{
-			Filters: map[string]interface{}{"repository_name": event.Target.Repository, "digest": event.Target.Descriptor.Digest},
-		}
-
-		result, err := ds.Storage.FindRepositories(ctx, filter)
-		if err != nil {
-			return err
-		}
-
-		if result.Total == 0 {
-			return errors.Errorf("failed to delete repository, entry %s not found", event.Target.Repository)
-		}
-
-		entry := result.Data[0].(store.RegistryEntry)
-
-	*/
-	var digest string
-	for _, ref := range event.Target.References {
-		if ref.MediaType == schema2.MediaTypeImageConfig {
-			digest = ref.Digest.String()
-			break
-		}
-	}
+	digest := event.Target.Descriptor.Digest
 
 	if digest == "" {
 		return errors.Errorf("failed to delete image from repository %s, entry %s not found", event.Target.Repository, digest)
 	}
 
-	if err := ds.Storage.DeleteRepository(ctx, "digest", digest); err != nil {
+	if err := ds.Storage.DeleteRepository(ctx, "digest", digest); err != nil && err != engine.ErrNotFound {
 		return errors.Errorf("failed to delete image entry digest: %s err: %v", digest, err)
 	}
 	return nil

@@ -23,7 +23,6 @@ const (
 )
 
 var (
-	ErrNotFound          = errors.New("record not found")
 	ErrTableAlreadyExist = errors.New("table already exist or has an error")
 )
 
