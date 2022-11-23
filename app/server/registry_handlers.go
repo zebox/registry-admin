@@ -218,7 +218,7 @@ func (rh *registryHandlers) catalogList(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	if user.GetRole() == "user" {
+	if user.GetRole() == store.UserRole {
 		if filter.Filters == nil {
 			filter.Filters = map[string]interface{}{"access.owner_id": user.Attributes["uid"]}
 		} else {

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/go-pkgz/auth/token"
 	log "github.com/go-pkgz/lgr"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
@@ -313,6 +314,7 @@ func TestRegistryHandlers_deleteDigest(t *testing.T) {
 }
 
 func TestRegistryHandlers_catalogList(t *testing.T) {
+
 	testRegistryHandlers := registryHandlers{}
 	testRegistryHandlers.l = log.Default()
 
@@ -322,24 +324,42 @@ func TestRegistryHandlers_catalogList(t *testing.T) {
 	ctx := context.Background()
 	testTable := []struct {
 		name           string
+		user           string
 		url            string
 		ctx            context.Context
 		expectedStatus int
 	}{
 		{
 			name:           "request with bad filter",
+			user:           store.AdminRole,
 			url:            `/api/v1/registry/catalog?&range=[0,A]`,
 			ctx:            ctx,
 			expectedStatus: http.StatusInternalServerError,
 		},
 		{
-			name:           "successful request",
+			name:           "successful request with admin role",
+			user:           store.AdminRole,
 			url:            "/api/v1/registry/catalog",
 			ctx:            ctx,
 			expectedStatus: http.StatusOK,
 		},
 		{
+			name:           "successful request with user role",
+			user:           store.UserRole,
+			url:            "/api/v1/registry/catalog",
+			ctx:            ctx,
+			expectedStatus: http.StatusOK,
+		},
+		{
+			name:           "successful request with user role and filters",
+			user:           store.UserRole,
+			url:            "/api/v1/registry/catalog?filter={\"q\":\"test search\"}",
+			ctx:            ctx,
+			expectedStatus: http.StatusOK,
+		},
+		{
 			name:           "request with error response",
+			user:           store.AdminRole,
 			url:            "/api/v1/registry/catalog",
 			ctx:            context.WithValue(ctx, ctxKey, true),
 			expectedStatus: http.StatusInternalServerError,
@@ -347,7 +367,7 @@ func TestRegistryHandlers_catalogList(t *testing.T) {
 	}
 	for _, test := range testTable {
 		t.Log(test.name)
-		requestWithCredentials(t, test.ctx, "bar", "bar_password", "GET", test.url, testRegistryHandlers.catalogList, nil, test.expectedStatus)
+		requestWithCredentials(t, test.ctx, test.user, "bar_password", "GET", test.url, testRegistryHandlers.catalogList, nil, test.expectedStatus)
 	}
 }
 
@@ -565,6 +585,17 @@ func prepareAccessStoreMock(t *testing.T) *engine.InterfaceMock {
 			if value := ctx.Value(ctxKey); value != nil {
 				return result, errors.New("failed to get repository list")
 			}
+
+			if _, ok := filter.Filters["access.owner_id"]; ok {
+				req, errReq := http.NewRequestWithContext(ctx, "GET", "https://test.local", nil)
+				require.NoError(t, errReq)
+
+				user, errUser := token.GetUserInfo(req)
+				require.NoError(t, errUser)
+				if user.Role != store.UserRole {
+					return result, errors.New("owner id field should exist for 'user' role only")
+				}
+			}
 			return result, err
 		},
 
@@ -591,8 +622,13 @@ func requestWithCredentials(t *testing.T, ctx context.Context, login, password s
 
 	req, errReq := http.NewRequestWithContext(ctx, method, url, bytes.NewBuffer(body))
 	require.NoError(t, errReq)
-
 	req.SetBasicAuth(login, password)
+
+	// set user info to auth context
+	req = token.SetUserInfo(req, token.User{
+		Name: login,
+		Role: login,
+	})
 
 	require.NoError(t, errReq)
 	testWriter := httptest.NewRecorder()

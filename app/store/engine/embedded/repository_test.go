@@ -238,6 +238,121 @@ func TestEmbedded_FindRepositories(t *testing.T) {
 	wg.Wait()
 }
 
+func TestEmbedded_FindRepositoriesByUser(t *testing.T) {
+	ctx, ctxCancel := context.WithCancel(context.Background())
+	var wg = new(sync.WaitGroup)
+	db := prepareTestDB(ctx, t, wg) // defined mock store
+
+	entries := []store.RegistryEntry{
+		{
+			RepositoryName: "aHello_test_1",
+			Tag:            "test_tag_1",
+			Digest:         "sha256:0ea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7c1",
+			Size:           708,
+			PullCounter:    1,
+			Timestamp:      time.Now().Unix(),
+			Raw:            `{"some":"json_1"}`,
+		},
+		{
+			RepositoryName: "aHello_test_2",
+			Tag:            "test_tag_2",
+			Digest:         "sha256:1ea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7c2",
+			Size:           709,
+			PullCounter:    1,
+			Timestamp:      time.Now().Unix(),
+			Raw:            `{"some":"json_2"}`,
+		},
+		{
+			RepositoryName: "bHello_test_3",
+			Tag:            "test_tag_3",
+			Digest:         "sha256:3ea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7c3",
+			Size:           710,
+			PullCounter:    1,
+			Timestamp:      time.Now().Unix(),
+			Raw:            `{"some":"json_3"}`,
+		},
+		{
+			RepositoryName: "bHello_test_4",
+			Tag:            "test_tag_4",
+			Digest:         "sha256:4ea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7c4",
+			Size:           711,
+			PullCounter:    1,
+			Timestamp:      time.Now().Unix(),
+			Raw:            `{"some":"json_4"}`,
+		},
+		{
+			RepositoryName: "bHello_test_4",
+			Tag:            "test_tag_4_1",
+			Digest:         "sha256:4ea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7c5",
+			Size:           711,
+			PullCounter:    1,
+			Timestamp:      time.Now().Unix(),
+			Raw:            `{"some":"json_4_1"}`,
+		},
+		{
+			RepositoryName: "bHello_test_4",
+			Tag:            "test_tag_4_2",
+			Digest:         "sha256:4ea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7c6",
+			Size:           711,
+			PullCounter:    1,
+			Timestamp:      time.Now().Unix(),
+			Raw:            `{"some":"json_4_2"}`,
+		},
+	}
+	testUser := store.User{
+		Login:    "test_user",
+		Name:     "test_user",
+		Group:    1,
+		Password: "test_password",
+		Role:     store.UserRole,
+	}
+
+	err := db.CreateUser(ctx, &testUser)
+	require.NoError(t, err)
+
+	testAccesses := []store.Access{
+		{
+			Name:         "test_access_1",
+			Owner:        testUser.ID,
+			ResourceName: "aHello_test_1",
+			Type:         "registry",
+			Action:       "pull",
+		},
+		{
+			Name:         "test_access_2",
+			Owner:        testUser.ID,
+			Type:         "repository",
+			ResourceName: "aHello_test_2",
+			Action:       "push",
+		},
+	}
+
+	for _, entry := range entries {
+		tmpEntry := entry
+		err = db.CreateRepository(ctx, &tmpEntry)
+		require.NoError(t, err)
+	}
+
+	for _, access := range testAccesses {
+		tmpAccess := access
+		err = db.CreateAccess(ctx, &tmpAccess)
+		require.NoError(t, err)
+	}
+
+	// fetch records start with ba* and has disabled field is false
+	filter := engine.QueryFilter{
+		Filters: map[string]interface{}{"access.owner_id": testUser.ID},
+	}
+
+	result, errFind := db.FindRepositories(ctx, filter)
+	assert.NoError(t, errFind)
+	assert.Equal(t, result.Total, int64(2))
+	assert.Equal(t, len(result.Data), 2)
+
+	ctxCancel()
+	wg.Wait()
+}
+
 func TestEmbedded_UpdateRepository(t *testing.T) {
 	ctx, ctxCancel := context.WithCancel(context.Background())
 	var wg = new(sync.WaitGroup)

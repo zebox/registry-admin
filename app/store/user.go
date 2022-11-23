@@ -7,14 +7,20 @@ import (
 	"log"
 )
 
-// List user roles
+// Role which define access right for different user
+// admin - has full access for entire registry end-points
+// manager - allow pull,push and delete for type 'repository'
+// a repository type defined with https://docs.docker.com/registry/spec/auth/scope/
+// NOTE: don't change order of items, it's expose values by indexes
+const (
+	AdminRole   = "admin"
+	ManagerRole = "manager"
+	UserRole    = "user"
+)
+
+// roles is the list for validation new user to assign with a specify role
 var (
-	// roles define access right for different user roles
-	// admin - has full access for entire registry end-points
-	// manager - allow pull,push and delete for type 'repository'
-	// a repository type defined with https://docs.docker.com/registry/spec/auth/scope/
-	// NOTE: don't change order of items, it's expose values by indexes
-	roles = []string{"admin", "manager", "user"}
+	roles = []string{AdminRole, ManagerRole, UserRole}
 )
 
 // User holds user-related info
