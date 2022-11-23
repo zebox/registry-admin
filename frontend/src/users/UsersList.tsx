@@ -5,7 +5,6 @@ import {
     Datagrid,
     TextField,
     EditButton,
-    DeleteButton,
     SelectInput,
     ReferenceInput,
     ReferenceField,
@@ -21,6 +20,7 @@ import Tooltip from '@mui/material/Tooltip'
 import { DisabledField } from '../components/DisabledField';
 import {SearchFieldTranslated} from '../helpers/Helpers'
 import {requirePermission} from '../helpers/Helpers';
+import { DeleteCustomButtonWithConfirmation } from '../components/DeleteCustomButtonWithConfirmation';
 
 interface IRoleList {
     id: string;
@@ -57,14 +57,15 @@ const RepositoryAccessList =()=>{
 }
 
 
-const UserList = () => {
+const UserList = (props:any) => {
     const translate=useTranslate();
     const {permissions} = usePermissions();
+
     return(requirePermission(permissions,'admin') ?
     <List
         sort={{ field: 'name', order: 'ASC' }}
         perPage={25}
-        filters={SearchFieldTranslated([<SelectInput
+        filters={SearchFieldTranslated(translate,[<SelectInput
             source="role"
             defaultValue={"user"}
             emptyValue={null}
@@ -84,7 +85,7 @@ const UserList = () => {
             <DisabledField source="blocked" />
             <RepositoryAccessList/>
             <EditButton />
-            <DeleteButton />
+            <DeleteCustomButtonWithConfirmation  source="name" {...props}/>
         </Datagrid>
     </List>:<NotFound/>
 )};

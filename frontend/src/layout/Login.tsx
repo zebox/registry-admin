@@ -22,6 +22,7 @@ import {
 } from 'react-admin';
 
 import Box from '@mui/material/Box';
+import Logo from './Logo';
 
 const Login = () => {
     const [userData, setUserData] = useStore('user.data', {})
@@ -39,31 +40,31 @@ const Login = () => {
         login(
             auth,
             location.state ? (location.state as any).nextPathname : '/'
-        ).then((data)=>{
+        ).then((data) => {
             setUserData(data);
             console.info(userData);
         })
-        .catch((error: Error) => {
-            setLoading(false);
-            notify(
-                typeof error === 'string'
-                    ? error
-                    : typeof error === 'undefined' || !error.message
-                    ? 'ra.auth.sign_in_error'
-                    : error.message,
-                {
-                    type: 'warning',
-                    messageArgs: {
-                        _:
-                            typeof error === 'string'
-                                ? error
-                                : error && error.message
-                                ? error.message
-                                : undefined,
-                    },
-                }
-            );
-        });
+            .catch((error: any) => {
+                setLoading(false);
+                notify(
+                    typeof error === 'string'
+                        ? error
+                        : typeof error === 'undefined' || error.body
+                            ? 'ra.auth.sign_in_error'
+                            : error.body.error,
+                    {
+                        type: 'warning',
+                        messageArgs: {
+                            _:
+                                typeof error === 'string'
+                                    ? error
+                                    : error && error.body
+                                        ? error.body.error
+                                        : undefined,
+                        },
+                    }
+                );
+            });
     };
 
     return (
@@ -75,13 +76,13 @@ const Login = () => {
                     minHeight: '100vh',
                     alignItems: 'center',
                     justifyContent: 'flex-start',
-                    background:
-                        'url(https://source.unsplash.com/random/1600x900)',
+                    background: "linear-gradient(90deg, rgba(88,88,95,1) 13%, rgba(2,0,36,1) 51%, rgba(88,88,95,1) 83%);",
                     backgroundRepeat: 'no-repeat',
                     backgroundSize: 'cover',
                 }}
             >
                 <Card sx={{ minWidth: 300, marginTop: '6em' }}>
+                   
                     <Box
                         sx={{
                             margin: '1em',
@@ -101,7 +102,7 @@ const Login = () => {
                             color: theme => theme.palette.grey[500],
                         }}
                     >
-                        Registry Admin
+                        <Logo />
                     </Box>
                     <Box sx={{ padding: '0 1em 1em 1em' }}>
                         <Box sx={{ marginTop: '1em' }}>
@@ -120,7 +121,7 @@ const Login = () => {
                                 label={translate('ra.auth.password')}
                                 type="password"
                                 disabled={loading}
-                                /* validate={required()} */
+                                validate={required()}
                                 fullWidth
                             />
                         </Box>

@@ -401,7 +401,7 @@ func (s *Server) BasicAuthCheckerFn(user, password string) (bool, token.User, er
 	ok := store.ComparePassword(u.Password, password)
 
 	if !ok {
-		return false, claim, errors.Errorf("password incorrect for login %s", user)
+		return false, claim, nil
 
 	}
 

@@ -5,19 +5,23 @@ import {
     Datagrid,
     TextField,
     EditButton,
-    DeleteButton,
+    useTranslate,
     usePermissions,
     NotFound
 } from 'react-admin';
-import {requirePermission} from '../helpers/Helpers';
+import { DeleteCustomButtonWithConfirmation } from "../components/DeleteCustomButtonWithConfirmation";
+import { requirePermission, SearchFieldTranslated } from '../helpers/Helpers';
 
-const GroupList = () => {
+const GroupList = (props: any) => {
+    const translate = useTranslate();
     const { permissions } = usePermissions();
+
     return (
         requirePermission(permissions, 'admin') ?
             <List
                 sort={{ field: 'name', order: 'ASC' }}
                 perPage={25}
+                filters={SearchFieldTranslated(translate)}
             >
                 <Datagrid bulkActionButtons={false}
                     sx={{
@@ -26,7 +30,7 @@ const GroupList = () => {
                     <TextField source="id" />
                     <TextField source="name" />
                     <EditButton />
-                    <DeleteButton />
+                    <DeleteCustomButtonWithConfirmation source="name" {...props} />
                 </Datagrid>
             </List> : <NotFound />
     )
@@ -34,7 +38,3 @@ const GroupList = () => {
 
 
 export default GroupList;
-
-function makeStyles(arg0: { toolbar: { alignItems: string; display: string; marginTop: number; marginBottom: number; }; }) {
-    throw new Error("Function not implemented.");
-}

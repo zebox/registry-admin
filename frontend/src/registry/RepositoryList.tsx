@@ -23,8 +23,6 @@ import {requirePermission} from '../helpers/Helpers';
 
 const EmptyList = () => {
     const translate = useTranslate();
-    const { permissions } = usePermissions();
-
 
     return (
         <Box textAlign="center" m={1}>
@@ -119,7 +117,7 @@ const RepositoryList = (props: any) => {
             title={translate(`resources.commands.repository_name`)}
             sort={{ field: 'repository_name', order: 'ASC' }}
             perPage={25}
-            filters={SearchFieldTranslated()}
+            filters={SearchFieldTranslated(translate)}
         >
             <Datagrid bulkActionButtons={false}>
                 <TextField source="repository_name" label={translate('resources.repository.fields.name')} />

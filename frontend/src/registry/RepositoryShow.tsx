@@ -36,10 +36,11 @@ const RepositoryShow = () => {
 
 const TagList = ({ children, actions, filters, title, ...props }: any) => {
     const { id } = useParams();
+    const translate = useTranslate();
     return (
         <ListBase filter={{ repository_name: id }} queryOptions={{ meta: { group_by: "none" } }}>
             <Title title={id} />
-            <ListToolbar filters={SearchFieldTranslated()} />
+            <ListToolbar filters={SearchFieldTranslated(translate)} />
             <Card >
                 {children}
             </Card>

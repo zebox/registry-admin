@@ -1,14 +1,15 @@
 import { ReactElement } from 'react';
-import { TextInput, useTranslate, useRecordContext } from 'react-admin';
+import { TextInput, Translate } from 'react-admin';
 
-export const SearchFieldTranslated = (additionalComponent?: ReactElement<any, any>[]): any => {
-    const translate = useTranslate();
+export const SearchFieldTranslated = (translate:Translate,additionalComponent?: ReactElement<any, any>[]): any => {
     let filters = [
         <TextInput source="q" label={translate('ra.action.search')} alwaysOn />
     ]
+
     if (additionalComponent && additionalComponent.length > 0) {
         additionalComponent.map(element => {
             filters.push(element);
+            return null;
         })
     }
     return filters;

@@ -1,5 +1,4 @@
 
-import { useState, useEffect } from 'react';
 import {
     List,
     Datagrid,
@@ -7,12 +6,12 @@ import {
     AutocompleteInput,
     TextField,
     EditButton,
-    DeleteButton,
-    ReferenceField,
+     ReferenceField,
     SelectInput,
     useTranslate,
     usePermissions
 } from 'react-admin';
+import { DeleteCustomButtonWithConfirmation } from '../components/DeleteCustomButtonWithConfirmation';
 import {DisabledField} from "../components/DisabledField";
 import {SearchFieldTranslated, requirePermission} from '../helpers/Helpers'
 
@@ -23,7 +22,7 @@ const ActionList: Array<IActionList> = [
 ];
 
 
-const AccessList = () => {
+const AccessList = (props:any) => {
   const translate = useTranslate();
   const { permissions } = usePermissions();
 
@@ -31,7 +30,7 @@ const AccessList = () => {
         hasCreate={requirePermission(permissions,'admin')}
         sort={{ field: 'name', order: 'ASC' }}
         perPage={25}
-        filters={SearchFieldTranslated([
+        filters={SearchFieldTranslated(translate,[
         <ReferenceInput source="owner_id" reference="users" label={translate('resources.accesses.fields.owner_id')}>
             <AutocompleteInput  optionText="name" optionValue="id" label={translate('resources.accesses.fields.owner_id')} />
         </ReferenceInput>,
@@ -52,7 +51,8 @@ const AccessList = () => {
             <DisabledField source="disabled" label={translate('resources.accesses.fields.disabled')}/>
             { requirePermission(permissions,'admin') ? <>
             <EditButton alignIcon="right" />
-            <DeleteButton alignIcon="right" />
+            <DeleteCustomButtonWithConfirmation  source="name" {...props}/>
+           {/*  <DeleteButton alignIcon="right" /> */}
             </>:null}
         </Datagrid>
     </List>
