@@ -341,7 +341,7 @@ func TestEmbedded_FindRepositoriesByUser(t *testing.T) {
 
 	// fetch records start with ba* and has disabled field is false
 	filter := engine.QueryFilter{
-		Filters: map[string]interface{}{"access.owner_id": testUser.ID},
+		Filters: map[string]interface{}{engine.RepositoriesByUserAccess: testUser.ID},
 	}
 
 	result, errFind := db.FindRepositories(ctx, filter)

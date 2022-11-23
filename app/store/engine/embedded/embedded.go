@@ -287,6 +287,10 @@ func filtersBuilder(filter engine.QueryFilter, fieldsName ...string) (f queryFil
 		}
 
 		conditionValue := fmt.Sprintf("%s = %s", k, castValueTypeToString(v))
+		if k == engine.RepositoriesByUserAccess {
+			conditionValue = fmt.Sprintf("access.owner_id = %s", castValueTypeToString(v))
+		}
+
 		strongConditions = append(strongConditions, conditionValue)
 	}
 
@@ -360,6 +364,7 @@ func (e *Embedded) getTotalRecordsExcludeRange(tableName string, filter engine.Q
 
 	// check for select repositories by user access
 	if _, ok := filter.Filters["access.owner_id"]; ok {
+
 		queryString = fmt.Sprintf("SELECT %s FROM %s INNER JOIN access on repositories.repository_name=access.resource_name %s", countType, tableName, f.where)
 	}
 

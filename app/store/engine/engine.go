@@ -11,6 +11,10 @@ import (
 	"strconv"
 )
 
+// RepositoriesByUserAccess allow filtered repositories result list by assigned user access
+// it's relevant only for role 'user' only
+const RepositoriesByUserAccess = "access.owner_id"
+
 // ListResponse is a container for return list of result data
 type ListResponse struct {
 	Total int64         `json:"total"`

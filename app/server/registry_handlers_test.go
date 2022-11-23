@@ -586,7 +586,7 @@ func prepareAccessStoreMock(t *testing.T) *engine.InterfaceMock {
 				return result, errors.New("failed to get repository list")
 			}
 
-			if _, ok := filter.Filters["access.owner_id"]; ok {
+			if _, ok := filter.Filters[engine.RepositoriesByUserAccess]; ok {
 				req, errReq := http.NewRequestWithContext(ctx, "GET", "https://test.local", nil)
 				require.NoError(t, errReq)
 

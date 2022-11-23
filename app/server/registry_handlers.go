@@ -220,9 +220,9 @@ func (rh *registryHandlers) catalogList(w http.ResponseWriter, r *http.Request) 
 
 	if user.GetRole() == store.UserRole {
 		if filter.Filters == nil {
-			filter.Filters = map[string]interface{}{"access.owner_id": user.Attributes["uid"]}
+			filter.Filters = map[string]interface{}{engine.RepositoriesByUserAccess: user.Attributes["uid"]}
 		} else {
-			filter.Filters["access.owner_id"] = user.Attributes["uid"]
+			filter.Filters[engine.RepositoriesByUserAccess] = user.Attributes["uid"]
 		}
 	}
 
