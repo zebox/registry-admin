@@ -128,7 +128,8 @@ func (ds *DataService) doSyncRepositories(ctx context.Context) {
 						entry := &store.RegistryEntry{
 							RepositoryName: repo,
 							Tag:            tag,
-							Digest:         manifest.ConfigDescriptor.Digest,
+							Digest:         manifest.ContentDigest,
+							ConfigDigest:   manifest.ConfigDescriptor.Digest,
 							Size:           manifest.TotalSize,
 							Timestamp:      now,
 							Raw:            string(rawManifestData),

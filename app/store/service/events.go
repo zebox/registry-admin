@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/docker/distribution/manifest/schema2"
 	"github.com/docker/distribution/notifications"
 	log "github.com/go-pkgz/lgr"
@@ -14,6 +13,11 @@ import (
 )
 
 func (ds *DataService) RepositoryEventsProcessing(ctx context.Context, envelope notifications.Envelope) (err error) {
+
+	// check for syncing or garbage collector operation is in progress
+	if ds.isWorking {
+		return errors.New("syncing or garbage collector operations in progress")
+	}
 
 	for _, e := range envelope.Events {
 		switch e.Action {
@@ -58,22 +62,26 @@ func (ds *DataService) updateRepositoryEntry(ctx context.Context, event notifica
 	}
 
 	if result.Total == 0 {
-		digest := ""
+		digest := event.Target.Descriptor.Digest.String()
+		configDigest := ""
+		var targetSize int64
 		for _, ref := range event.Target.References {
+			targetSize += ref.Size
 			if ref.MediaType == schema2.MediaTypeImageConfig {
-				digest = ref.Digest.String()
-				break
+				configDigest = ref.Digest.String()
 			}
 		}
-		if digest == "" {
-			return fmt.Errorf("digest not found for repo: %s and tag %s", event.Target.Repository, event.Target.Tag)
+		if digest == "" || configDigest == "" || event.Target.Tag == "" {
+			log.Printf("[WARN] content or config digest is empty for repo: %s and tag %s", event.Target.Repository, event.Target.Tag)
+			return nil
 		}
 
 		repositoryEntry := &store.RegistryEntry{
 			RepositoryName: event.Target.Repository,
 			Tag:            event.Target.Tag,
 			Digest:         digest,
-			Size:           event.Target.Size,
+			ConfigDigest:   configDigest,
+			Size:           targetSize,
 			Timestamp:      event.Timestamp.Unix(),
 			Raw:            string(eventRawBytes),
 		}
