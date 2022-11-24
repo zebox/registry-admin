@@ -35,7 +35,7 @@ export default function ImageConfigPage({ record, isOpen, handleShowFn }: any) {
 
     const { data, isLoading, error } = useGetOne(
         repositoryBaseResource,
-        { id: 'blobs', meta: { name: record.repository_name, digest: record.digest } }
+        { id: 'blobs', meta: { name: record.repository_name, digest: record.config_digest } }
     );
 
     const decodeConfig = (data: any): any => {

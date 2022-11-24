@@ -1,5 +1,6 @@
+import React from 'react';
 import SyncRepo from '@mui/icons-material/Sync';
-import { Box, Typography, Card, CardContent, Tooltip } from '@mui/material';
+import { Box, Typography, Card, Container, CssBaseline, CardContent, Tooltip } from '@mui/material';
 import { useEffect, useState } from 'react';
 
 import { SearchFieldTranslated, ParseSizeToReadable } from '../helpers/Helpers';
@@ -21,23 +22,30 @@ import {
 } from 'react-admin';
 import { requirePermission } from '../helpers/Helpers';
 
+
 const EmptyList = () => {
     const translate = useTranslate();
 
     return (
-        <Box textAlign="center" m={1}>
-            <Card>
-                <CardContent>
-                    <Typography variant="h4" paragraph>
-                        {translate('resources.repository.message_empty_page')}
-                    </Typography>
-                    <Typography variant="body1">
-                        {translate('resources.repository.message_sync_repo')}
-                    </Typography>
-                    <SyncButton />
-                </CardContent>
-            </Card>
-        </Box>
+        <React.Fragment >
+            <CssBaseline />
+            <Container maxWidth="sm">
+                <Box textAlign="center" m={1}>
+                    <Card>
+                        <CardContent>
+                            <Typography variant="h4" paragraph>
+                                {translate('resources.repository.message_empty_page')}
+                            </Typography>
+                            <Typography variant="body1">
+                                {translate('resources.repository.message_sync_repo')}
+                            </Typography>
+                            <SyncButton />
+                        </CardContent>
+                    </Card>
+                </Box>
+            </Container>
+        </React.Fragment>
+
     )
 };
 
