@@ -108,6 +108,7 @@ func (rh *registryHandlers) tokenAuth(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		w.Header().Add("Content-Type", "application/json")
 		_, _ = w.Write([]byte(tokenString))
 		return
 	}
@@ -120,6 +121,7 @@ func (rh *registryHandlers) tokenAuth(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		w.Header().Add("Content-Type", "application/json")
 		_, _ = w.Write([]byte(userToken))
 		return
 	}
