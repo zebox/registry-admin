@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/docker/distribution/manifest/schema2"
 	"github.com/docker/distribution/notifications"
+	log "github.com/go-pkgz/lgr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
 	"github.com/zebox/registry-admin/app/store"
@@ -100,7 +101,8 @@ func (ds *DataService) deleteRepositoryEntry(ctx context.Context, event notifica
 	digest := event.Target.Descriptor.Digest
 
 	if digest == "" {
-		return errors.Errorf("failed to delete image from repository %s, entry %s not found", event.Target.Repository, digest)
+		log.Printf("[WARN] detected delete event for repository %s, but digest is empty", event.Target.Repository)
+		return nil
 	}
 
 	if err := ds.Storage.DeleteRepository(ctx, "digest", digest); err != nil && err != engine.ErrNotFound {

@@ -12,16 +12,79 @@ import (
 	"time"
 )
 
+var entries = []store.RegistryEntry{
+	{
+		RepositoryName: "aHello_test_1",
+		Tag:            "test_tag_1",
+		Digest:         "sha256:0ea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7c1",
+		ConfigDigest:   "sha256:2b83bbdc2334fbdb889af0f8e3892255a8b6a32029ffd7fc9e0b3dcd0e842166",
+		Size:           708,
+		PullCounter:    1,
+		Timestamp:      time.Now().Unix(),
+		Raw:            `{"some":"json_1"}`,
+	},
+	{
+		RepositoryName: "aHello_test_2",
+		Tag:            "test_tag_2",
+		Digest:         "sha256:1ea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7c2",
+		ConfigDigest:   "sha256:2b83bbdc2334fbdb889af0f8e3892255a8b6a32029ffd7fc9e0b3dcd0e842165",
+		Size:           709,
+		PullCounter:    1,
+		Timestamp:      time.Now().Unix(),
+		Raw:            `{"some":"json_2"}`,
+	},
+	{
+		RepositoryName: "bHello_test_3",
+		Tag:            "test_tag_3",
+		Digest:         "sha256:3ea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7c3",
+		ConfigDigest:   "sha256:2b83bbdc2334fbdb889af0f8e3892255a8b6a32029ffd7fc9e0b3dcd0e842164",
+		Size:           710,
+		PullCounter:    1,
+		Timestamp:      time.Now().Unix(),
+		Raw:            `{"some":"json_3"}`,
+	},
+	{
+		RepositoryName: "bHello_test_4",
+		Tag:            "test_tag_4",
+		Digest:         "sha256:4ea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7c4",
+		ConfigDigest:   "sha256:2b83bbdc2334fbdb889af0f8e3892255a8b6a32029ffd7fc9e0b3dcd0e842163",
+		Size:           711,
+		PullCounter:    1,
+		Timestamp:      time.Now().Unix(),
+		Raw:            `{"some":"json_4"}`,
+	},
+	{
+		RepositoryName: "bHello_test_4",
+		Tag:            "test_tag_4_1",
+		Digest:         "sha256:4ea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7c5",
+		ConfigDigest:   "sha256:2b83bbdc2334fbdb889af0f8e3892255a8b6a32029ffd7fc9e0b3dcd0e842162",
+		Size:           711,
+		PullCounter:    1,
+		Timestamp:      time.Now().Unix(),
+		Raw:            `{"some":"json_4_1"}`,
+	},
+	{
+		RepositoryName: "bHello_test_4",
+		Tag:            "test_tag_4_2",
+		Digest:         "sha256:4ea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7c6",
+		ConfigDigest:   "sha256:2b83bbdc2334fbdb889af0f8e3892255a8b6a32029ffd7fc9e0b3dcd0e842161",
+		Size:           711,
+		PullCounter:    1,
+		Timestamp:      time.Now().Unix(),
+		Raw:            `{"some":"json_4_2"}`,
+	},
+}
+
 func TestEmbedded_CreateRepository(t *testing.T) {
 
 	ctx, ctxCancel := context.WithCancel(context.Background())
 	var wg = new(sync.WaitGroup)
 	db := prepareTestDB(ctx, t, wg) // defined mock store
-
 	testEntry := store.RegistryEntry{
 		RepositoryName: "hello_test",
 		Tag:            "test_tag",
 		Digest:         "sha256:fea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7cf",
+		ConfigDigest:   "sha256:2b83bbdc2334fbdb889af0f8e3892255a8b6a32029ffd7fc9e0b3dcd0e842162",
 		Size:           708,
 		PullCounter:    1,
 		Timestamp:      time.Now().Unix(),
@@ -64,12 +127,12 @@ func TestEmbedded_GetRepository(t *testing.T) {
 		RepositoryName: "hello_test",
 		Tag:            "test_tag",
 		Digest:         "sha256:fea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7cf",
+		ConfigDigest:   "sha256:2b83bbdc2334fbdb889af0f8e3892255a8b6a32029ffd7fc9e0b3dcd0e842162",
 		Size:           708,
 		PullCounter:    1,
 		Timestamp:      time.Now().Unix(),
 		Raw:            `{"some":"json"}`,
 	}
-
 	err := db.CreateRepository(ctx, &testEntry)
 	assert.NoError(t, err)
 	assert.Greater(t, testEntry.ID, int64(0))
@@ -99,63 +162,6 @@ func TestEmbedded_FindRepositories(t *testing.T) {
 	ctx, ctxCancel := context.WithCancel(context.Background())
 	var wg = new(sync.WaitGroup)
 	db := prepareTestDB(ctx, t, wg) // defined mock store
-
-	entries := []store.RegistryEntry{
-		{
-			RepositoryName: "aHello_test_1",
-			Tag:            "test_tag_1",
-			Digest:         "sha256:0ea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7c1",
-			Size:           708,
-			PullCounter:    1,
-			Timestamp:      time.Now().Unix(),
-			Raw:            `{"some":"json_1"}`,
-		},
-		{
-			RepositoryName: "aHello_test_2",
-			Tag:            "test_tag_2",
-			Digest:         "sha256:1ea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7c2",
-			Size:           709,
-			PullCounter:    1,
-			Timestamp:      time.Now().Unix(),
-			Raw:            `{"some":"json_2"}`,
-		},
-		{
-			RepositoryName: "bHello_test_3",
-			Tag:            "test_tag_3",
-			Digest:         "sha256:3ea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7c3",
-			Size:           710,
-			PullCounter:    1,
-			Timestamp:      time.Now().Unix(),
-			Raw:            `{"some":"json_3"}`,
-		},
-		{
-			RepositoryName: "bHello_test_4",
-			Tag:            "test_tag_4",
-			Digest:         "sha256:4ea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7c4",
-			Size:           711,
-			PullCounter:    1,
-			Timestamp:      time.Now().Unix(),
-			Raw:            `{"some":"json_4"}`,
-		},
-		{
-			RepositoryName: "bHello_test_4",
-			Tag:            "test_tag_4_1",
-			Digest:         "sha256:4ea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7c5",
-			Size:           711,
-			PullCounter:    1,
-			Timestamp:      time.Now().Unix(),
-			Raw:            `{"some":"json_4_1"}`,
-		},
-		{
-			RepositoryName: "bHello_test_4",
-			Tag:            "test_tag_4_2",
-			Digest:         "sha256:4ea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7c6",
-			Size:           711,
-			PullCounter:    1,
-			Timestamp:      time.Now().Unix(),
-			Raw:            `{"some":"json_4_2"}`,
-		},
-	}
 
 	for _, entry := range entries {
 		tmpGr := entry
@@ -243,62 +249,6 @@ func TestEmbedded_FindRepositoriesByUser(t *testing.T) {
 	var wg = new(sync.WaitGroup)
 	db := prepareTestDB(ctx, t, wg) // defined mock store
 
-	entries := []store.RegistryEntry{
-		{
-			RepositoryName: "aHello_test_1",
-			Tag:            "test_tag_1",
-			Digest:         "sha256:0ea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7c1",
-			Size:           708,
-			PullCounter:    1,
-			Timestamp:      time.Now().Unix(),
-			Raw:            `{"some":"json_1"}`,
-		},
-		{
-			RepositoryName: "aHello_test_2",
-			Tag:            "test_tag_2",
-			Digest:         "sha256:1ea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7c2",
-			Size:           709,
-			PullCounter:    1,
-			Timestamp:      time.Now().Unix(),
-			Raw:            `{"some":"json_2"}`,
-		},
-		{
-			RepositoryName: "bHello_test_3",
-			Tag:            "test_tag_3",
-			Digest:         "sha256:3ea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7c3",
-			Size:           710,
-			PullCounter:    1,
-			Timestamp:      time.Now().Unix(),
-			Raw:            `{"some":"json_3"}`,
-		},
-		{
-			RepositoryName: "bHello_test_4",
-			Tag:            "test_tag_4",
-			Digest:         "sha256:4ea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7c4",
-			Size:           711,
-			PullCounter:    1,
-			Timestamp:      time.Now().Unix(),
-			Raw:            `{"some":"json_4"}`,
-		},
-		{
-			RepositoryName: "bHello_test_4",
-			Tag:            "test_tag_4_1",
-			Digest:         "sha256:4ea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7c5",
-			Size:           711,
-			PullCounter:    1,
-			Timestamp:      time.Now().Unix(),
-			Raw:            `{"some":"json_4_1"}`,
-		},
-		{
-			RepositoryName: "bHello_test_4",
-			Tag:            "test_tag_4_2",
-			Digest:         "sha256:4ea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7c6",
-			Size:           711,
-			PullCounter:    1,
-			Timestamp:      time.Now().Unix(),
-			Raw:            `{"some":"json_4_2"}`,
-		},
-	}
 	testUser := store.User{
 		Login:    "test_user",
 		Name:     "test_user",
@@ -358,45 +308,6 @@ func TestEmbedded_UpdateRepository(t *testing.T) {
 	var wg = new(sync.WaitGroup)
 	db := prepareTestDB(ctx, t, wg) // defined mock store
 
-	entries := []store.RegistryEntry{
-		{
-			RepositoryName: "aHello_test_1",
-			Tag:            "test_tag_1",
-			Digest:         "sha256:0ea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7cf",
-			Size:           708,
-			PullCounter:    1,
-			Timestamp:      time.Now().Unix(),
-			Raw:            `{"some":"json_1"}`,
-		},
-		{
-			RepositoryName: "aHello_test_2",
-			Tag:            "test_tag_2",
-			Digest:         "sha256:1ea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7cf",
-			Size:           709,
-			PullCounter:    1,
-			Timestamp:      time.Now().Unix(),
-			Raw:            `{"some":"json_2"}`,
-		},
-		{
-			RepositoryName: "bHello_test_3",
-			Tag:            "test_tag_3",
-			Digest:         "sha256:3ea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7cf",
-			Size:           710,
-			PullCounter:    1,
-			Timestamp:      time.Now().Unix(),
-			Raw:            `{"some":"json_3"}`,
-		},
-		{
-			RepositoryName: "bHello_test_4",
-			Tag:            "test_tag_4",
-			Digest:         "sha256:4ea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7cf",
-			Size:           711,
-			PullCounter:    1,
-			Timestamp:      time.Now().Unix(),
-			Raw:            `{"some":"json_4"}`,
-		},
-	}
-
 	for _, entry := range entries {
 		tmpGr := entry
 		err := db.CreateRepository(ctx, &tmpGr)
@@ -451,12 +362,12 @@ func TestEmbedded_DeleteRepository(t *testing.T) {
 		RepositoryName: "hello_test",
 		Tag:            "test_tag",
 		Digest:         "sha256:fea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7cf",
+		ConfigDigest:   "sha256:2b83bbdc2334fbdb889af0f8e3892255a8b6a32029ffd7fc9e0b3dcd0e842162",
 		Size:           708,
 		PullCounter:    1,
 		Timestamp:      time.Now().Unix(),
 		Raw:            `{"some":"json"}`,
 	}
-
 	err := db.CreateRepository(ctx, &testEntry)
 	assert.NoError(t, err)
 	assert.Greater(t, testEntry.ID, int64(0))
@@ -490,11 +401,12 @@ func TestEmbedded_RepositoryGarbageCollector(t *testing.T) {
 
 	dateSync := time.Now().Unix()
 	outdated := time.Now().Add(-1 * time.Hour).Unix()
-	entries := []store.RegistryEntry{
+	testEntries := []store.RegistryEntry{
 		{
 			RepositoryName: "aHello_test_1",
 			Tag:            "test_tag_1",
 			Digest:         "sha256:0ea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7cf",
+			ConfigDigest:   "sha256:2b83bbdc2334fbdb889af0f8e3892255a8b6a32029ffd7fc9e0b3dcd0e842166",
 			Size:           708,
 			PullCounter:    1,
 			Timestamp:      dateSync,
@@ -504,6 +416,7 @@ func TestEmbedded_RepositoryGarbageCollector(t *testing.T) {
 			RepositoryName: "aHello_test_2",
 			Tag:            "test_tag_2",
 			Digest:         "sha256:1ea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7cf",
+			ConfigDigest:   "sha256:2b83bbdc2334fbdb889af0f8e3892255a8b6a32029ffd7fc9e0b3dcd0e842116",
 			Size:           709,
 			PullCounter:    1,
 			Timestamp:      dateSync,
@@ -513,6 +426,7 @@ func TestEmbedded_RepositoryGarbageCollector(t *testing.T) {
 			RepositoryName: "bHello_test_3",
 			Tag:            "test_tag_3",
 			Digest:         "sha256:3ea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7cf",
+			ConfigDigest:   "sha256:2b83bbdc2334fbdb889af0f8e3892255a8b6a32029ffd7fc9e0b3dcd0e842163",
 			Size:           710,
 			PullCounter:    1,
 			Timestamp:      outdated,
@@ -522,6 +436,7 @@ func TestEmbedded_RepositoryGarbageCollector(t *testing.T) {
 			RepositoryName: "bHello_test_4",
 			Tag:            "test_tag_4",
 			Digest:         "sha256:4ea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7cf",
+			ConfigDigest:   "sha256:2b83bbdc2334fbdb889af0f8e3892255a8b6a32029ffd7fc9e0b3dcd0e84216d",
 			Size:           711,
 			PullCounter:    1,
 			Timestamp:      outdated,
@@ -529,7 +444,7 @@ func TestEmbedded_RepositoryGarbageCollector(t *testing.T) {
 		},
 	}
 
-	for _, entry := range entries {
+	for _, entry := range testEntries {
 		tmpGr := entry
 		err := db.CreateRepository(ctx, &tmpGr)
 		entry.ID = tmpGr.ID

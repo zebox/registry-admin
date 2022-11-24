@@ -201,6 +201,7 @@ func (e *Embedded) initRepositoriesTable(ctx context.Context) (err error) {
 		repository_name INTEGER NOT NULL CHECK(repository_name <> ''),
 		tag TEXT NOT NULL CHECK(tag <> ''),
 		digest TEXT NOT NULL CHECK(digest <> ''),
+		config_digest TEXT NOT NULL CHECK(config_digest <> ''),
 		size INTEGER,
 		pull_counter INTEGER,
 		timestamp INTEGER,

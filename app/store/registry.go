@@ -10,19 +10,21 @@ type RegistryEntry struct {
 	ID             int64  `json:"id"`
 	RepositoryName string `json:"repository_name"` // Storage identifies the named repository.
 	Tag            string `json:"tag"`             // Tag provides the tag
-	Digest         string `json:"digest"`          // Digest uniquely identifies the content. A byte stream can be verified against this digest.
+	Digest         string `json:"digest"`          // Digest uniquely identifies an image content. A byte stream can be verified against this digest.
+	ConfigDigest   string `json:"config_digest"`   // ConfigDigest uniquely identifies an image config data.
 	Size           int64  `json:"size"`            // Size in bytes of content.
 	PullCounter    int64  `json:"pull_counter"`    // image pull counter
 	Timestamp      int64  `json:"timestamp"`       // last modification date/time
 	Raw            string `json:"raw,omitempty"`   // Raw is a whole notify event data in json
 }
 
-// Contract for storage for a registry data
+// Contract with storage for a registry data
 const (
-	RegistryIdField             = "id"
+	RegistryIdFieID             = "id"
 	RegistryRepositoryNameField = "repository_name"
 	RegistryTagField            = "tag"
-	RegistryDigestNameField     = "digest"
+	RegistryContentDigestField  = "digest"
+	RegistryConfigDigestField   = "config_digest"
 	RegistrySizeNameField       = "size"
 	RegistryPullCounterField    = "pull_counter"
 	RegistryTimestampField      = "timestamp"

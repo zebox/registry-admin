@@ -18,17 +18,18 @@ func (e *Embedded) CreateRepository(ctx context.Context, entry *store.RegistryEn
 		repository_name,
 		tag,
 		digest,
+		config_digest,
 		size,
 		pull_counter,
 		timestamp,
 		raw
-	) values(?, ?, ?, ?, ?, ?, ?)`, repositoriesTable)
+	) values(?, ?, ?, ?, ?, ?, ?, ?)`, repositoriesTable)
 	stmt, err := e.db.PrepareContext(ctx, createGroupSQL)
 	if err != nil {
 		return errors.Wrap(err, "failed to create repository entry")
 	}
 	defer func() { _ = stmt.Close() }()
-	result, err := stmt.ExecContext(ctx, entry.RepositoryName, entry.Tag, entry.Digest, entry.Size, entry.PullCounter, entry.Timestamp, entry.Raw)
+	result, err := stmt.ExecContext(ctx, entry.RepositoryName, entry.Tag, entry.Digest, entry.ConfigDigest, entry.Size, entry.PullCounter, entry.Timestamp, entry.Raw)
 	if err != nil {
 		return err
 	}
@@ -43,7 +44,7 @@ func (e *Embedded) CreateRepository(ctx context.Context, entry *store.RegistryEn
 // GetRepository get repository data by ID
 func (e *Embedded) GetRepository(ctx context.Context, entryID int64) (entry store.RegistryEntry, err error) { //nolint dupl
 
-	queryFilter := fmt.Sprintf("SELECT id, repository_name, tag, digest, size, pull_counter, timestamp,raw FROM %s WHERE id = ?", repositoriesTable)
+	queryFilter := fmt.Sprintf("SELECT id, repository_name, tag, digest, config_digest, size, pull_counter, timestamp,raw FROM %s WHERE id = ?", repositoriesTable)
 	stmt, err := e.db.PrepareContext(ctx, queryFilter)
 	if err != nil {
 		return entry, errors.Wrap(err, "failed to prepare query for get repository data")
@@ -58,7 +59,7 @@ func (e *Embedded) GetRepository(ctx context.Context, entryID int64) (entry stor
 
 	emptyResult := true
 	for rows.Next() {
-		if err = rows.Scan(&entry.ID, &entry.RepositoryName, &entry.Tag, &entry.Digest, &entry.Size, &entry.PullCounter, &entry.Timestamp, &entry.Raw); err != nil {
+		if err = rows.Scan(&entry.ID, &entry.RepositoryName, &entry.Tag, &entry.Digest, &entry.ConfigDigest, &entry.Size, &entry.PullCounter, &entry.Timestamp, &entry.Raw); err != nil {
 			return entry, errors.Wrap(err, "failed scan group data")
 		}
 		emptyResult = false
@@ -77,7 +78,7 @@ func (e *Embedded) FindRepositories(ctx context.Context, filter engine.QueryFilt
 
 	// check for select repositories by user access
 	if _, ok := filter.Filters["access.owner_id"]; ok {
-		queryString = fmt.Sprintf("SELECT repositories.id as id,repository_name,tag,digest,size,pull_counter,timestamp,raw FROM %s INNER JOIN access on repositories.repository_name=access.resource_name %s", repositoriesTable, f.allClauses)
+		queryString = fmt.Sprintf("SELECT repositories.id as id,repository_name,tag,digest,config_digest,size,pull_counter,timestamp,raw FROM %s INNER JOIN access on repositories.repository_name=access.resource_name %s", repositoriesTable, f.allClauses)
 	}
 
 	// avoid error shadowed
@@ -104,7 +105,7 @@ func (e *Embedded) FindRepositories(ctx context.Context, filter engine.QueryFilt
 	entries.Data = []interface{}{}
 	for rows.Next() {
 		var entry store.RegistryEntry
-		if err = rows.Scan(&entry.ID, &entry.RepositoryName, &entry.Tag, &entry.Digest, &entry.Size, &entry.PullCounter, &entry.Timestamp, &entry.Raw); err != nil {
+		if err = rows.Scan(&entry.ID, &entry.RepositoryName, &entry.Tag, &entry.Digest, &entry.ConfigDigest, &entry.Size, &entry.PullCounter, &entry.Timestamp, &entry.Raw); err != nil {
 			return entries, errors.Wrap(err, "failed scan repository data")
 		}
 		entries.Data = append(entries.Data, entry)
