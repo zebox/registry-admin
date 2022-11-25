@@ -25,6 +25,7 @@ const russianMessages: TranslationMessages = {
             search: 'Поиск',
             select_all: 'Выбрать все',
             select_row: 'Выбрать строку',
+            select_columns: 'Выбрать поля',
             show: 'Показать',
             sort: 'Сортировка',
             undo: 'Отменить',

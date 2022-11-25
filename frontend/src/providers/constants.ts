@@ -24,5 +24,5 @@ const isDev = process.env.NODE_ENV;
 export const API_BASE: string = '/api/v1';
 export const API_AUTH: string = '/auth';
 export const BASE_URL: string = isDev === "development" ? `http://${window.location.hostname}` : getBaseUrl();
-
+export const BASENAME: string = "web";
 

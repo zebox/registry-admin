@@ -72,14 +72,14 @@ function App() {
       theme={currentTheme && currentTheme === "light" ? lightTheme : darkTheme}
       history={history}
     >
-      <CustomRoutes>
-        <Route path="/configuration" element={<Configuration />} />
-      </CustomRoutes>
-
       <Resource name="registry/catalog" {...repository} />
       <Resource name="access" {...access} />
       <Resource name="users" {...users} />
       <Resource name="groups" {...groups} />
+
+      <CustomRoutes>
+        <Route path="/configuration" element={<Configuration />} />
+      </CustomRoutes>
     </Admin>
   );
 }
