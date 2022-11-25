@@ -91,6 +91,14 @@ func TestDataService_RepositoryEventsProcessing(t *testing.T) {
 	err = ds.RepositoryEventsProcessing(ctx, testEnvelope)
 	assert.NoError(t, err)
 
+	// test with empty digit
+	testEnvelope.Events[0].Action = notifications.EventActionPush
+	testEnvelope.Events[0].Target.Repository = "test/repo_5"
+	testEnvelope.Events[0].Target.Descriptor.Digest = ""
+	testEnvelope.Events[0].Target.Tag = "1.1.0"
+	err = ds.RepositoryEventsProcessing(ctx, testEnvelope)
+	assert.Nil(t, err)
+
 	// test with race avoid flag
 	ds.isWorking = true
 	testEnvelope.Events[0].Action = notifications.EventActionPull
@@ -111,14 +119,6 @@ func TestDataService_RepositoryEventsProcessing(t *testing.T) {
 	testEnvelope.Events[0].Target.Tag = ""
 	err = ds.RepositoryEventsProcessing(ctx, testEnvelope)
 	assert.Error(t, err)
-
-	/*// test with empty digit
-	testEnvelope.Events[0].Action = notifications.EventActionPush
-	testEnvelope.Events[0].Target.Repository = "test/repo_1"
-	testEnvelope.Events[0].Target.Descriptor.Digest = ""
-	testEnvelope.Events[0].Target.Tag = "1.1.0"
-	err = ds.RepositoryEventsProcessing(ctx, testEnvelope)
-	assert.Nil(t, err)*/
 
 	// test with delete action
 	createTestEvent()
