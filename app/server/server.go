@@ -396,6 +396,9 @@ func (s *Server) serveStaticWeb(r chi.Router, path string) {
 	path += "*"
 
 	r.Get(path, func(w http.ResponseWriter, req *http.Request) {
+		if _, err = subFS.Open("web" + req.URL.Path); err != nil && req.URL.Path != "/" {
+			return
+		}
 		webFS.ServeHTTP(w, req)
 	})
 
