@@ -2,9 +2,12 @@ package server
 
 import (
 	"context"
+	"embed"
 	"fmt"
 	"io"
+	"io/fs"
 	"net/http"
+	"os"
 	"strconv"
 	"sync"
 	"time"
@@ -26,6 +29,9 @@ import (
 	log "github.com/go-pkgz/lgr"
 	R "github.com/go-pkgz/rest"
 )
+
+//go:embed web/*
+var webContent embed.FS
 
 // Server the main service instance
 type Server struct {
@@ -197,12 +203,14 @@ func (s *Server) Shutdown() {
 
 func (s *Server) routes() chi.Router {
 	router := chi.NewRouter()
+
 	router.Use(middleware.Throttle(1000), middleware.RealIP, R.Recoverer(log.Default()))
 	router.Use(middleware.Timeout(30 * time.Second))
 	router.Use(R.Ping)
 
 	corsMiddleware := cors.New(cors.Options{
-		AllowedOrigins:   []string{s.Hostname, "http://127.0.0.1:3000", "https://127.0.0.1:3000"},
+		//AllowedOrigins:   []string{s.Hostname, "http://127.0.0.1:3000", "https://127.0.0.1:3000"},
+		AllowedOrigins:   []string{s.Hostname, os.Getenv("RA_DEV_HOST")},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Origin", "Accept", "Authorization", "Content-Type", "X-XSRF-Token", "X-JWT"},
 		ExposedHeaders:   []string{"Authorization"},
@@ -215,6 +223,9 @@ func (s *Server) routes() chi.Router {
 
 	authHandler, _ := s.Authenticator.Handlers()
 	authMiddleware := s.Authenticator.Middleware()
+
+	// router.Get("/", http.RedirectHandler("/web/index.html", 301).ServeHTTP)
+	// router.NotFound(http.RedirectHandler("/index.html", 301).ServeHTTP)
 
 	router.Group(func(r chi.Router) {
 		r.Use(middleware.Timeout(5 * time.Second))
@@ -345,6 +356,9 @@ func (s *Server) routes() chi.Router {
 		})
 	})
 
+	// serving web UI static content (html,js,css etc.)
+	s.serveStaticWeb(router, "/")
+
 	return router
 }
 
@@ -363,6 +377,28 @@ func (s *Server) makeHTTPServer(addr string, router http.Handler) *http.Server {
 		WriteTimeout:      10 * time.Second,
 		IdleTimeout:       30 * time.Second,
 	}
+}
+
+// serves static files from /web or embedded by static
+func (s *Server) serveStaticWeb(r chi.Router, path string) {
+	var webFS http.Handler
+	subFS, err := fs.Sub(webContent, "web")
+	if err != nil {
+		panic(fmt.Errorf("%v: failed to read web directory from embed FS", err))
+	}
+
+	webFS = http.StripPrefix(path, http.FileServer(http.FS(subFS)))
+
+	if path != "/" && path[len(path)-1] != '/' {
+		r.Get(path, http.RedirectHandler(path+"/", http.StatusMovedPermanently).ServeHTTP)
+		path += "/"
+	}
+	path += "*"
+
+	r.Get(path, func(w http.ResponseWriter, req *http.Request) {
+		webFS.ServeHTTP(w, req)
+	})
+
 }
 
 // ClaimUpdateFn will either add or update token extra data with token claims it call when new token or refresh
