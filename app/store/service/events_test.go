@@ -7,6 +7,7 @@ import (
 	"github.com/docker/distribution"
 	"github.com/docker/distribution/manifest/schema2"
 	"github.com/docker/distribution/notifications"
+	"github.com/opencontainers/go-digest"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -81,14 +82,23 @@ func TestDataService_RepositoryEventsProcessing(t *testing.T) {
 	assert.NoError(t, errFind)
 	require.Len(t, result.Data, 1)
 	assert.IsType(t, store.RegistryEntry{}, result.Data[0])
-	testRegistyEntry := result.Data[0].(store.RegistryEntry)
-	assert.Equal(t, int64(3), testRegistyEntry.PullCounter)
+	testRegistryEntry := result.Data[0].(store.RegistryEntry)
+	assert.Equal(t, int64(3), testRegistryEntry.PullCounter)
 
 	// test with not exist repository
 	testEnvelope.Events[0].Target.Repository = "test/repo_3"
 	testEnvelope.Events[0].Target.Tag = "1.1.0"
 	err = ds.RepositoryEventsProcessing(ctx, testEnvelope)
 	assert.NoError(t, err)
+
+	// test with race avoid flag
+	ds.isWorking = true
+	testEnvelope.Events[0].Action = notifications.EventActionPull
+	testEnvelope.Events[0].Target.Repository = "test/repo_1"
+	testEnvelope.Events[0].Target.Tag = "1.1.0"
+	err = ds.RepositoryEventsProcessing(ctx, testEnvelope)
+	ds.isWorking = false
+	assert.Error(t, err)
 
 	// test with multiple values
 	testEnvelope.Events[0].Target.Repository = "test/repo_"
@@ -102,6 +112,14 @@ func TestDataService_RepositoryEventsProcessing(t *testing.T) {
 	err = ds.RepositoryEventsProcessing(ctx, testEnvelope)
 	assert.Error(t, err)
 
+	/*// test with empty digit
+	testEnvelope.Events[0].Action = notifications.EventActionPush
+	testEnvelope.Events[0].Target.Repository = "test/repo_1"
+	testEnvelope.Events[0].Target.Descriptor.Digest = ""
+	testEnvelope.Events[0].Target.Tag = "1.1.0"
+	err = ds.RepositoryEventsProcessing(ctx, testEnvelope)
+	assert.Nil(t, err)*/
+
 	// test with delete action
 	createTestEvent()
 	testEnvelopePullEvent.Events[0].Action = notifications.EventActionDelete
@@ -109,9 +127,15 @@ func TestDataService_RepositoryEventsProcessing(t *testing.T) {
 	assert.NoError(t, err)
 
 	// test delete with not existed repository entry
-	testEnvelopePullEvent.Events[0].Target.References[0].Digest = "unknown"
+	testEnvelopePullEvent.Events[0].Target.Descriptor.Digest = "unknown"
 	err = ds.RepositoryEventsProcessing(nil, testEnvelope) // nolint
 	assert.Error(t, err)
+
+	// test delete with empty digit
+	testEnvelopePullEvent.Events[0].Target.Descriptor.Digest = ""
+	err = ds.RepositoryEventsProcessing(nil, testEnvelope) // nolint
+	assert.Nil(t, err)
+
 }
 
 func prepareEngineMock() *engine.InterfaceMock {
@@ -210,7 +234,7 @@ func prepareEngineMock() *engine.InterfaceMock {
 
 		DeleteRepositoryFunc: func(ctx context.Context, key string, id interface{}) error {
 			for _, val := range testRepositoriesEntries {
-				if val.Digest == id.(string) {
+				if val.Digest == id.(digest.Digest).String() {
 					return nil
 				}
 			}

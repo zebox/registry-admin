@@ -12,12 +12,9 @@ import (
 	"github.com/zebox/registry-admin/app/store/engine"
 )
 
-func (ds *DataService) RepositoryEventsProcessing(ctx context.Context, envelope notifications.Envelope) (err error) {
+var ErrorSyncGcInProgress = errors.New("syncing or garbage collector operations in progress")
 
-	// check for syncing or garbage collector operation is in progress
-	if ds.isWorking {
-		return errors.New("syncing or garbage collector operations in progress")
-	}
+func (ds *DataService) RepositoryEventsProcessing(ctx context.Context, envelope notifications.Envelope) (err error) {
 
 	for _, e := range envelope.Events {
 		switch e.Action {
@@ -46,6 +43,18 @@ func (ds *DataService) updateRepositoryEntry(ctx context.Context, event notifica
 
 	// increase pull counter when repo pull
 	if event.Action == notifications.EventActionPull && result.Total == 1 {
+
+		// When 'manifests' API calls, registry triggers pull event, but sync operation use this API for fetch data from
+		// registry. For avoid race between sync and pull event triggers uses check for syncing or garbage collector
+		// operation is in progress
+		if func() bool {
+			ds.mutex.RLock()
+			defer ds.mutex.RUnlock()
+			return ds.isWorking
+		}() {
+			return ErrorSyncGcInProgress
+		}
+
 		repositoryEntry := result.Data[0].(store.RegistryEntry)
 
 		err = ds.Storage.UpdateRepository(
