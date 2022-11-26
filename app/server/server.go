@@ -397,7 +397,10 @@ func (s *Server) serveStaticWeb(r chi.Router, path, rootWebDir string) {
 	r.Get(path, func(w http.ResponseWriter, req *http.Request) {
 		contentPath := rootWebDir + req.URL.Path
 
-		// this required for support with SPA routing (e.g. react-router), otherwise server return page with 404 error
+		// This required for support with SPA routing (e.g. react-router), otherwise server return page with 404 error
+		// If a file is found, it will be served. If not, the file located at the index path
+		// on the SPA handler will be served.
+		// This is suitable behavior for serving an SPA (single page application).
 		if _, err = s.WebContentFS.Open(contentPath); err != nil && req.URL.Path != "/" {
 			tpl, errTpl := template.ParseFS(s.WebContentFS, rootWebDir+"/index.html")
 			if errTpl != nil {
