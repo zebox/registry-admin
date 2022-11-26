@@ -82,7 +82,9 @@ func run() error {
 		Storage:                  dataStore,
 		RegistryService:          registryService,
 		GarbageCollectorInterval: opts.Registry.GarbageCollectorInterval,
-		WebContentFS:             &webContent,
+
+		// this use embed.FS which required that web directory has content
+		WebContentFS: &webContent,
 	}
 
 	authOptions := auth.Opts{
