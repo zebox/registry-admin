@@ -140,7 +140,7 @@ func NewRegistry(login, password, secret string, settings Settings) (*Registry, 
 	r.settings = settings
 
 	if r.settings.AuthType == Basic && login == "" {
-		return nil, errors.New("at least login should set when basic auth type is set")
+		return nil, errors.New("login for access to registry set required when basic auth type is defined")
 	}
 
 	r.settings.credentials.login = login
@@ -159,10 +159,6 @@ func NewRegistry(login, password, secret string, settings Settings) (*Registry, 
 			InsecureSkipVerify: r.settings.InsecureRequest, // it's need  for self-signed certificate which use for https
 		}
 		r.httpClient.Transport = transport
-	}
-
-	if len(secret) == 0 {
-		return nil, errors.New("token secret must be defined for 'self_token' auth type")
 	}
 
 	// checking for at least one field of certs path is filled, other fields must require filled too
@@ -188,6 +184,11 @@ func NewRegistry(login, password, secret string, settings Settings) (*Registry, 
 	}
 
 	if r.settings.AuthType == SelfToken {
+
+		if len(secret) == 0 {
+			return nil, errors.New("token secret must be defined for 'self_token' auth type")
+		}
+
 		r.htpasswd = nil // not needed for self-token auth
 		var err error
 		if certsPathIsFilled {

@@ -31,10 +31,14 @@ const (
 
 func Test_Main(t *testing.T) {
 
+	tmpHtpasswd, err := ioutil.TempFile(os.TempDir(), "tmp")
+	require.NoError(t, err)
+
 	port := 40000 + int(rand.Int31n(10000)) //nolint:gosec
 	os.Args = []string{"test",
 		"--listen=*", "--port=" + strconv.Itoa(port),
 		"--auth.token-secret=super-secret", "--hostname=localhost", "--registry.host=http://test.registry-host.local",
+		"--registry.htpasswd=" + tmpHtpasswd.Name(), "--registry.login=test_admin",
 		"--debug", "--logger.enabled", "--logger.stdout", "--logger.file=" + os.TempDir() + "/registry-admin.log",
 		"--ssl.type=none", "--store.type=embed", "--store.embed.path=" + os.TempDir() + "/test.db",
 	}
@@ -59,7 +63,6 @@ func Test_Main(t *testing.T) {
 			errKill := v.Kill()
 			t.Log(errKill)
 			assert.NoError(t, errKill)
-
 		}
 
 		t.Log("process parent killing")
@@ -93,10 +96,23 @@ func Test_Main(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, "pong", string(body))
 	}
+
+	{
+		// test for web static content from embed.FS
+		resp, err := http.Get(fmt.Sprintf("http://localhost:%d/empty.txt", port))
+		require.NoError(t, err)
+		defer func() { assert.NoError(t, resp.Body.Close()) }()
+		assert.Equal(t, 200, resp.StatusCode)
+		body, err := io.ReadAll(resp.Body)
+		assert.NoError(t, err)
+		assert.Equal(t, "empty web content", string(body))
+	}
 }
 
 func Test_MainWithSSLAndAuth(t *testing.T) {
 
+	tmpHtpasswd, errTmp := ioutil.TempFile(os.TempDir(), "tmp")
+	require.NoError(t, errTmp)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -112,6 +128,7 @@ func Test_MainWithSSLAndAuth(t *testing.T) {
 		"--listen=*", "--port=" + strconv.Itoa(port),
 		"--auth.token-secret=super-secret", "--hostname=localhost", "--registry.host=http://test.registry-host.local",
 		"--debug", "--logger.enabled", "--logger.stdout", "--logger.file=" + os.TempDir() + "/registry-admin.log",
+		"--registry.htpasswd=" + tmpHtpasswd.Name(), "--registry.login=test_admin",
 		"--ssl.type=static", "--ssl.port=" + strconv.Itoa(sslPort), "--ssl.cert=" + certFile, "--ssl.key=" + keyFile, "--store.type=embed",
 		"--store.embed.path=" + os.TempDir() + "/test.db",
 	}
