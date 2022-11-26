@@ -94,7 +94,7 @@ type Registry struct {
 	httpClient *http.Client
 }
 
-type ApiResponse struct {
+type ApiResponse struct { //nolint
 	Total int64       `json:"total"`
 	Data  interface{} `json:"data"`
 }
@@ -156,7 +156,7 @@ func NewRegistry(login, password, secret string, settings Settings) (*Registry, 
 
 		transport := &http.Transport{}
 		transport.TLSClientConfig = &tls.Config{
-			InsecureSkipVerify: r.settings.InsecureRequest, // it's need  for self-signed certificate which use for https
+			InsecureSkipVerify: r.settings.InsecureRequest, //nolint:gosec    // it's need  for self-signed certificate which use for https
 		}
 		r.httpClient.Transport = transport
 	}
@@ -258,13 +258,13 @@ func (r *Registry) UpdateHtpasswd(users []store.User) error {
 	return r.htpasswd.update(users)
 }
 
-// ApiVersionCheck a minimal endpoint, mounted at /v2/ will provide version support information based on its response statuses.
+// APIVersionCheck a minimal endpoint, mounted at /v2/ will provide version support information based on its response statuses.
 // more details by link https://docs.docker.com/registry/spec/api/#api-version-check
-func (r *Registry) ApiVersionCheck(ctx context.Context) error {
+func (r *Registry) APIVersionCheck(ctx context.Context) error {
 	var apiError ApiError
-	url := fmt.Sprintf("%s:%d/v2/", r.settings.Host, r.settings.Port)
+	baseURL := fmt.Sprintf("%s:%d/v2/", r.settings.Host, r.settings.Port)
 
-	resp, err := r.newHttpRequest(ctx, url, "GET", nil)
+	resp, err := r.newHttpRequest(ctx, baseURL, "GET", nil)
 	if err != nil {
 		apiError.Message = fmt.Sprintf("failed to request to registry host %s", r.settings.Host)
 		return err
@@ -282,9 +282,9 @@ func (r *Registry) ApiVersionCheck(ctx context.Context) error {
 // GetBlob retrieve the blob from the registry identified by digest. A HEAD request can also be issued to this endpoint
 // to obtain resource information without receiving all data.
 func (r *Registry) GetBlob(ctx context.Context, name, digest string) (blob []byte, err error) {
-	baseUrl := fmt.Sprintf("%s:%d/v2/%s/blobs/%s", r.settings.Host, r.settings.Port, name, digest)
+	baseURL := fmt.Sprintf("%s:%d/v2/%s/blobs/%s", r.settings.Host, r.settings.Port, name, digest)
 
-	resp, err := r.newHttpRequest(ctx, baseUrl, "GET", nil)
+	resp, err := r.newHttpRequest(ctx, baseURL, "GET", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -307,13 +307,13 @@ func (r *Registry) GetBlob(ctx context.Context, name, digest string) (blob []byt
 func (r *Registry) Catalog(ctx context.Context, n, last string) (Repositories, error) {
 	var repos Repositories
 
-	baseUrl := fmt.Sprintf("%s:%d/v2/_catalog", r.settings.Host, r.settings.Port)
+	baseURL := fmt.Sprintf("%s:%d/v2/_catalog", r.settings.Host, r.settings.Port)
 
 	if n != "" {
-		baseUrl = fmt.Sprintf("%s:%d/v2/_catalog?n=%s&last=%s", r.settings.Host, r.settings.Port, n, last)
+		baseURL = fmt.Sprintf("%s:%d/v2/_catalog?n=%s&last=%s", r.settings.Host, r.settings.Port, n, last)
 	}
 
-	resp, err := r.newHttpRequest(ctx, baseUrl, "GET", nil)
+	resp, err := r.newHttpRequest(ctx, baseURL, "GET", nil)
 	if err != nil {
 		return repos, err
 	}
@@ -345,14 +345,14 @@ func (r *Registry) Catalog(ctx context.Context, n, last string) (Repositories, e
 func (r *Registry) ListingImageTags(ctx context.Context, repoName, n, last string) (ImageTags, error) {
 	var tags ImageTags
 
-	baseUrl := fmt.Sprintf("%s:%d/v2/%s/tags/list", r.settings.Host, r.settings.Port, repoName)
+	baseURL := fmt.Sprintf("%s:%d/v2/%s/tags/list", r.settings.Host, r.settings.Port, repoName)
 
 	// pagination request
 	if n != "" {
-		baseUrl = fmt.Sprintf("%s:%d/v2/%s/tags/list?n=%s&last=%s", r.settings.Host, r.settings.Port, repoName, n, last)
+		baseURL = fmt.Sprintf("%s:%d/v2/%s/tags/list?n=%s&last=%s", r.settings.Host, r.settings.Port, repoName, n, last)
 	}
 
-	resp, err := r.newHttpRequest(ctx, baseUrl, "GET", nil)
+	resp, err := r.newHttpRequest(ctx, baseURL, "GET", nil)
 	if err != nil {
 		return tags, err
 	}
@@ -386,9 +386,9 @@ func (r *Registry) ListingImageTags(ctx context.Context, repoName, n, last strin
 func (r *Registry) Manifest(ctx context.Context, repoName, tag string) (ManifestSchemaV2, error) {
 	var manifest ManifestSchemaV2
 	var apiError ApiError
-	baseUrl := fmt.Sprintf("%s:%d/v2/%s/manifests/%s", r.settings.Host, r.settings.Port, repoName, tag)
+	baseURL := fmt.Sprintf("%s:%d/v2/%s/manifests/%s", r.settings.Host, r.settings.Port, repoName, tag)
 
-	resp, err := r.newHttpRequest(ctx, baseUrl, "GET", nil)
+	resp, err := r.newHttpRequest(ctx, baseURL, "GET", nil)
 	if err != nil {
 		return manifest, makeApiError("failed to make request for docker registry manifest", err.Error())
 	}

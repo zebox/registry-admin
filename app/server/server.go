@@ -76,7 +76,7 @@ type registryInterface interface {
 
 	// ApiVersionCheck a minimal endpoint, mounted at /v2/ will provide version support information
 	// based on its response statuses.
-	ApiVersionCheck(ctx context.Context) error
+	APIVersionCheck(ctx context.Context) error
 
 	// Catalog return list a set of available repositories in the local registry cluster.
 	Catalog(ctx context.Context, n, last string) (registry.Repositories, error)

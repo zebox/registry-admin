@@ -132,7 +132,7 @@ func (rh *registryHandlers) tokenAuth(w http.ResponseWriter, r *http.Request) {
 // health checks availability a registry service
 func (rh *registryHandlers) health(w http.ResponseWriter, r *http.Request) {
 
-	if err := rh.registryService.ApiVersionCheck(r.Context()); err != nil {
+	if err := rh.registryService.APIVersionCheck(r.Context()); err != nil {
 		SendErrorJSON(w, r, rh.l, http.StatusInternalServerError, err, "registry service request failed")
 		return
 	}

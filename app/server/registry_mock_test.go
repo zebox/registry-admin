@@ -175,7 +175,7 @@ type registryInterfaceMock struct {
 }
 
 // ApiVersionCheck calls ApiVersionCheckFunc.
-func (mock *registryInterfaceMock) ApiVersionCheck(ctx context.Context) error {
+func (mock *registryInterfaceMock) APIVersionCheck(ctx context.Context) error {
 	if mock.ApiVersionCheckFunc == nil {
 		panic("registryInterfaceMock.ApiVersionCheckFunc: method is nil but registryInterface.ApiVersionCheck was just called")
 	}

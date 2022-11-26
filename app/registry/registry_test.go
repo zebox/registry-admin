@@ -84,17 +84,17 @@ func TestRegistry_ApiCheck(t *testing.T) {
 	require.NotNil(t, r)
 
 	// test with auth error
-	err = r.ApiVersionCheck(context.Background())
+	err = r.APIVersionCheck(context.Background())
 	assert.Error(t, err)
 
 	r.settings.credentials.login = defaultMockUsername
 	r.settings.credentials.password = defaultMockPassword
 
-	err = r.ApiVersionCheck(context.Background())
+	err = r.APIVersionCheck(context.Background())
 	assert.NoError(t, err)
 
 	r.settings.Host = ""
-	err = r.ApiVersionCheck(context.Background())
+	err = r.APIVersionCheck(context.Background())
 	assert.Error(t, err)
 	assert.Equal(t, fmt.Sprintf(`parse ":%d/v2/": missing protocol scheme`, testPort), err.Error())
 }
