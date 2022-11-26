@@ -4,6 +4,7 @@ import (
 	"context"
 	"embed"
 	"fmt"
+	"html/template"
 	"io"
 	"io/fs"
 	"net/http"
@@ -30,9 +31,6 @@ import (
 	R "github.com/go-pkgz/rest"
 )
 
-//go:embed web/*
-var webContent embed.FS
-
 // Server the main service instance
 type Server struct {
 	Hostname                 string
@@ -45,6 +43,7 @@ type Server struct {
 	Storage                  engine.Interface  // main storage instance interface
 	RegistryService          registryInterface // main instance for connection to registry service
 	GarbageCollectorInterval int64
+	WebContentFS             *embed.FS
 
 	ctx         context.Context
 	httpsServer *http.Server
@@ -356,8 +355,8 @@ func (s *Server) routes() chi.Router {
 		})
 	})
 
-	// serving web UI static content (html,js,css etc.)
-	s.serveStaticWeb(router, "/")
+	// serving static content with web UI (html,js,css etc.)
+	s.serveStaticWeb(router, "/", "web")
 
 	return router
 }
@@ -380,14 +379,14 @@ func (s *Server) makeHTTPServer(addr string, router http.Handler) *http.Server {
 }
 
 // serves static files from /web or embedded by static
-func (s *Server) serveStaticWeb(r chi.Router, path string) {
+func (s *Server) serveStaticWeb(r chi.Router, path, rootWebDir string) {
 	var webFS http.Handler
-	subFS, err := fs.Sub(webContent, "web")
+	webDirFS, err := fs.Sub(s.WebContentFS, rootWebDir)
 	if err != nil {
 		panic(fmt.Errorf("%v: failed to read web directory from embed FS", err))
 	}
 
-	webFS = http.StripPrefix(path, http.FileServer(http.FS(subFS)))
+	webFS = http.StripPrefix(path, http.FileServer(http.FS(webDirFS)))
 
 	if path != "/" && path[len(path)-1] != '/' {
 		r.Get(path, http.RedirectHandler(path+"/", http.StatusMovedPermanently).ServeHTTP)
@@ -396,7 +395,23 @@ func (s *Server) serveStaticWeb(r chi.Router, path string) {
 	path += "*"
 
 	r.Get(path, func(w http.ResponseWriter, req *http.Request) {
-		if _, err = subFS.Open("web" + req.URL.Path); err != nil && req.URL.Path != "/" {
+		contentPath := rootWebDir + req.URL.Path
+
+		// this required for support with SPA routing (e.g. react-router), otherwise server return page with 404 error
+		if _, err = s.WebContentFS.Open(contentPath); err != nil && req.URL.Path != "/" {
+			tpl, errTpl := template.ParseFS(s.WebContentFS, rootWebDir+"/index.html")
+			if errTpl != nil {
+				s.L.Logf("[ERROR] page %s not found in pages cache...", req.RequestURI)
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+
+			w.Header().Set("Content-Type", "text/html")
+			w.WriteHeader(http.StatusOK)
+			if err = tpl.Execute(w, nil); err != nil {
+				s.L.Logf("[ERROR] failed to execute template for SPA router redirect %v", err)
+				return
+			}
 			return
 		}
 		webFS.ServeHTTP(w, req)

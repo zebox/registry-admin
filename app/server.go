@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"embed"
 	"fmt"
 	"github.com/zebox/registry-admin/app/registry"
 	"github.com/zebox/registry-admin/app/store/engine/embedded"
@@ -27,12 +28,15 @@ import (
 	log "github.com/go-pkgz/lgr"
 )
 
+//go:embed web/*
+var webContent embed.FS
+
 func run() error {
 
 	// setup logger for access requests
-	accessLogger, err := createLoggerToFile()
-	if err != nil {
-		return errors.Wrap(err, "failed to setup logging to file, set logging to stdout")
+	accessLogger, errLog := createLoggerToFile()
+	if errLog != nil {
+		return errors.Wrap(errLog, "failed to setup logging to file, set logging to stdout")
 	}
 
 	defer func() {
@@ -78,6 +82,7 @@ func run() error {
 		Storage:                  dataStore,
 		RegistryService:          registryService,
 		GarbageCollectorInterval: opts.Registry.GarbageCollectorInterval,
+		WebContentFS:             &webContent,
 	}
 
 	authOptions := auth.Opts{
@@ -122,11 +127,11 @@ func run() error {
 		srv.Shutdown()
 	}()
 
-	err = srv.Run(ctx)
-	if err != nil && err == http.ErrServerClosed {
-		log.Printf("[WARN] proxy server closed, %v", err) // nolint gocritic
+	errLog = srv.Run(ctx)
+	if errLog != nil && errLog == http.ErrServerClosed {
+		log.Printf("[WARN] proxy server closed, %v", errLog) // nolint gocritic
 	}
-	return err
+	return errLog
 }
 
 // checkHostnameForURL check hostname URL for valid format with specific scheme
