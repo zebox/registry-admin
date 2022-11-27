@@ -1,7 +1,9 @@
 package server
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -15,6 +17,43 @@ import (
 // userHandlers implement controllers which allow manipulation with users model using REST API endpoints
 type userHandlers struct {
 	endpointsHandler
+	registryService registryInterface
+}
+
+type usersFn func(ctx context.Context, filter engine.QueryFilter) (users engine.ListResponse, err error)
+
+// usersRegistryAdapter need for bind FindUsers func in store engine with registry instance
+// for update password when htpasswd is used
+type usersRegistryAdapter struct {
+	ctx     context.Context
+	filters engine.QueryFilter
+	usersFn usersFn
+}
+
+func newUsersRegistryAdapter(ctx context.Context, filters engine.QueryFilter, usersFunc usersFn) *usersRegistryAdapter {
+	return &usersRegistryAdapter{
+		ctx:     ctx,
+		filters: filters,
+		usersFn: usersFunc,
+	}
+}
+
+func (ura *usersRegistryAdapter) Users() ([]store.User, error) {
+	result, err := ura.usersFn(ura.ctx, ura.filters)
+	if err != nil {
+		return nil, err
+	}
+
+	var users []store.User
+	for _, u := range result.Data {
+		users = append(users, u.(store.User))
+	}
+
+	if len(users) > 0 {
+		return users, nil
+	}
+
+	return nil, errors.New("users list is empty")
 }
 
 func (u *userHandlers) userCreateCtrl(w http.ResponseWriter, r *http.Request) {
@@ -39,6 +78,10 @@ func (u *userHandlers) userCreateCtrl(w http.ResponseWriter, r *http.Request) {
 	}
 
 	R.RenderJSON(w, responseMessage{Error: false, Message: "user created", ID: user.ID, Data: user})
+
+	if err = u.registryService.UpdateHtpasswd(newUsersRegistryAdapter(r.Context(), engine.QueryFilter{}, u.dataStore.FindUsers)); err != nil {
+		u.l.Logf("failed to update htpasswd: %v", err)
+	}
 
 }
 
@@ -114,6 +157,10 @@ func (u *userHandlers) userUpdateCtrl(w http.ResponseWriter, r *http.Request) { 
 		ID:      user.ID,
 		Data:    user,
 	})
+
+	if err = u.registryService.UpdateHtpasswd(newUsersRegistryAdapter(r.Context(), engine.QueryFilter{}, u.dataStore.FindUsers)); err != nil {
+		u.l.Logf("failed to update htpasswd: %v", err)
+	}
 }
 
 func (u *userHandlers) userDeleteCtrl(w http.ResponseWriter, r *http.Request) {
@@ -136,4 +183,8 @@ func (u *userHandlers) userDeleteCtrl(w http.ResponseWriter, r *http.Request) {
 	}
 
 	R.RenderJSON(w, responseMessage{Message: "user deleted"})
+
+	if err = u.registryService.UpdateHtpasswd(newUsersRegistryAdapter(r.Context(), engine.QueryFilter{}, u.dataStore.FindUsers)); err != nil {
+		u.l.Logf("failed to update htpasswd: %v", err)
+	}
 }

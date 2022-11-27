@@ -249,12 +249,21 @@ func (r *Registry) Token(authRequest TokenRequest) (string, error) {
 }
 
 // UpdateHtpasswd update user access list every time when user add/update/delete
-func (r *Registry) UpdateHtpasswd(users []store.User) error {
+func (r *Registry) UpdateHtpasswd(usersFn FetchUsers) error {
 
-	// skip update a .htpasswd file if selfToken auth using
+	// skip update a .htpasswd file if selfToken auth is using
 	if r.htpasswd == nil {
 		return nil
 	}
+
+	if usersFn == nil {
+		return errors.New("can't fetch users list because userFn should be defined")
+	}
+	users, err := usersFn.Users()
+	if err != nil {
+		return fmt.Errorf("can't fetch users list: %v", err)
+	}
+
 	return r.htpasswd.update(users)
 }
 

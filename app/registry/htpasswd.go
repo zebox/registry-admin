@@ -19,6 +19,11 @@ type htpasswd struct {
 	lock sync.Mutex
 }
 
+// FetchUsers interface allows get users list from store engine in registry instance
+type FetchUsers interface {
+	Users() ([]store.User, error)
+}
+
 // update will call every time when access list will change
 func (ht *htpasswd) update(users []store.User) error {
 	ht.lock.Lock()

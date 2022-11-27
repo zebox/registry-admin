@@ -497,7 +497,7 @@ func prepareRegistryMock(_ *testing.T) *registryInterfaceMock {
 			}
 			return "", errors.New("user not allowed here")
 		},
-		ApiVersionCheckFunc: func(ctx context.Context) error {
+		APIVersionCheckFunc: func(ctx context.Context) error {
 
 			switch val := ctx.Value(ctxKey).(type) {
 			case bool:

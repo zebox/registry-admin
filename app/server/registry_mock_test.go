@@ -20,8 +20,8 @@ var _ registryInterface = &registryInterfaceMock{}
 //
 // 		// make and configure a mocked registryInterface
 // 		mockedregistryInterface := &registryInterfaceMock{
-// 			ApiVersionCheckFunc: func(ctx context.Context) error {
-// 				panic("mock out the ApiVersionCheck method")
+// 			APIVersionCheckFunc: func(ctx context.Context) error {
+// 				panic("mock out the APIVersionCheck method")
 // 			},
 // 			CatalogFunc: func(ctx context.Context, n string, last string) (registry.Repositories, error) {
 // 				panic("mock out the Catalog method")
@@ -47,7 +47,7 @@ var _ registryInterface = &registryInterfaceMock{}
 // 			TokenFunc: func(authRequest registry.TokenRequest) (string, error) {
 // 				panic("mock out the Token method")
 // 			},
-// 			UpdateHtpasswdFunc: func(users []store.User) error {
+// 			UpdateHtpasswdFunc: func(usersFn registry.FetchUsers) error {
 // 				panic("mock out the UpdateHtpasswd method")
 // 			},
 // 		}
@@ -57,8 +57,8 @@ var _ registryInterface = &registryInterfaceMock{}
 //
 // 	}
 type registryInterfaceMock struct {
-	// ApiVersionCheckFunc mocks the ApiVersionCheck method.
-	ApiVersionCheckFunc func(ctx context.Context) error
+	// APIVersionCheckFunc mocks the APIVersionCheck method.
+	APIVersionCheckFunc func(ctx context.Context) error
 
 	// CatalogFunc mocks the Catalog method.
 	CatalogFunc func(ctx context.Context, n string, last string) (registry.Repositories, error)
@@ -85,12 +85,12 @@ type registryInterfaceMock struct {
 	TokenFunc func(authRequest registry.TokenRequest) (string, error)
 
 	// UpdateHtpasswdFunc mocks the UpdateHtpasswd method.
-	UpdateHtpasswdFunc func(users []store.User) error
+	UpdateHtpasswdFunc func(usersFn registry.FetchUsers) error
 
 	// calls tracks calls to the methods.
 	calls struct {
-		// ApiVersionCheck holds details about calls to the ApiVersionCheck method.
-		ApiVersionCheck []struct {
+		// APIVersionCheck holds details about calls to the APIVersionCheck method.
+		APIVersionCheck []struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
 		}
@@ -158,11 +158,11 @@ type registryInterfaceMock struct {
 		}
 		// UpdateHtpasswd holds details about calls to the UpdateHtpasswd method.
 		UpdateHtpasswd []struct {
-			// Users is the users argument value.
-			Users []store.User
+			// UsersFn is the usersFn argument value.
+			UsersFn registry.FetchUsers
 		}
 	}
-	lockApiVersionCheck                sync.RWMutex
+	lockAPIVersionCheck                sync.RWMutex
 	lockCatalog                        sync.RWMutex
 	lockDeleteTag                      sync.RWMutex
 	lockGetBlob                        sync.RWMutex
@@ -174,34 +174,34 @@ type registryInterfaceMock struct {
 	lockUpdateHtpasswd                 sync.RWMutex
 }
 
-// ApiVersionCheck calls ApiVersionCheckFunc.
+// APIVersionCheck calls APIVersionCheckFunc.
 func (mock *registryInterfaceMock) APIVersionCheck(ctx context.Context) error {
-	if mock.ApiVersionCheckFunc == nil {
-		panic("registryInterfaceMock.ApiVersionCheckFunc: method is nil but registryInterface.ApiVersionCheck was just called")
+	if mock.APIVersionCheckFunc == nil {
+		panic("registryInterfaceMock.APIVersionCheckFunc: method is nil but registryInterface.APIVersionCheck was just called")
 	}
 	callInfo := struct {
 		Ctx context.Context
 	}{
 		Ctx: ctx,
 	}
-	mock.lockApiVersionCheck.Lock()
-	mock.calls.ApiVersionCheck = append(mock.calls.ApiVersionCheck, callInfo)
-	mock.lockApiVersionCheck.Unlock()
-	return mock.ApiVersionCheckFunc(ctx)
+	mock.lockAPIVersionCheck.Lock()
+	mock.calls.APIVersionCheck = append(mock.calls.APIVersionCheck, callInfo)
+	mock.lockAPIVersionCheck.Unlock()
+	return mock.APIVersionCheckFunc(ctx)
 }
 
-// ApiVersionCheckCalls gets all the calls that were made to ApiVersionCheck.
+// APIVersionCheckCalls gets all the calls that were made to APIVersionCheck.
 // Check the length with:
-//     len(mockedregistryInterface.ApiVersionCheckCalls())
-func (mock *registryInterfaceMock) ApiVersionCheckCalls() []struct {
+//     len(mockedregistryInterface.APIVersionCheckCalls())
+func (mock *registryInterfaceMock) APIVersionCheckCalls() []struct {
 	Ctx context.Context
 } {
 	var calls []struct {
 		Ctx context.Context
 	}
-	mock.lockApiVersionCheck.RLock()
-	calls = mock.calls.ApiVersionCheck
-	mock.lockApiVersionCheck.RUnlock()
+	mock.lockAPIVersionCheck.RLock()
+	calls = mock.calls.APIVersionCheck
+	mock.lockAPIVersionCheck.RUnlock()
 	return calls
 }
 
@@ -498,29 +498,29 @@ func (mock *registryInterfaceMock) TokenCalls() []struct {
 }
 
 // UpdateHtpasswd calls UpdateHtpasswdFunc.
-func (mock *registryInterfaceMock) UpdateHtpasswd(users []store.User) error {
+func (mock *registryInterfaceMock) UpdateHtpasswd(usersFn registry.FetchUsers) error {
 	if mock.UpdateHtpasswdFunc == nil {
 		panic("registryInterfaceMock.UpdateHtpasswdFunc: method is nil but registryInterface.UpdateHtpasswd was just called")
 	}
 	callInfo := struct {
-		Users []store.User
+		UsersFn registry.FetchUsers
 	}{
-		Users: users,
+		UsersFn: usersFn,
 	}
 	mock.lockUpdateHtpasswd.Lock()
 	mock.calls.UpdateHtpasswd = append(mock.calls.UpdateHtpasswd, callInfo)
 	mock.lockUpdateHtpasswd.Unlock()
-	return mock.UpdateHtpasswdFunc(users)
+	return mock.UpdateHtpasswdFunc(usersFn)
 }
 
 // UpdateHtpasswdCalls gets all the calls that were made to UpdateHtpasswd.
 // Check the length with:
 //     len(mockedregistryInterface.UpdateHtpasswdCalls())
 func (mock *registryInterfaceMock) UpdateHtpasswdCalls() []struct {
-	Users []store.User
+	UsersFn registry.FetchUsers
 } {
 	var calls []struct {
-		Users []store.User
+		UsersFn registry.FetchUsers
 	}
 	mock.lockUpdateHtpasswd.RLock()
 	calls = mock.calls.UpdateHtpasswd

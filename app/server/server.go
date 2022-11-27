@@ -71,10 +71,10 @@ type registryInterface interface {
 	// ParseAuthenticateHeaderRequest will parse 'Www-Authenticate' header for extract token authorization data.
 	ParseAuthenticateHeaderRequest(headerValue string) (authRequest registry.TokenRequest, err error)
 
-	// UpdateHtpasswd update user access list in .htpasswd file every time when users entries add/update/deleteDigest
-	UpdateHtpasswd(users []store.User) error
+	// UpdateHtpasswd update user access list in .htpasswd file every time when users entries add/update/delete
+	UpdateHtpasswd(usersFn registry.FetchUsers) error
 
-	// ApiVersionCheck a minimal endpoint, mounted at /v2/ will provide version support information
+	// APIVersionCheck a minimal endpoint, mounted at /v2/ will provide version support information
 	// based on its response statuses.
 	APIVersionCheck(ctx context.Context) error
 
@@ -249,7 +249,7 @@ func (s *Server) routes() chi.Router {
 	}
 
 	// main endpoints routes
-	uh := userHandlers{eh}
+	uh := userHandlers{eh, s.RegistryService}
 	router.Route("/api/v1", func(rootApi chi.Router) {
 		rootApi.Group(func(rootRoute chi.Router) {
 			rootRoute.Use(tollbooth_chi.LimitHandler(tollbooth.NewLimiter(10, nil)))

@@ -68,10 +68,6 @@ type MockRegistry struct {
 
 type MockRegistryOptions func(option *MockRegistry)
 
-type ctxKeyType string
-
-const ctxKey ctxKeyType = "test_ctx_key"
-
 func TokenAuth(tokenFn tokenProcessing) MockRegistryOptions {
 	return func(mr *MockRegistry) {
 		mr.auth = SelfToken
@@ -153,7 +149,7 @@ func NewMockRegistry(t testing.TB, host string, port uint, repoNumber, tagNumber
 
 // URL returns the url of the registry
 func (mr *MockRegistry) URL() string {
-	return fmt.Sprintf("http://%s", mr.hostPort)
+	return fmt.Sprintf("http://%s", mr.hostPort) //
 }
 
 // Close closes mock and releases resources
@@ -267,9 +263,9 @@ func (mr *MockRegistry) getBlobs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	url := r.URL.Path
+	u := r.URL.Path
 	pathRegExp := regexp.MustCompile(`(?m)/v2/(.*)/blobs/(.*)`)
-	matches := pathRegExp.FindStringSubmatch(url)
+	matches := pathRegExp.FindStringSubmatch(u)
 	names := pathRegExp.SubexpNames()
 	var params []string
 
@@ -320,8 +316,8 @@ func (mr *MockRegistry) getCatalog(w http.ResponseWriter, r *http.Request) {
 	data, err := json.Marshal(Repositories{List: result})
 	assert.NoError(mr.t, err)
 
-	nextLinkUrl := fmt.Sprintf("/v2/_catalog?last=%s&n=%s; %s", mr.repositories.List[lastIndex], n, rel)
-	w.Header().Set("link", nextLinkUrl)
+	nextLinkURL := fmt.Sprintf("/v2/_catalog?last=%s&n=%s; %s", mr.repositories.List[lastIndex], n, rel)
+	w.Header().Set("link", nextLinkURL)
 	_, err = w.Write(data)
 	assert.NoError(mr.t, err)
 
@@ -387,8 +383,8 @@ func (mr *MockRegistry) getImageTags(w http.ResponseWriter, r *http.Request) {
 	data, err := json.Marshal(ImageTags{Name: repoName[1], Tags: result})
 	assert.NoError(mr.t, err)
 
-	nextLinkUrl := fmt.Sprintf("/v2/_catalog?last=%s&n=%s; %s", mr.tagList[repoIndex].Tags[lastIndex], n, rel)
-	w.Header().Set("link", nextLinkUrl)
+	nextLinkURL := fmt.Sprintf("/v2/_catalog?last=%s&n=%s; %s", mr.tagList[repoIndex].Tags[lastIndex], n, rel)
+	w.Header().Set("link", nextLinkURL)
 	_, err = w.Write(data)
 	assert.NoError(mr.t, err)
 
@@ -525,7 +521,7 @@ func (mr *MockRegistry) deleteManifest(w http.ResponseWriter, r *http.Request) {
 				digest := makeDigest(tag)
 				if digest == requestData[2] {
 					isTagFound = true
-					updatedTags := append(v.Tags[:j], v.Tags[j+1:]...)
+					updatedTags := append(v.Tags[:j], v.Tags[j+1:]...) //nolint
 					mr.tagList[i].Tags = updatedTags
 					break
 				}
