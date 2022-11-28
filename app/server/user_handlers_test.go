@@ -4,21 +4,33 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"strconv"
+	"testing"
+
 	"github.com/go-chi/chi/v5"
+	log "github.com/go-pkgz/lgr"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/zebox/registry-admin/app/store"
 	"github.com/zebox/registry-admin/app/store/engine"
-	"net/http"
-	"net/http/httptest"
-	"strconv"
-	"testing"
 )
+
+type ctxErrorKeyType string
+
+var ctxErrorKey ctxErrorKeyType = "testCtxErrorKey"
+
+// need for checks specs with registry password update at htpasswd file
+var htpasswdMock map[string]struct{}
 
 func Test_userCreateCtrl(t *testing.T) {
 	testUserHandlers := userHandlers{}
+	testUserHandlers.l = log.Default()
 	testUserHandlers.dataStore = prepareUserMock(t)
+	testUserHandlers.registryService = prepareRegistryMock(t)
+	htpasswdMock = make(map[string]struct{})
 
 	user := store.User{
 		Login:    "test_login",
@@ -29,7 +41,8 @@ func Test_userCreateCtrl(t *testing.T) {
 	userData, err := json.Marshal(user)
 	require.NoError(t, err)
 
-	req, errReq := http.NewRequest("POST", "/api/v1/users", bytes.NewBuffer(userData))
+	ctx := context.WithValue(context.Background(), ctxErrorKey, false)
+	req, errReq := http.NewRequestWithContext(ctx, "POST", "/api/v1/users", bytes.NewBuffer(userData))
 	require.NoError(t, errReq)
 
 	testWriter := httptest.NewRecorder()
@@ -44,6 +57,12 @@ func Test_userCreateCtrl(t *testing.T) {
 
 	assert.Equal(t, testResponse.ID, int64(1))
 	assert.Equal(t, testResponse.Data.(map[string]interface{})["login"], user.Login)
+	assert.NotNil(t, htpasswdMock[user.Login])
+
+	// emit registry update password error
+	ctx = context.WithValue(context.Background(), ctxErrorKey, true)
+	req, errReq = http.NewRequestWithContext(ctx, "POST", "/api/v1/users", bytes.NewBuffer(userData))
+	require.NoError(t, errReq)
 
 	// wrong user data
 	user.Login = ""
@@ -76,6 +95,7 @@ func Test_userCreateCtrl(t *testing.T) {
 	testWriter = httptest.NewRecorder()
 	handler.ServeHTTP(testWriter, req)
 	assert.Equal(t, http.StatusInternalServerError, testWriter.Code)
+
 }
 
 func Test_userInfoCtrl(t *testing.T) {
@@ -114,6 +134,8 @@ func Test_userInfoCtrl(t *testing.T) {
 func Test_userUpdateCtrl(t *testing.T) {
 	testUserHandlers := userHandlers{}
 	testUserHandlers.dataStore = prepareUserMock(t)
+	testUserHandlers.registryService = prepareRegistryMock(t)
+	testUserHandlers.l = log.Default()
 
 	var user = store.User{
 		ID:          10001,
@@ -128,7 +150,8 @@ func Test_userUpdateCtrl(t *testing.T) {
 	userData, err := json.Marshal(user)
 	require.NoError(t, err)
 
-	req, errReq := http.NewRequest("PUT", "/api/v1/users/10001", bytes.NewBuffer(userData))
+	ctx := context.WithValue(context.Background(), ctxErrorKey, true)
+	req, errReq := http.NewRequestWithContext(ctx, "PUT", "/api/v1/users/10001", bytes.NewBuffer(userData))
 	require.NoError(t, errReq)
 
 	rctx := chi.NewRouteContext()
@@ -254,6 +277,8 @@ func Test_userFindCtrl(t *testing.T) {
 func Test_userDeleteCtr(t *testing.T) {
 	testUserHandlers := userHandlers{}
 	testUserHandlers.dataStore = prepareUserMock(t)
+	testUserHandlers.registryService = prepareRegistryMock(t)
+	testUserHandlers.l = log.Default()
 
 	req, errReq := http.NewRequest("GET", `/api/v1/users?filter={"ids":[10001]}`, http.NoBody)
 	require.NoError(t, errReq)
@@ -264,7 +289,8 @@ func Test_userDeleteCtr(t *testing.T) {
 	assert.Equal(t, http.StatusOK, testWriter.Code)
 
 	{
-		req, errReq = http.NewRequest("DELETE", `/api/v1/users/10001`, http.NoBody)
+		ctx := context.WithValue(context.Background(), ctxErrorKey, true)
+		req, errReq = http.NewRequestWithContext(ctx, "DELETE", `/api/v1/users/10001`, http.NoBody)
 		require.NoError(t, errReq)
 
 		// check item for exist
@@ -387,6 +413,7 @@ func prepareUserMock(t *testing.T) *engine.InterfaceMock {
 				return errors.New("unknown role")
 			}
 			user.ID = 1
+			users = append(users, *user)
 			return nil
 		},
 
@@ -421,6 +448,20 @@ func prepareUserMock(t *testing.T) *engine.InterfaceMock {
 		FindUsersFunc: func(ctx context.Context, filter engine.QueryFilter) (engine.ListResponse, error) {
 
 			result := engine.ListResponse{}
+
+			if isErrorCtx := ctx.Value(ctxErrorKey); isErrorCtx != nil {
+				if !isErrorCtx.(bool) {
+					result.Total = int64(len(users))
+					func() {
+						for _, u := range users {
+							result.Data = append(result.Data, u)
+						}
+
+					}()
+					return result, nil
+				}
+				return result, errors.New("find user mock error")
+			}
 
 			for _, user := range users {
 				if filter.Filters != nil {

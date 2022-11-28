@@ -508,6 +508,21 @@ func prepareRegistryMock(_ *testing.T) *registryInterfaceMock {
 
 			return nil
 		},
+
+		UpdateHtpasswdFunc: func(usersFn registry.FetchUsers) error {
+			if usersFn == nil {
+				return errors.New("users list function should be defined")
+			}
+
+			users, err := usersFn.Users()
+			if err != nil {
+				return errors.New("users not found")
+			}
+			for _, u := range users {
+				htpasswdMock[u.Login] = struct{}{}
+			}
+			return nil
+		},
 	}
 }
 
