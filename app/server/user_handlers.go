@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/zebox/registry-admin/app/registry"
 	"net/http"
 	"strconv"
 
@@ -20,17 +21,15 @@ type userHandlers struct {
 	registryService registryInterface
 }
 
-type usersFn func(ctx context.Context, filter engine.QueryFilter) (users engine.ListResponse, err error)
-
 // usersRegistryAdapter need for bind FindUsers func in store engine with registry instance
 // for update password when htpasswd is used
 type usersRegistryAdapter struct {
 	ctx     context.Context
 	filters engine.QueryFilter
-	usersFn usersFn
+	usersFn registry.UsersFn
 }
 
-func newUsersRegistryAdapter(ctx context.Context, filters engine.QueryFilter, usersFunc usersFn) *usersRegistryAdapter {
+func newUsersRegistryAdapter(ctx context.Context, filters engine.QueryFilter, usersFunc registry.UsersFn) *usersRegistryAdapter {
 	return &usersRegistryAdapter{
 		ctx:     ctx,
 		filters: filters,
@@ -87,10 +86,10 @@ func (u *userHandlers) userCreateCtrl(w http.ResponseWriter, r *http.Request) {
 
 func (u *userHandlers) userInfoCtrl(w http.ResponseWriter, r *http.Request) {
 
-	userId := chi.URLParam(r, "id")
+	userID := chi.URLParam(r, "id")
 
 	// userInfo handler allows fetch user data only by user id
-	i, err := strconv.ParseInt(userId, 10, 64)
+	i, err := strconv.ParseInt(userID, 10, 64)
 	if err != nil {
 		SendErrorJSON(w, r, u.l, http.StatusBadRequest, err, "failed to parse user id with api")
 		return
@@ -127,9 +126,9 @@ func (u *userHandlers) userFindCtrl(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *userHandlers) userUpdateCtrl(w http.ResponseWriter, r *http.Request) { //nolint dupl
-	userId := chi.URLParam(r, "id")
+	userID := chi.URLParam(r, "id")
 
-	i, err := strconv.ParseInt(userId, 10, 64)
+	i, err := strconv.ParseInt(userID, 10, 64)
 	if err != nil {
 		SendErrorJSON(w, r, u.l, http.StatusBadRequest, err, "failed to parse user id with api")
 		return
@@ -164,9 +163,9 @@ func (u *userHandlers) userUpdateCtrl(w http.ResponseWriter, r *http.Request) { 
 }
 
 func (u *userHandlers) userDeleteCtrl(w http.ResponseWriter, r *http.Request) {
-	userId := chi.URLParam(r, "id")
+	userID := chi.URLParam(r, "id")
 
-	id, err := strconv.ParseInt(userId, 10, 64)
+	id, err := strconv.ParseInt(userID, 10, 64)
 	if err != nil {
 		SendErrorJSON(w, r, u.l, http.StatusBadRequest, err, "failed to parse user id with api")
 		return

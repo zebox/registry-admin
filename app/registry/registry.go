@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/zebox/registry-admin/app/store"
+	"github.com/zebox/registry-admin/app/store/engine"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -33,6 +34,9 @@ const (
 
 // authType define auth mechanism for accessing to docker registry using a docker HTTP API protocol
 type authType int8
+
+// UsersFn uses in adapter for bind FindUsers func in store engine with registry instance
+type UsersFn func(ctx context.Context, filter engine.QueryFilter) (users engine.ListResponse, err error)
 
 const (
 	Basic     authType = iota // allow access using auth basic credentials
