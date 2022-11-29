@@ -46,14 +46,21 @@ func TestRegistry_UpdateHtpasswd(t *testing.T) {
 		err := bcrypt.CompareHashAndPassword(v, []byte("password"+keySuffix))
 		assert.NoError(t, err)
 	}
-
 	assert.NoError(t, r.UpdateHtpasswd(tra))
+
+	// test for error with empty users
+	tra.usersFn = testFindUserFunc(nil)
+	assert.Error(t, r.UpdateHtpasswd(tra))
 
 	r.htpasswd.path = ""
 	assert.Error(t, r.UpdateHtpasswd(tra))
 
+	// test for error with nil userFn
+	assert.Error(t, r.UpdateHtpasswd(nil))
+
 	r.htpasswd = nil
 	assert.Nil(t, r.UpdateHtpasswd(tra))
+
 }
 
 func htpasswdReader(t *testing.T, path string) map[string][]byte {
@@ -98,6 +105,11 @@ func testFindUserFunc(users []store.User) UsersFn {
 		result := engine.ListResponse{}
 		if users == nil {
 			return result, errors.New("user list is empty")
+		}
+		result.Total = int64(len(users))
+
+		for _, u := range users {
+			result.Data = append(result.Data, u)
 		}
 		return result, nil
 	}
