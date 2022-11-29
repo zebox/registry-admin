@@ -141,16 +141,16 @@ func Test_createRegistryConnection(t *testing.T) {
 			Host:     "http://localhost/",
 			IP:       "127.0.0.1",
 			Port:     5000,
-			AuthType: "self_token",
+			AuthType: "token",
 			Secret:   "test_secret",
 			Login:    "test_login",
 			Password: "test_password",
 			Htpasswd: ".test_htpasswd",
 			Certs: struct {
-				Path      string `long:"path" env:"CERT_PATH" description:"A path where will be stored new self-signed cert,keys and CA files, when 'self-token' auth type is used" json:"certs_path"`
-				Key       string `long:"key" env:"KEY_PATH" description:"A path where will be stored new self-signed private key file, when 'self-token' auth type is used" json:"key"`
-				PublicKey string `long:"public-key" env:"PUBLIC_KEY_PATH" description:"A path where will be stored new self-signed public key file, when 'self-token' auth type is used" json:"public_key"`
-				CARoot    string `long:"ca-root" env:"CA_ROOT_PATH" description:"A path where will be stored new CA bundles file, when 'self-token' auth type is used" json:"ca_root"`
+				Path      string `long:"path" env:"CERT_PATH" description:"A path where will be stored new self-signed cert,keys and CA files, when 'token' auth type is used" json:"certs_path"`
+				Key       string `long:"key" env:"KEY_PATH" description:"A path where will be stored new self-signed private key file, when 'token' auth type is used" json:"key"`
+				PublicKey string `long:"public-key" env:"PUBLIC_KEY_PATH" description:"A path where will be stored new self-signed public key file, when 'token' auth type is used" json:"public_key"`
+				CARoot    string `long:"ca-root" env:"CA_ROOT_PATH" description:"A path where will be stored new CA bundles file, when 'token' auth type is used" json:"ca_root"`
 			}(struct {
 				Path      string
 				Key       string

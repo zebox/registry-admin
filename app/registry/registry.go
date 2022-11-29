@@ -190,10 +190,10 @@ func NewRegistry(login, password, secret string, settings Settings) (*Registry, 
 	if r.settings.AuthType == SelfToken {
 
 		if len(secret) == 0 {
-			return nil, errors.New("token secret must be defined for 'self_token' auth type")
+			return nil, errors.New("token secret must be defined for 'token' auth type")
 		}
 
-		r.htpasswd = nil // not needed for self-token auth
+		r.htpasswd = nil // not needed for token auth
 		var err error
 		if certsPathIsFilled {
 			hostName := r.settings.Host
@@ -216,7 +216,7 @@ func NewRegistry(login, password, secret string, settings Settings) (*Registry, 
 	}
 
 	// try to create secure http client transport with defined certificates path
-	// call this after token creation attempt, because it will create a new certificate if it doesn't exist and self-token auth defined
+	// call this after token creation attempt, because it will create a new certificate if it doesn't exist and token auth defined
 	if certsPathIsFilled {
 		transport, err := createHttpsTransport(settings.CertificatesPaths)
 		if err != nil {

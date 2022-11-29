@@ -6,7 +6,7 @@
   "registry": {
     "host": "127.0.0.1",
     "port": 50555,
-    "auth_type": "self_token",
+    "auth_type": "token",
     "token_secret": "testTokenSecret",
     "login": "admin",
     "password": "password",

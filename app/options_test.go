@@ -126,13 +126,20 @@ func Test_parseArgs(t *testing.T) {
 	require.NotNil(t, opts)
 	assert.Equal(t, &testMatcherOptions, opts)
 
-	// test for random token generated
+	// test for random token generated for main auth token
 	assert.NoError(t, os.Setenv("RA_AUTH_TOKEN_SECRET", ""))
-	os.Args = []string{os.Args[0]} // clear Go test flags
 	opts, err = parseArgs()
 	require.NoError(t, err)
 	require.NotNil(t, opts)
 	assert.NotEmpty(t, opts.Auth.TokenSecret)
+
+	// test for random token generated for registry auth token
+	assert.NoError(t, os.Setenv("RA_REGISTRY_TOKEN_SECRET", ""))
+	assert.NoError(t, os.Setenv("RA_REGISTRY_AUTH_TYPE", "token"))
+	opts, err = parseArgs()
+	require.NoError(t, err)
+	require.NotNil(t, opts)
+	assert.NotEmpty(t, opts.Registry.Secret)
 }
 
 func TestJsonConfigParser_ReadConfigFromFile(t *testing.T) {

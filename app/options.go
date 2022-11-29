@@ -75,8 +75,8 @@ type RegistryGroup struct {
 	Host                     string `long:"host" env:"HOST" required:"true" description:"Main host or address to docker registry service" json:"host"`
 	IP                       string `long:"ip" env:"IP" description:"Address which appends to certificate SAN (Subject Alternative Name)" json:"ip"`
 	Port                     uint   `long:"port" env:"PORT" description:"Port which registry accept requests. Default:5000" default:"5000" json:"port"`
-	AuthType                 string `long:"auth-type" env:"AUTH_TYPE" description:"Type for auth to docker registry service. Available 'basic' and 'self_token'. Default 'basic'" choice:"basic" choice:"self-token" default:"basic" json:"auth_type"`
-	Secret                   string `long:"token-secret" env:"TOKEN_SECRET" description:"Token secret for sign token when using 'self-token' auth type"  json:"token_secret"`
+	AuthType                 string `long:"auth-type" env:"AUTH_TYPE" description:"Type for auth to docker registry service. Available 'basic' and 'token'. Default 'basic'" choice:"basic" choice:"token" default:"basic" json:"auth_type"`
+	Secret                   string `long:"token-secret" env:"TOKEN_SECRET" description:"Token secret for sign token when using 'token' auth type"  json:"token_secret"`
 	Login                    string `long:"login" env:"LOGIN" description:"Username is a credential for access to registry service using basic auth type" json:"login"`
 	Password                 string `long:"password" env:"PASSWORD" description:"Password is a credential for access to registry service using basic auth type" json:"password"`
 	Htpasswd                 string `long:"htpasswd" env:"HTPASSWD" description:"Path to htpasswd file when basic auth type selected" json:"htpasswd"`
@@ -85,10 +85,10 @@ type RegistryGroup struct {
 	Issuer                   string `long:"issuer" env:"TOKEN_ISSUER" description:"A token issuer name which defined in registry settings" json:"token_issuer"`
 	GarbageCollectorInterval int64  `long:"gc-interval" env:"GC_INTERVAL" description:"Use for define custom time interval for garbage collector call (in hour), default 1 hours" json:"gc_interval"`
 	Certs                    struct {
-		Path      string `long:"path" env:"CERT_PATH" description:"A path where will be stored new self-signed cert,keys and CA files, when 'self-token' auth type is used" json:"certs_path"`
-		Key       string `long:"key" env:"KEY_PATH" description:"A path where will be stored new self-signed private key file, when 'self-token' auth type is used" json:"key"`
-		PublicKey string `long:"public-key" env:"PUBLIC_KEY_PATH" description:"A path where will be stored new self-signed public key file, when 'self-token' auth type is used" json:"public_key"`
-		CARoot    string `long:"ca-root" env:"CA_ROOT_PATH" description:"A path where will be stored new CA bundles file, when 'self-token' auth type is used" json:"ca_root"`
+		Path      string `long:"path" env:"CERT_PATH" description:"A path where will be stored new self-signed cert,keys and CA files, when 'token' auth type is used" json:"certs_path"`
+		Key       string `long:"key" env:"KEY_PATH" description:"A path where will be stored new self-signed private key file, when 'token' auth type is used" json:"key"`
+		PublicKey string `long:"public-key" env:"PUBLIC_KEY_PATH" description:"A path where will be stored new self-signed public key file, when 'token' auth type is used" json:"public_key"`
+		CARoot    string `long:"ca-root" env:"CA_ROOT_PATH" description:"A path where will be stored new CA bundles file, when 'token' auth type is used" json:"ca_root"`
 	} `group:"certs" namespace:"certs" env-namespace:"CERTS" json:"certs"`
 }
 
@@ -104,12 +104,7 @@ func parseArgs() (*Options, error) {
 	if options.Port > 65535 || options.Port < 1 {
 		return nil, errors.New("wrong port value")
 	}
-	if options.Auth.TokenSecret == "" {
-		options.Auth.TokenSecret = generateRandomSecureToken(64)
-		log.Print("No TokenSecret secret provided - generated random secret. To provide a TokenSecret, fill in " +
-			"'token_secret' in the configuration file, set the 'RA_AUTH_TOKEN_SECRET' environment variable " +
-			"or use '--auth.token-secret' CLI flag.")
-	}
+
 	// try read config from config file
 	if options.ConfigPath != "" {
 		ext := filepath.Ext(options.ConfigPath)
@@ -124,6 +119,21 @@ func parseArgs() (*Options, error) {
 		}
 
 	}
+
+	if options.Auth.TokenSecret == "" {
+		options.Auth.TokenSecret = generateRandomSecureToken(64)
+		log.Print("No TokenSecret secret provided - generated random secret. To provide a TokenSecret, fill in " +
+			"'token_secret' at 'auth' section in the configuration file, set the 'RA_AUTH_TOKEN_SECRET' environment variable " +
+			"or use '--auth.token-secret' CLI flag.")
+	}
+
+	if options.Registry.AuthType == "token" && options.Registry.Secret == "" {
+		options.Registry.Secret = generateRandomSecureToken(64)
+		log.Print("No TokenSecret secret provided for registry auth token - generated random secret. To provide a Secret, fill in " +
+			"'token_secret' at 'registry' section in the configuration file, set the 'RA_AUTH_TOKEN_SECRET' environment variable " +
+			"or use '--registry.token-secret' CLI flag.")
+	}
+
 	return &options, nil
 }
 

@@ -180,7 +180,7 @@ func createRegistryConnection(opts RegistryGroup) (*registry.Registry, error) {
 		if opts.Htpasswd == "" {
 			return nil, errors.New("htpasswd file path required for basic auth type")
 		}
-	case "self_token":
+	case "token":
 		registrySettings.Service = opts.Service
 		registrySettings.Issuer = opts.Issuer
 		registrySettings.AuthType = registry.SelfToken
@@ -193,7 +193,7 @@ func createRegistryConnection(opts RegistryGroup) (*registry.Registry, error) {
 		// required for append to certificate extension
 		registrySettings.IP = opts.IP
 
-		// paths to private, public keys and CA certificates for token generation if 'self_token' auth type defined
+		// paths to private, public keys and CA certificates for token generation if 'token' auth type defined
 		registrySettings.CertificatesPaths.RootPath = opts.Certs.Path
 		registrySettings.CertificatesPaths.KeyPath = opts.Certs.Key
 		registrySettings.CertificatesPaths.PublicKeyPath = opts.Certs.PublicKey
