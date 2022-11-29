@@ -3,6 +3,7 @@ import { Layout, LayoutProps } from 'react-admin';
 import AppBar from './AppBar';
 import Menu from './Menu';
 
-export default (props: LayoutProps) => {
-    return <Layout {...props} appBar={AppBar} menu={Menu} />;
-};
+// eslint-disable-next-line 
+export default (props: LayoutProps) => ( 
+     <Layout {...props} appBar={AppBar} menu={Menu} />
+);

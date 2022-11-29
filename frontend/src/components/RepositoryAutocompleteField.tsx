@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Identifier,  useDataProvider, useInput, useRecordContext, useTranslate, required } from "react-admin";
+import { Identifier,  useDataProvider, useInput, useRecordContext, useTranslate } from "react-admin";
 import { repositoryBaseResource } from "../registry/RepositoryShow";
 import TextField from '@mui/material/TextField';
 import Autocomplete from '@mui/material/Autocomplete';
@@ -43,7 +43,7 @@ export const RepositoryAutocomplete = (props: any) => {
 
     useEffect(() => {
         getRepositoryData();
-    }, []);
+    },);
 
     const getRepositoryData = (searchValue: string | void) => {
         dataProvider.getList(

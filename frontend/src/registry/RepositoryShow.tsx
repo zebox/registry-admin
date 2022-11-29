@@ -8,6 +8,7 @@ import { SizeFieldReadable } from "./RepositoryList";
 import ImageConfigPage from './ImageConfig';
 import InfoIcon from '@mui/icons-material/Info';
 import { requirePermission } from '../helpers/Helpers';
+import CopyToClipboard from "../components/ClipboardCopy/CopyToClipboard";
 /**
  * Fetch a repository entry from the API and display it
  */
@@ -20,7 +21,7 @@ const RepositoryShow = () => {
 
     return <TagList title={translate('resources.repository.tag_list_title')}>
         <Datagrid bulkActionButtons={false}>
-            <TextField source="tag" label={translate('resources.repository.fields.tag')} />
+            <TagFiled source="tag" label={translate('resources.repository.fields.tag')} />
             <TagDescription source="digest" label={translate('resources.repository.fields.digest')} />
             <DateFieldFormatted source="timestamp" label={translate('resources.repository.fields.date')} />
             <SizeFieldReadable source="size" label={translate('resources.repository.fields.size')} />
@@ -33,6 +34,15 @@ const RepositoryShow = () => {
     </TagList>
 }
 
+const TagFiled = ({source}:any):React.ReactElement=>{
+    const record = useRecordContext();
+    return (
+        <>
+          <TextField source="tag" />
+          <CopyToClipboard content={`${record['repository_name']}:${record[source]}`}/>
+        </>
+    )
+}
 
 const TagList = ({ children, actions, filters, title, ...props }: any) => {
     const { id } = useParams();

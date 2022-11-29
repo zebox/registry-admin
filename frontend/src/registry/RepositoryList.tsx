@@ -1,10 +1,9 @@
 import React from 'react';
 import SyncRepo from '@mui/icons-material/Sync';
+
 import { Box, Typography, Card, Container, CssBaseline, CardContent, Tooltip } from '@mui/material';
 import { useEffect, useState } from 'react';
-
 import { SearchFieldTranslated, ParseSizeToReadable } from '../helpers/Helpers';
-
 import {
     Button,
     ExportButton,
@@ -21,6 +20,7 @@ import {
     usePermissions
 } from 'react-admin';
 import { requirePermission } from '../helpers/Helpers';
+import CopyToClipboard from '../components/ClipboardCopy/CopyToClipboard';
 
 
 const EmptyList = () => {
@@ -135,7 +135,7 @@ const RepositoryList = (props: any) => {
             filters={SearchFieldTranslated(translate)}
         >
             <Datagrid bulkActionButtons={false}>
-                <TextField source="repository_name" label={translate('resources.repository.fields.name')} />
+                <RepositoryItemName source="repository_name" label={translate('resources.repository.fields.name')} />
                 <SizeFieldReadable source="size" label={translate('resources.repository.fields.size')} />
                 <RepositoryShowButton />
             </Datagrid>
@@ -151,6 +151,15 @@ export const SizeFieldReadable = ({ source }: any) => {
             {ParseSizeToReadable(record[source], 2)}
         </>
     ) : null;
+}
+
+const RepositoryItemName = ({ source }: any) => {
+    const record = useRecordContext();
+
+    return <>
+        <TextField source="repository_name"  />
+        <CopyToClipboard content={record[source]}/>
+    </>
 }
 
 export default RepositoryList;

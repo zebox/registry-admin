@@ -3,7 +3,7 @@ import FormHelperText from '@mui/material/FormHelperText';
 import Select from '@mui/material/Select';
 import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
-import { useInput, useTranslate, useRecordContext } from 'react-admin';
+import { useInput, useTranslate } from 'react-admin';
 
 
 const RepositoryAction = (props:any) => {

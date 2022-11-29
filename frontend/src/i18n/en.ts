@@ -83,6 +83,7 @@ const customEnglishMessages: TranslationMessages = {
             message_sync_repo:"Synchronize repositories from registry",
             message_syncing_repo:"Repositories sync in progress...",
             message_error_syncing_repo:"Synchronization error",
+            message_copied_to_clipboard: "Copied to clipboard",
             message_repo_syncing_running:"Synchronization currently running. Please wait for complete previous task.",
             button_sync:"Sync"
 

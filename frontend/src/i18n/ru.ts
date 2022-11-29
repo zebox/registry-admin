@@ -61,12 +61,12 @@ const customRussianMessages: TranslationMessages = {
         },
         repository:{
             fields:{
-                name: "Название",
+                name: "Наименование",
                 size: "Размер",
                 tag:"Тэг",
                 date:"Дата",
                 digest:"Подпись",
-                details:"Поднробнее"
+                details:"Подробнее"
 
             },
             title: "Информация о репозитории",
@@ -83,6 +83,7 @@ const customRussianMessages: TranslationMessages = {
             message_sync_repo: "Синхронизировать репозитории из реестра",
             message_syncing_repo: "Синхронизация репозиториев запущена",
             message_error_syncing_repo: "Попытка синхронизации завершилась ошибкой",
+            message_copied_to_clipboard: "Скопировано",
             message_repo_syncing_running: "Синхронизация уже запущена. Дождитесь окончания окончания операции.",
             button_sync: "Синхронизировать"
         }

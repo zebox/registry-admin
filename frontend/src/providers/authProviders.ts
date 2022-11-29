@@ -1,5 +1,5 @@
 import { AuthProvider, fetchUtils } from 'react-admin';
-import { BASE_URL, API_BASE, API_AUTH } from "./constants";
+import { BASE_URL, API_AUTH } from "./constants";
 
 
 const apiAuthUrl: string = `${BASE_URL}${API_AUTH}`;

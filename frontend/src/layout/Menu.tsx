@@ -4,8 +4,7 @@ import {
     MenuItemLink,
     MenuProps,
     useSidebarState,
-    usePermissions,
-    useBasename
+    usePermissions
 } from 'react-admin';
 
 import users from '../users';
