@@ -13,7 +13,6 @@ jobs:
 
     steps:
       - name: disable and stop mono-xsp4.service (wtf?)
-        working-directory: app
         run: |
           sudo systemctl stop mono-xsp4.service || true
           sudo systemctl disable mono-xsp4.service || true
