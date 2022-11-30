@@ -1,0 +1,49 @@
+name: build
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    # The branches below must be a subset of the branches above
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: disable and stop mono-xsp4.service (wtf?)
+        working-directory: app
+        run: |
+          sudo systemctl stop mono-xsp4.service || true
+          sudo systemctl disable mono-xsp4.service || true
+
+      - name: set up go 1.17
+        uses: actions/setup-go@v2
+        with:
+          go-version: '1.17'
+        id: go
+
+      - name: checkout
+        uses: actions/checkout@v2
+
+      - name: build and test
+        working-directory: app
+        run: |
+          go get -v
+          go test -timeout=60s -v -race -p 1 -covermode=atomic -coverprofile=$GITHUB_WORKSPACE/profile.cov_tmp ./...
+          cat $GITHUB_WORKSPACE/profile.cov_tmp | grep -v "_mock.go" > $GITHUB_WORKSPACE/profile.cov
+          go build -race
+        env:
+          GO111MODULE: "on"
+          CGO_ENABLED: "1"
+      - name: install golangci-lint
+        run: |
+          curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b $GITHUB_WORKSPACE v1.50.1
+          GO111MODULE=off go get -u -v github.com/mattn/goveralls
+      - name: run linters
+        working-directory: app
+        run: $GITHUB_WORKSPACE/golangci-lint run
+
+
+
