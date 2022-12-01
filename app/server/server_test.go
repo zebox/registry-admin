@@ -43,7 +43,7 @@ const (
 
 type testCtxValue string
 
-var testUserId = int64(rand.Uint32()) //nolint:gosec
+var testUserID = int64(rand.Uint32()) //nolint:gosec
 
 func TestServer_RunNoneSSL(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
@@ -104,7 +104,7 @@ func TestServer_RunStaticSSL(t *testing.T) {
 	defer cancel()
 
 	_, dir, err := initTestKeys(ctx, t)
-
+	t.Logf("keys dir: %s", dir)
 	require.NoError(t, err)
 	_, err = os.Stat(dir + "/" + testPrivateKeyFileName)
 	require.NoError(t, err)
@@ -218,7 +218,7 @@ func TestServer_ClaimUpdateFn(t *testing.T) {
 	srv := Server{
 		Storage: prepareTestStorage(t),
 	}
-	strUserId := strconv.FormatInt(testUserId, 10)
+	strUserId := strconv.FormatInt(testUserID, 10)
 	var baseClaims token.Claims
 	baseClaims.Id = strUserId
 	baseClaims.User = &token.User{ID: strUserId, Name: "test_user"}
@@ -247,7 +247,7 @@ func TestServer_BasicAuthCheckerFn(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.True(t, ok)
-		assert.Equal(t, claim.ID, strconv.FormatInt(testUserId, 10))
+		assert.Equal(t, claim.ID, strconv.FormatInt(testUserID, 10))
 	}
 
 	{
@@ -354,12 +354,12 @@ func TestIntegrationUserOperationWithEmbeddedStore(t *testing.T) {
 
 		var cookies []*http.Cookie
 
-		baseUrl := fmt.Sprintf("http://localhost:%d/api/v1", ts.Port)
+		baseURL := fmt.Sprintf("http://localhost:%d/api/v1", ts.Port)
 		loginURL := fmt.Sprintf("http://localhost:%d/auth/test_local/login", ts.Port)
 
 		{
 			// try to make a request without auth
-			resp, err := client.Get(baseUrl + "/users")
+			resp, err := client.Get(baseURL + "/users")
 			require.NoError(t, err)
 			defer func() { assert.NoError(t, resp.Body.Close()) }()
 			assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
@@ -401,9 +401,9 @@ func TestIntegrationUserOperationWithEmbeddedStore(t *testing.T) {
 		require.NoError(t, e)
 
 		{
-			// testing create user
+			t.Log("testing for create user")
 
-			req, err := http.NewRequestWithContext(ctx, "POST", baseUrl+"/users", bytes.NewBuffer(testUserData))
+			req, err := http.NewRequestWithContext(ctx, "POST", baseURL+"/users", bytes.NewBuffer(testUserData))
 			require.NoError(t, err)
 			addCookiesFn(req, cookies)
 
@@ -437,8 +437,8 @@ func TestIntegrationUserOperationWithEmbeddedStore(t *testing.T) {
 		}
 
 		{
-			// testing get user from store
-			req, err := http.NewRequestWithContext(ctx, "GET", baseUrl+"/users/2", http.NoBody)
+			t.Log("testing get user from store")
+			req, err := http.NewRequestWithContext(ctx, "GET", baseURL+"/users/2", http.NoBody)
 			require.NoError(t, err)
 			addCookiesFn(req, cookies)
 
@@ -460,9 +460,8 @@ func TestIntegrationUserOperationWithEmbeddedStore(t *testing.T) {
 			testUser.ID = respMsg.ID
 			assert.Equal(t, *testUser, createdUser)
 		}
-
 		{
-			// testing find users
+			t.Log("testing find users")
 			testUsers := []store.User{
 				{
 					Login:       "test_manager",
@@ -484,10 +483,12 @@ func TestIntegrationUserOperationWithEmbeddedStore(t *testing.T) {
 				},
 			}
 
+			t.Log("testing for create multiple users")
 			for _, u := range testUsers {
-				uData, errJson := json.Marshal(u)
-				require.NoError(t, errJson)
-				req, err := http.NewRequestWithContext(ctx, "POST", baseUrl+"/users", bytes.NewBuffer(uData))
+				t.Logf("creating: %s", u.Login)
+				uData, errJSON := json.Marshal(u)
+				require.NoError(t, errJSON)
+				req, err := http.NewRequestWithContext(ctx, "POST", baseURL+"/users", bytes.NewBuffer(uData))
 				require.NoError(t, err)
 				addCookiesFn(req, cookies)
 
@@ -496,7 +497,8 @@ func TestIntegrationUserOperationWithEmbeddedStore(t *testing.T) {
 				assert.Equal(t, http.StatusOK, resp.StatusCode)
 			}
 
-			req, err := http.NewRequestWithContext(ctx, "GET", baseUrl+"/users", http.NoBody)
+			t.Log("test for get users list")
+			req, err := http.NewRequestWithContext(ctx, "GET", baseURL+"/users", http.NoBody)
 			require.NoError(t, err)
 			addCookiesFn(req, cookies)
 
@@ -508,18 +510,19 @@ func TestIntegrationUserOperationWithEmbeddedStore(t *testing.T) {
 			var respMsg engine.ListResponse
 			err = json.NewDecoder(resp.Body).Decode(&respMsg)
 			require.NoError(t, err)
+			t.Logf("%v", respMsg)
 			defer func() { assert.NoError(t, resp.Body.Close()) }()
 			assert.Equal(t, int64(4), respMsg.Total)
 		}
 
 		{
-			// try to update user and disable user which issued token use
+			t.Log("try to update user and disable user which issued token use")
 			testUser.Disabled = true
 			testUser.Password = ""
 
-			uData, errJson := json.Marshal(testUser)
-			require.NoError(t, errJson)
-			req, err := http.NewRequestWithContext(ctx, "PUT", baseUrl+"/users/2", bytes.NewBuffer(uData))
+			uData, errJSON := json.Marshal(testUser)
+			require.NoError(t, errJSON)
+			req, err := http.NewRequestWithContext(ctx, "PUT", baseURL+"/users/2", bytes.NewBuffer(uData))
 			require.NoError(t, err)
 			addCookiesFn(req, cookies)
 
@@ -528,7 +531,7 @@ func TestIntegrationUserOperationWithEmbeddedStore(t *testing.T) {
 			assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 			// try request after update when user is disabled
-			req, err = http.NewRequestWithContext(ctx, "GET", baseUrl+"/users/2", http.NoBody)
+			req, err = http.NewRequestWithContext(ctx, "GET", baseURL+"/users/2", http.NoBody)
 			require.NoError(t, err)
 
 			resp, errClient = client.Do(req)
@@ -539,10 +542,11 @@ func TestIntegrationUserOperationWithEmbeddedStore(t *testing.T) {
 			assert.NoError(t, loginFn("test_admin", "test_admin_password", http.StatusInternalServerError))
 		}
 		{
-			// try re-login with user role
+
+			t.Log("try re-login with user role")
 			assert.NoError(t, loginFn("test_user", "test_user_password", http.StatusOK))
 
-			req, err := http.NewRequestWithContext(ctx, "GET", baseUrl+"/users", http.NoBody)
+			req, err := http.NewRequestWithContext(ctx, "GET", baseURL+"/users", http.NoBody)
 			require.NoError(t, err)
 			addCookiesFn(req, cookies)
 
@@ -552,9 +556,10 @@ func TestIntegrationUserOperationWithEmbeddedStore(t *testing.T) {
 		}
 		{
 			// try re-login with manager role
+			t.Log("try re-login with manager role")
 			assert.NoError(t, loginFn("test_manager", "test_manager_password", http.StatusOK))
 
-			req, err := http.NewRequestWithContext(ctx, "GET", baseUrl+"/users", http.NoBody)
+			req, err := http.NewRequestWithContext(ctx, "GET", baseURL+"/users", http.NoBody)
 			require.NoError(t, err)
 			addCookiesFn(req, cookies)
 
@@ -605,7 +610,7 @@ func prepareTestStorage(t *testing.T) *engine.InterfaceMock {
 		GetUserFunc: func(ctx context.Context, id interface{}) (store.User, error) {
 
 			testUser := store.User{
-				ID:   testUserId,
+				ID:   testUserID,
 				Name: "test_user",
 				Role: "user",
 			}
@@ -623,7 +628,7 @@ func prepareTestStorage(t *testing.T) *engine.InterfaceMock {
 			switch val := id.(type) {
 			case string:
 				if i, err := strconv.Atoi(val); err == nil {
-					if int64(i) != testUserId {
+					if int64(i) != testUserID {
 						return store.User{}, errors.New("unknown user id")
 					}
 					return testUser, nil
@@ -633,7 +638,7 @@ func prepareTestStorage(t *testing.T) *engine.InterfaceMock {
 				}
 			case int, int64:
 				iUserId := val.(int)
-				if int64(iUserId) != testUserId {
+				if int64(iUserId) != testUserID {
 					return store.User{}, errors.New("unknown user id")
 				}
 			}
@@ -734,7 +739,9 @@ func initTestKeys(ctx context.Context, t *testing.T) (keys *gojwk.Keys, dir stri
 	}
 
 	fileStore := storage.NewFileStorage(dir, testPrivateKeyFileName, testPublicKeyFileName)
-	keys, _ = gojwk.NewKeys(gojwk.Storage(fileStore))
+	keys, err = gojwk.NewKeys(gojwk.Storage(fileStore))
+
+	require.NoError(t, err)
 
 	ca := &x509.Certificate{
 		SerialNumber: big.NewInt(2019),

@@ -30,7 +30,6 @@ func Test_userCreateCtrl(t *testing.T) {
 	testUserHandlers.l = log.Default()
 	testUserHandlers.dataStore = prepareUserMock(t)
 	testUserHandlers.registryService = prepareRegistryMock(t)
-	htpasswdMock = make(map[string]struct{})
 
 	user := store.User{
 		Login:    "test_login",
@@ -60,41 +59,45 @@ func Test_userCreateCtrl(t *testing.T) {
 	assert.NotNil(t, htpasswdMock[user.Login])
 
 	// emit registry update password error
-	ctx = context.WithValue(context.Background(), ctxErrorKey, true)
-	req, errReq = http.NewRequestWithContext(ctx, "POST", "/api/v1/users", bytes.NewBuffer(userData))
-	require.NoError(t, errReq)
+	{
+		ctx = context.WithValue(context.Background(), ctxErrorKey, true)
+		req, errReq = http.NewRequestWithContext(ctx, "POST", "/api/v1/users", bytes.NewBuffer(userData))
+		require.NoError(t, errReq)
 
-	// wrong user data
-	user.Login = ""
-	userData, err = json.Marshal(user)
-	require.NoError(t, err)
+		// wrong user data
+		user.Login = ""
+		userData, err = json.Marshal(user)
+		require.NoError(t, err)
 
-	req, errReq = http.NewRequest("POST", "/api/v1/users", bytes.NewBuffer(userData))
-	require.NoError(t, errReq)
+		req, errReq = http.NewRequest("POST", "/api/v1/users", bytes.NewBuffer(userData))
+		require.NoError(t, errReq)
 
-	testWriter = httptest.NewRecorder()
-	handler.ServeHTTP(testWriter, req)
-	assert.Equal(t, http.StatusInternalServerError, testWriter.Code)
+		testWriter = httptest.NewRecorder()
+		handler.ServeHTTP(testWriter, req)
+		assert.Equal(t, http.StatusInternalServerError, testWriter.Code)
 
-	user.ID = 1
-	user.Login = "test_login"
-	userData, err = json.Marshal(user)
-	require.NoError(t, err)
+		user.ID = 1
+		user.Login = "test_login"
+		userData, err = json.Marshal(user)
+		require.NoError(t, err)
+	}
 
-	req, errReq = http.NewRequest("POST", "/api/v1/users", bytes.NewBuffer(userData))
-	require.NoError(t, errReq)
+	{
+		req, errReq = http.NewRequest("POST", "/api/v1/users", bytes.NewBuffer(userData))
+		require.NoError(t, errReq)
 
-	testWriter = httptest.NewRecorder()
-	handler.ServeHTTP(testWriter, req)
-	assert.Equal(t, http.StatusInternalServerError, testWriter.Code)
+		testWriter = httptest.NewRecorder()
+		handler.ServeHTTP(testWriter, req)
+		assert.Equal(t, http.StatusInternalServerError, testWriter.Code)
 
-	badUserJson := `{"id":"0"}`
-	req, errReq = http.NewRequest("POST", "/api/v1/users", bytes.NewBuffer([]byte(badUserJson)))
-	require.NoError(t, errReq)
+		badUserJSON := `{"id":"0"}`
+		req, errReq = http.NewRequest("POST", "/api/v1/users", bytes.NewBuffer([]byte(badUserJSON)))
+		require.NoError(t, errReq)
 
-	testWriter = httptest.NewRecorder()
-	handler.ServeHTTP(testWriter, req)
-	assert.Equal(t, http.StatusInternalServerError, testWriter.Code)
+		testWriter = httptest.NewRecorder()
+		handler.ServeHTTP(testWriter, req)
+		assert.Equal(t, http.StatusInternalServerError, testWriter.Code)
+	}
 
 }
 

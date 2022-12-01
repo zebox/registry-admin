@@ -466,6 +466,9 @@ func filledTestEntries(t *testing.T, testRegistryHandlers *registryHandlers) {
 }
 
 func prepareRegistryMock(_ *testing.T) *registryInterfaceMock {
+	if htpasswdMock == nil {
+		htpasswdMock = make(map[string]struct{})
+	}
 
 	return &registryInterfaceMock{
 

@@ -84,7 +84,6 @@ func TestFilterBuilder(t *testing.T) {
 		f := filtersBuilder(filter, "role", "login")
 		checkWhere := "WHERE (role LIKE '%test%' OR login LIKE '%test%') AND (disabled = 1) ORDER BY id asc  LIMIT 9 OFFSET 1"
 		assert.Equal(t, checkWhere, f.allClauses)
-		t.Log(f.allClauses)
 	}
 
 	{
@@ -92,7 +91,6 @@ func TestFilterBuilder(t *testing.T) {
 		f1 := filtersBuilder(filter, "role", "login")
 		checkWhere := "WHERE (role LIKE '%test%' OR login LIKE '%test%') ORDER BY id asc  LIMIT 9 OFFSET 1"
 		assert.Equal(t, checkWhere, f1.allClauses)
-		t.Log(f1.allClauses)
 	}
 	{
 

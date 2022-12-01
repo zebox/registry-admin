@@ -55,7 +55,8 @@ func TestDataService_SyncExistedRepositories(t *testing.T) {
 	assert.Nil(t, errExisted)
 
 	// wait until synced
-	for testDS.isWorking {
+	for testDS.isWorking.Load().(int) == 0 {
+
 		select {
 		case <-ctx.Done():
 			t.Error("context timeout before sync done")
@@ -78,22 +79,27 @@ func TestDataService_SyncExistedRepositories(t *testing.T) {
 
 	// test with fake errors
 	repositoryStore = make(map[string]store.RegistryEntry) // clear data in mock registry
-	errs.createError = errorCreate
+
+	// errs.createError = errorCreate
+	ctx = context.WithValue(context.Background(), ctxKey, errorCreate)
 	testDS.doSyncRepositories(ctx)
 	assert.Equal(t, 0, len(repositoryStore))
 
 	repositoryStore = make(map[string]store.RegistryEntry) // clear data in mock registry
-	errs.manifestError = errorManifest
+	// errs.manifestError = errorManifest
+	ctx = context.WithValue(context.Background(), ctxKey, errorManifest)
 	testDS.doSyncRepositories(ctx)
 	assert.Equal(t, 0, len(repositoryStore))
 
 	repositoryStore = make(map[string]store.RegistryEntry) // clear data in mock registry
-	errs.listError = errorList
+	// errs.listError = errorList
+	ctx = context.WithValue(context.Background(), ctxKey, errorList)
 	testDS.doSyncRepositories(ctx)
 	assert.Equal(t, 0, len(repositoryStore))
 
 	repositoryStore = make(map[string]store.RegistryEntry) // clear data in mock registry
-	errs.catalogError = errorCatalog
+	// errs.catalogError = errorCatalog
+	ctx = context.WithValue(context.Background(), ctxKey, errorCatalog)
 	testDS.doSyncRepositories(ctx)
 	assert.Equal(t, 0, len(repositoryStore))
 
@@ -125,7 +131,7 @@ func TestDataService_RepositoriesMaintaining(t *testing.T) {
 	err := testDS.doGarbageCollector(ctx)
 	assert.NotNil(t, err)
 
-	testDS.lastSyncDate = 0
+	testDS.lastSyncDate.Store(int64(0))
 	err = testDS.doGarbageCollector(ctx)
 	assert.Equal(t, ErrNoSyncedYet, err)
 }
@@ -172,9 +178,14 @@ func prepareRegistryMock(size int, errs *errorsEmulator) *registryInterfaceMock 
 		CatalogFunc: func(ctx context.Context, n string, last string) (repos registry.Repositories, err error) {
 
 			// emit fake error
-			if errs.catalogError != nil {
-				return repos, errs.catalogError
+			if ctx != nil && ctx.Value(ctxKey) != nil {
+				if ctx.Value(ctxKey).(error) == errs.catalogError {
+					return repos, errs.catalogError
+				}
 			}
+			/*if errs.catalogError != nil {
+				return repos, errs.catalogError
+			}*/
 
 			// sorting testRepos
 			names := make([]string, 0, len(testRepositories))

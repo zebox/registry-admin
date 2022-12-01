@@ -100,12 +100,12 @@ func TestDataService_RepositoryEventsProcessing(t *testing.T) {
 	assert.Nil(t, err)
 
 	// test with race avoid flag
-	ds.isWorking = true
+	ds.isWorking.Store(1)
 	testEnvelope.Events[0].Action = notifications.EventActionPull
 	testEnvelope.Events[0].Target.Repository = "test/repo_1"
 	testEnvelope.Events[0].Target.Tag = "1.1.0"
 	err = ds.RepositoryEventsProcessing(ctx, testEnvelope)
-	ds.isWorking = false
+	ds.isWorking.Store(0)
 	assert.Error(t, err)
 
 	// test with multiple values

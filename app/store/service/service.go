@@ -10,6 +10,7 @@ import (
 	"github.com/zebox/registry-admin/app/store/engine"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	log "github.com/go-pkgz/lgr"
@@ -36,43 +37,33 @@ type DataService struct {
 	Registry registryInterface
 	Storage  engine.Interface
 
-	lastSyncDate int64 // timestamp for mark actual record and use it for repository garbage collector
+	lastSyncDate atomic.Value // timestamp for mark actual record and use it for repository garbage collector
 
 	// used for checks status either syncing operation or garbage collector is active
 	// it prevents stacking task in queue and run in parallels
-	isWorking bool
+	isWorking atomic.Value
 
-	mutex sync.RWMutex
+	syncGcChan chan context.Context
+	mutex      sync.RWMutex
 }
 
 // SyncExistedRepositories will check existed entries at a registry service and synchronize it
 func (ds *DataService) SyncExistedRepositories(ctx context.Context) error {
 
-	// prevent parallel syncing
-	ds.mutex.RLock()
-	defer ds.mutex.RUnlock()
-	if ds.isWorking {
+	if ds.isWorking.Load().(int) > 0 {
 		return errors.New("repository sync currently running")
 	}
 
-	go ds.doSyncRepositories(ctx)
-
-	go func() {
-		if err := ds.doGarbageCollector(ctx); err != nil {
-			log.Printf("[ERROR] failed to run garbage collector")
-		}
-	}()
-
+	ds.syncGcChan <- ctx
 	return nil
 }
 
 func (ds *DataService) doSyncRepositories(ctx context.Context) {
 
 	ds.mutex.Lock()
-	ds.isWorking = true
-
+	ds.isWorking.Store(1)
 	defer func() {
-		ds.isWorking = false
+		ds.isWorking.Store(0)
 		ds.mutex.Unlock()
 	}()
 
@@ -86,7 +77,7 @@ func (ds *DataService) doSyncRepositories(ctx context.Context) {
 		totalTags  uint64
 	)
 	for {
-		repos, errCatalog := ds.Registry.Catalog(context.Background(), n, lastRepo)
+		repos, errCatalog := ds.Registry.Catalog(ctx, n, lastRepo)
 
 		if errCatalog != nil && errCatalog != registry.ErrNoMorePages {
 			log.Printf("[ERROR] failed to fetch catalog list: %v", errCatalog)
@@ -192,8 +183,7 @@ func (ds *DataService) doSyncRepositories(ctx context.Context) {
 		}
 	}
 
-	ds.lastSyncDate = now
-
+	ds.lastSyncDate.Store(now)
 }
 
 // RepositoriesMaintenance check repositories for outdated or updated data in repository storage
@@ -205,7 +195,19 @@ func (ds *DataService) RepositoriesMaintenance(ctx context.Context, timeout int6
 	if timeout == 0 {
 		timeout = 60
 	}
-	ticker := time.NewTicker(time.Duration(timeout) * time.Hour)
+	ticker := time.NewTicker(time.Duration(timeout) * time.Minute)
+	ds.isWorking.Store(0)
+	ds.syncGcChan = make(chan context.Context)
+
+	SyncGcTaskFn := func(syncCtx context.Context) {
+		if ds.isWorking.Load().(int) > 0 {
+			return
+		}
+		ds.doSyncRepositories(ctx)
+		if err := ds.doGarbageCollector(ctx); err != nil {
+			log.Printf("[ERROR] %v", err)
+		}
+	}
 
 	// starting garbage collector background task
 	go func() {
@@ -215,29 +217,29 @@ func (ds *DataService) RepositoriesMaintenance(ctx context.Context, timeout int6
 				log.Printf("[DEBUG] repositories maintaining task stopped")
 				return
 			case <-ticker.C:
-				ds.doSyncRepositories(ctx)
-				if err := ds.doGarbageCollector(ctx); err != nil {
-					log.Printf("[ERROR] %v", err)
-				}
+				SyncGcTaskFn(ctx)
+			case handleCtx := <-ds.syncGcChan: // handle manual start sync and garbage collector
+				SyncGcTaskFn(handleCtx)
 			}
 		}
 	}()
 }
 
 func (ds *DataService) doGarbageCollector(ctx context.Context) error {
-	ds.mutex.Lock()
 
-	ds.isWorking = true
+	ds.isWorking.Store(1)
+	ds.mutex.Lock()
 	defer func() {
-		ds.isWorking = false
+		ds.isWorking.Store(0)
 		ds.mutex.Unlock()
 	}()
 
-	if ds.lastSyncDate == 0 {
+	lastSyncDate := ds.lastSyncDate.Load().(int64)
+	if lastSyncDate == 0 {
 		return ErrNoSyncedYet
 	}
 
-	if err := ds.Storage.RepositoryGarbageCollector(ctx, ds.lastSyncDate); err != nil {
+	if err := ds.Storage.RepositoryGarbageCollector(ctx, lastSyncDate); err != nil {
 		return fmt.Errorf("repositories garbage collector aborted with error: %v", err)
 	}
 

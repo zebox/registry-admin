@@ -6,7 +6,6 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"fmt"
-	"github.com/shirou/gopsutil/process"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/zebox/gojwk"
@@ -52,31 +51,14 @@ func Test_Main(t *testing.T) {
 	done := make(chan struct{})
 	go func() {
 		<-done
-		t.Log("done processing")
-		p, err := process.NewProcess(int32(syscall.Getpid()))
-		require.NoError(t, err)
-
-		childrenProccess, errChild := p.Children()
-		require.NoError(t, errChild)
-		t.Log("process killing")
-		for _, v := range childrenProccess {
-			errKill := v.Kill()
-			t.Log(errKill)
-			assert.NoError(t, errKill)
-		}
-
-		t.Log("process parent killing")
-		errKillParent := p.Kill()
-		assert.NoError(t, errKillParent) // Kill the parent process
-
-		t.Log("processes killed")
+		e := syscall.Kill(syscall.Getpid(), syscall.SIGTERM)
+		require.NoError(t, e)
 	}()
 
 	finished := make(chan struct{})
 	go func() {
 		main()
 		close(finished)
-		t.Log("main finished")
 	}()
 
 	// defer cleanup because require check below can fail
@@ -141,16 +123,8 @@ func Test_MainWithSSLAndAuth(t *testing.T) {
 	done := make(chan struct{})
 	go func() {
 		<-done
-		p, err := process.NewProcess(int32(syscall.Getpid()))
-		require.NoError(t, err)
-
-		childrenProccess, errChild := p.Children()
-		require.NoError(t, errChild)
-		for _, v := range childrenProccess {
-			assert.NoError(t, v.Kill())
-		}
-		assert.NoError(t, p.Kill()) // Kill the parent process
-
+		e := syscall.Kill(syscall.Getpid(), syscall.SIGTERM)
+		require.NoError(t, e)
 	}()
 
 	finished := make(chan struct{})

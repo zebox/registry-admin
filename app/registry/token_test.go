@@ -202,18 +202,18 @@ func TestRegistryToken_CreateCerts(t *testing.T) {
 	assert.NoError(t, os.Remove(tmpDir+CAName))
 
 	// test  with error when path error
-	rt.Certs.KeyPath = "*"
+	rt.Certs.KeyPath = "/"
 	err = rt.createCerts()
 	assert.Error(t, err)
 
-	rt.Certs.PublicKeyPath = "*"
+	rt.Certs.PublicKeyPath = "/"
 	err = rt.createCerts()
 	assert.Error(t, err)
 
 	rt.Certs.KeyPath = privateKeyName
 	rt.Certs.PublicKeyPath = publicKeyName
 
-	rt.Certs.CARootPath = "*"
+	rt.Certs.CARootPath = "/"
 	err = rt.createCerts()
 	assert.Error(t, err)
 
