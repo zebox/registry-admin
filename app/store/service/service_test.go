@@ -34,7 +34,7 @@ var (
 
 func TestDataService_SyncExistedRepositories(t *testing.T) {
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 	defer cancel()
 
 	generator := rand.New(rand.NewSource(time.Now().UnixNano())) // #nosec
