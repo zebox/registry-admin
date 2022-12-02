@@ -26,6 +26,8 @@ func TestDataService_RepositoryEventsProcessing(t *testing.T) {
 	ds := DataService{
 		Storage: prepareEngineMock(),
 	}
+	ds.isWorking.Store(false)
+
 	testEnvelope := notifications.Envelope{
 		Events: []notifications.Event{
 			{
@@ -100,12 +102,12 @@ func TestDataService_RepositoryEventsProcessing(t *testing.T) {
 	assert.Nil(t, err)
 
 	// test with race avoid flag
-	ds.isWorking.Store(1)
+	ds.isWorking.Store(true)
 	testEnvelope.Events[0].Action = notifications.EventActionPull
 	testEnvelope.Events[0].Target.Repository = "test/repo_1"
 	testEnvelope.Events[0].Target.Tag = "1.1.0"
 	err = ds.RepositoryEventsProcessing(ctx, testEnvelope)
-	ds.isWorking.Store(0)
+	ds.isWorking.Store(false)
 	assert.Error(t, err)
 
 	// test with multiple values

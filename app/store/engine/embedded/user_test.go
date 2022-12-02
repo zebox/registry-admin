@@ -179,8 +179,8 @@ func TestEmbedded_FindUsers(t *testing.T) {
 
 	result, err := db.FindUsers(ctx, filter)
 	assert.NoError(t, err)
-	assert.Equal(t, result.Total, int64(2))
-	assert.Equal(t, len(result.Data), 2)
+	assert.Equal(t, int64(2), result.Total)
+	assert.Equal(t, 2, len(result.Data))
 
 	for _, user := range result.Data {
 		u := user.(store.User)

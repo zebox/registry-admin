@@ -47,7 +47,7 @@ func (ds *DataService) updateRepositoryEntry(ctx context.Context, event notifica
 		// When 'manifests' API calls, registry triggers pull event, but sync operation use this API for fetch data from
 		// registry. For avoid race between sync and pull event triggers uses check for syncing or garbage collector
 		// operation is in progress
-		if ds.isWorking.Load().(int) > 0 {
+		if ds.isWorking.Load().(bool) {
 			return ErrorSyncGcInProgress
 		}
 

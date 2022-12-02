@@ -60,9 +60,6 @@ func Test_userCreateCtrl(t *testing.T) {
 
 	// emit registry update password error
 	{
-		ctx = context.WithValue(context.Background(), ctxErrorKey, true)
-		req, errReq = http.NewRequestWithContext(ctx, "POST", "/api/v1/users", bytes.NewBuffer(userData))
-		require.NoError(t, errReq)
 
 		// wrong user data
 		user.Login = ""

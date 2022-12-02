@@ -43,8 +43,8 @@ func TestDataService_SyncExistedRepositories(t *testing.T) {
 	testSize := n
 
 	testDS := &DataService{
-		Registry: prepareRegistryMock(testSize, errs),
-		Storage:  prepareStorageMock(repositoryStore, errs),
+		Registry: prepareRegistryMock(testSize),
+		Storage:  prepareStorageMock(repositoryStore),
 	}
 	testDS.RepositoriesMaintenance(ctx, 5)
 
@@ -57,16 +57,8 @@ func TestDataService_SyncExistedRepositories(t *testing.T) {
 	assert.Error(t, errSync)
 
 	// wait until synced
-	for testDS.isWorking.Load().(int) != 0 {
+	for testDS.isWorking.Load().(bool) {
 		time.Sleep(time.Millisecond * 10)
-		/*select {
-		case <-ctx.Done():
-			t.Error("context timeout before sync done")
-			return
-		default:
-			time.Sleep(time.Millisecond * 10)
-		}*/
-
 	}
 
 	assert.Equal(t, testSize*testSize, len(repositoryStore))
@@ -79,33 +71,35 @@ func TestDataService_SyncExistedRepositories(t *testing.T) {
 	for _, v := range repositoryStore {
 		assert.Equal(t, lastSync, v.Timestamp)
 	}
+	cancel()
 
 	// test with fake errors
 	repositoryStore = make(map[string]store.RegistryEntry) // clear data in mock registry
 
-	// errs.createError = errorCreate
 	ctx = context.WithValue(context.Background(), ctxKey, errorCreate)
 	testDS.doSyncRepositories(ctx)
 	assert.Equal(t, 0, len(repositoryStore))
+	assert.Equal(t, errorCreate, errs.currentError)
 
 	repositoryStore = make(map[string]store.RegistryEntry) // clear data in mock registry
-	// errs.manifestError = errorManifest
 	ctx = context.WithValue(context.Background(), ctxKey, errorManifest)
 	testDS.doSyncRepositories(ctx)
 	assert.Equal(t, 0, len(repositoryStore))
+	assert.Equal(t, errorManifest, errs.currentError)
 
 	repositoryStore = make(map[string]store.RegistryEntry) // clear data in mock registry
 	// errs.listError = errorList
 	ctx = context.WithValue(context.Background(), ctxKey, errorList)
 	testDS.doSyncRepositories(ctx)
 	assert.Equal(t, 0, len(repositoryStore))
+	assert.Equal(t, errorList, errs.currentError)
 
 	repositoryStore = make(map[string]store.RegistryEntry) // clear data in mock registry
 	// errs.catalogError = errorCatalog
 	ctx = context.WithValue(context.Background(), ctxKey, errorCatalog)
 	testDS.doSyncRepositories(ctx)
 	assert.Equal(t, 0, len(repositoryStore))
-
+	assert.Equal(t, errorCatalog, errs.currentError)
 }
 
 func TestDataService_RepositoriesMaintaining(t *testing.T) {
@@ -118,8 +112,8 @@ func TestDataService_RepositoriesMaintaining(t *testing.T) {
 	testSize := n
 
 	testDS := &DataService{
-		Registry: prepareRegistryMock(testSize, errs),
-		Storage:  prepareStorageMock(repositoryStore, errs),
+		Registry: prepareRegistryMock(testSize),
+		Storage:  prepareStorageMock(repositoryStore),
 	}
 
 	ctx = context.WithValue(ctx, ctxKey, ctxValueGC{keyRepoGcError: false, keyAccessGcError: false})
@@ -147,11 +141,20 @@ var (
 )
 
 type errorsEmulator struct {
-	catalogError, listError, manifestError error // errors for registry
-	createError                            error // errors for storage
+	currentError error // errors for registry
 }
 
-func prepareRegistryMock(size int, errs *errorsEmulator) *registryInterfaceMock {
+func ctxCheckErrorFn(ctx context.Context, err error) error {
+	if ctxValue := ctx.Value(ctxKey); ctxValue != nil {
+		if ctxValue.(error) == err {
+			errs.currentError = err
+			return err
+		}
+	}
+	return nil
+}
+
+func prepareRegistryMock(size int) *registryInterfaceMock {
 	var testRepositories = make(map[string]registry.ImageTags)
 	var testManifests = make(map[string]registry.ManifestSchemaV2)
 
@@ -181,14 +184,9 @@ func prepareRegistryMock(size int, errs *errorsEmulator) *registryInterfaceMock 
 		CatalogFunc: func(ctx context.Context, n string, last string) (repos registry.Repositories, err error) {
 
 			// emit fake error
-			if ctx != nil && ctx.Value(ctxKey) != nil {
-				if ctx.Value(ctxKey).(error) == errs.catalogError {
-					return repos, errs.catalogError
-				}
+			if err := ctxCheckErrorFn(ctx, errorCatalog); err != nil {
+				return repos, errorCatalog
 			}
-			/*if errs.catalogError != nil {
-				return repos, errs.catalogError
-			}*/
 
 			// sorting testRepos
 			names := make([]string, 0, len(testRepositories))
@@ -208,8 +206,8 @@ func prepareRegistryMock(size int, errs *errorsEmulator) *registryInterfaceMock 
 		ListingImageTagsFunc: func(ctx context.Context, repoName, n, last string) (tags registry.ImageTags, err error) {
 
 			// emit fake error
-			if errs.listError != nil {
-				return tags, errs.listError
+			if err := ctxCheckErrorFn(ctx, errorList); err != nil {
+				return tags, errorList
 			}
 
 			tags.Name = repoName
@@ -231,8 +229,8 @@ func prepareRegistryMock(size int, errs *errorsEmulator) *registryInterfaceMock 
 		},
 		ManifestFunc: func(ctx context.Context, repoName string, tag string) (manifest registry.ManifestSchemaV2, _ error) {
 			// emit fake error
-			if errs.manifestError != nil {
-				return manifest, errs.manifestError
+			if err := ctxCheckErrorFn(ctx, errorManifest); err != nil {
+				return manifest, errorManifest
 			}
 
 			if val, ok := testManifests[repoName+"_"+tag]; ok {
@@ -243,7 +241,7 @@ func prepareRegistryMock(size int, errs *errorsEmulator) *registryInterfaceMock 
 	}
 }
 
-func prepareStorageMock(repositoryStore map[string]store.RegistryEntry, errs *errorsEmulator) *engine.InterfaceMock {
+func prepareStorageMock(repositoryStore map[string]store.RegistryEntry) *engine.InterfaceMock {
 
 	ctxCheckFn := func(ctx context.Context, key string) error {
 		ctxValue := ctx.Value(ctxKey)
@@ -260,11 +258,11 @@ func prepareStorageMock(repositoryStore map[string]store.RegistryEntry, errs *er
 	}
 
 	return &engine.InterfaceMock{
-		CreateRepositoryFunc: func(_ context.Context, entry *store.RegistryEntry) error {
+		CreateRepositoryFunc: func(ctx context.Context, entry *store.RegistryEntry) error {
 
 			// emit fake error
-			if errs.createError != nil {
-				return errs.createError
+			if err := ctxCheckErrorFn(ctx, errorCreate); err != nil {
+				return err
 			}
 
 			entryName := entry.RepositoryName + "_" + entry.Tag
@@ -276,6 +274,7 @@ func prepareStorageMock(repositoryStore map[string]store.RegistryEntry, errs *er
 		},
 
 		UpdateRepositoryFunc: func(ctx context.Context, conditionClause map[string]interface{}, data map[string]interface{}) error { //nolint:lll
+
 			// search entry first
 			repoName := conditionClause[store.RegistryRepositoryNameField].(string)
 			tagName := conditionClause[store.RegistryTagField].(string)

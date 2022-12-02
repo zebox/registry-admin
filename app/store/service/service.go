@@ -9,7 +9,6 @@ import (
 	"github.com/zebox/registry-admin/app/store"
 	"github.com/zebox/registry-admin/app/store/engine"
 	"strings"
-	"sync"
 	"sync/atomic"
 	"time"
 
@@ -44,13 +43,12 @@ type DataService struct {
 	isWorking atomic.Value
 
 	syncGcChan chan context.Context
-	mutex      sync.RWMutex
 }
 
 // SyncExistedRepositories will check existed entries at a registry service and synchronize it
 func (ds *DataService) SyncExistedRepositories(ctx context.Context) error {
 
-	if ds.isWorking.Load().(int) > 0 {
+	if ds.isWorking.Load().(bool) {
 		return errors.New("repository sync currently running")
 	}
 	ds.syncGcChan <- ctx
@@ -188,19 +186,18 @@ func (ds *DataService) RepositoriesMaintenance(ctx context.Context, timeout int6
 		timeout = 60
 	}
 	ticker := time.NewTicker(time.Duration(timeout) * time.Minute)
-	ds.isWorking.Store(0)
+	ds.isWorking.Store(false)
+	ds.lastSyncDate.Store(int64(0))
 	ds.syncGcChan = make(chan context.Context)
 
 	SyncGcTaskFn := func(syncCtx context.Context) {
-		if ds.isWorking.Load().(int) > 0 {
+		if ds.isWorking.Load().(bool) {
 			return
 		}
 
-		// ds.mutex.Lock()
-		ds.isWorking.Store(1)
+		ds.isWorking.Store(true)
 		defer func() {
-			ds.isWorking.Store(0)
-			// ds.mutex.Unlock()
+			ds.isWorking.Store(false)
 		}()
 
 		ds.doSyncRepositories(ctx)

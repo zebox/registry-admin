@@ -16,7 +16,7 @@ import (
 
 func TestNewRegistry(t *testing.T) {
 
-	tmpDir, errDir := os.MkdirTemp("", "test_cert")
+	tmpDir, errDir := os.MkdirTemp(os.TempDir(), "test_cert")
 	require.NoError(t, errDir)
 
 	defer func() {

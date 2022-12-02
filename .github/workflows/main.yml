@@ -10,7 +10,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: disable and stop mono-xsp4.service (wtf?)
         run: |
@@ -29,6 +28,7 @@ jobs:
       - name: build and test
         working-directory: app
         run: |
+          sudo chown -R $USER:$USER ~
           go get -v
           go test -timeout=60s -v -race -p 1 -covermode=atomic -coverprofile=$GITHUB_WORKSPACE/profile.cov_tmp ./...
           cat $GITHUB_WORKSPACE/profile.cov_tmp | grep -v "_mock.go" > $GITHUB_WORKSPACE/profile.cov
