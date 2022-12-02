@@ -53,19 +53,11 @@ func (ds *DataService) SyncExistedRepositories(ctx context.Context) error {
 	if ds.isWorking.Load().(int) > 0 {
 		return errors.New("repository sync currently running")
 	}
-
 	ds.syncGcChan <- ctx
 	return nil
 }
 
 func (ds *DataService) doSyncRepositories(ctx context.Context) {
-
-	ds.mutex.Lock()
-	ds.isWorking.Store(1)
-	defer func() {
-		ds.isWorking.Store(0)
-		ds.mutex.Unlock()
-	}()
 
 	now := time.Now().Unix()
 
@@ -203,6 +195,14 @@ func (ds *DataService) RepositoriesMaintenance(ctx context.Context, timeout int6
 		if ds.isWorking.Load().(int) > 0 {
 			return
 		}
+
+		// ds.mutex.Lock()
+		ds.isWorking.Store(1)
+		defer func() {
+			ds.isWorking.Store(0)
+			// ds.mutex.Unlock()
+		}()
+
 		ds.doSyncRepositories(ctx)
 		if err := ds.doGarbageCollector(ctx); err != nil {
 			log.Printf("[ERROR] %v", err)
@@ -226,13 +226,6 @@ func (ds *DataService) RepositoriesMaintenance(ctx context.Context, timeout int6
 }
 
 func (ds *DataService) doGarbageCollector(ctx context.Context) error {
-
-	ds.isWorking.Store(1)
-	ds.mutex.Lock()
-	defer func() {
-		ds.isWorking.Store(0)
-		ds.mutex.Unlock()
-	}()
 
 	lastSyncDate := ds.lastSyncDate.Load().(int64)
 	if lastSyncDate == 0 {

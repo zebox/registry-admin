@@ -46,24 +46,26 @@ func TestDataService_SyncExistedRepositories(t *testing.T) {
 		Registry: prepareRegistryMock(testSize, errs),
 		Storage:  prepareStorageMock(repositoryStore, errs),
 	}
+	testDS.RepositoriesMaintenance(ctx, 5)
+
 	require.NotNil(t, testDS)
 	err := testDS.SyncExistedRepositories(ctx)
 	require.NoError(t, err)
 
 	time.Sleep(time.Millisecond * 10)
-	errExisted := testDS.SyncExistedRepositories(ctx)
-	assert.Nil(t, errExisted)
+	errSync := testDS.SyncExistedRepositories(ctx)
+	assert.Error(t, errSync)
 
 	// wait until synced
-	for testDS.isWorking.Load().(int) == 0 {
-
-		select {
+	for testDS.isWorking.Load().(int) != 0 {
+		time.Sleep(time.Millisecond * 10)
+		/*select {
 		case <-ctx.Done():
 			t.Error("context timeout before sync done")
 			return
 		default:
 			time.Sleep(time.Millisecond * 10)
-		}
+		}*/
 
 	}
 
@@ -72,10 +74,11 @@ func TestDataService_SyncExistedRepositories(t *testing.T) {
 	// test for duplicate exclude
 	err = testDS.SyncExistedRepositories(ctx)
 	assert.NoError(t, err)
+	lastSync := testDS.lastSyncDate.Load().(int64)
+
 	for _, v := range repositoryStore {
-		assert.Equal(t, testDS.lastSyncDate, v.Timestamp)
+		assert.Equal(t, lastSync, v.Timestamp)
 	}
-	// assert.Equal(t, testSize*testSize, len(repositoryStore))
 
 	// test with fake errors
 	repositoryStore = make(map[string]store.RegistryEntry) // clear data in mock registry
