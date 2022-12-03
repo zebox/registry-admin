@@ -191,7 +191,7 @@ func NewRegistryToken(secretPhrase string, opts ...TokenOption) (*registryToken,
 		opt(rt)
 	}
 
-	if err = os.Mkdir(path, 0600); err != nil && !os.IsExist(err) {
+	if err = os.Mkdir(path, os.ModePerm); err != nil && !os.IsExist(err) {
 		return nil, errors.Wrap(err, "failed to create default directory for save certificates")
 	}
 
