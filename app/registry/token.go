@@ -174,18 +174,14 @@ func NewRegistryToken(secretPhrase string, opts ...TokenOption) (*registryToken,
 	}
 
 	// Create default directory where certificates will be created by default.
-	// The directory default path is a home directory at user which process run under
+	// The directory default path is a home directory at user which process executed app
 	userHomeDir, err := os.UserHomeDir()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain home directory for user which process run")
 	}
 	path := filepath.ToSlash(userHomeDir) + "/" + certsDirName // fix backslashes for Windows path
 
-	if err = os.Mkdir(path, os.ModeDir); err != nil && !os.IsExist(err) {
-		return nil, errors.Wrap(err, "failed to create default directory for save certificates")
-	}
-
-	// define default certificate files path
+	// define certificate files path if their options omitted
 	rt.RootPath = path
 	rt.PublicKeyPath = rt.RootPath + publicKeyName
 	rt.KeyPath = rt.RootPath + privateKeyName
@@ -193,6 +189,10 @@ func NewRegistryToken(secretPhrase string, opts ...TokenOption) (*registryToken,
 
 	for _, opt := range opts {
 		opt(rt)
+	}
+
+	if err = os.Mkdir(path, os.ModeDir); err != nil && !os.IsExist(err) {
+		return nil, errors.Wrap(err, "failed to create default directory for save certificates")
 	}
 
 	if len(secretPhrase) < 10 {
@@ -203,7 +203,7 @@ func NewRegistryToken(secretPhrase string, opts ...TokenOption) (*registryToken,
 		return nil, errors.Errorf("token expiration time is invalid, should great more than one")
 	}
 
-	if err := rt.loadCerts(); err != nil {
+	if err = rt.loadCerts(); err != nil {
 		err = rt.createCerts()
 		if err != nil {
 			return nil, err
