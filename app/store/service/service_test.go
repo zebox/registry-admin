@@ -34,7 +34,7 @@ var (
 
 func TestDataService_SyncExistedRepositories(t *testing.T) {
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	generator := rand.New(rand.NewSource(time.Now().UnixNano())) // #nosec
@@ -49,31 +49,32 @@ func TestDataService_SyncExistedRepositories(t *testing.T) {
 	testDS.RepositoriesMaintenance(ctx, 5)
 
 	require.NotNil(t, testDS)
+	t.Log("start main syncing")
 	err := testDS.SyncExistedRepositories(ctx)
 	require.NoError(t, err)
 
-	time.Sleep(time.Millisecond * 10)
-	errSync := testDS.SyncExistedRepositories(ctx)
-	assert.Error(t, errSync)
+	time.Sleep(time.Second * 10)
 
 	// wait until synced
 	for testDS.isWorking.Load().(bool) {
-		time.Sleep(time.Millisecond * 10)
+		errSync := testDS.SyncExistedRepositories(ctx)
+		assert.Error(t, errSync)
+		time.Sleep(time.Millisecond * 100)
 	}
 
 	assert.Equal(t, testSize*testSize, len(repositoryStore))
 
-	// test for duplicate exclude
+	t.Log("test for duplicate exclude")
 	err = testDS.SyncExistedRepositories(ctx)
 	assert.NoError(t, err)
-	lastSync := testDS.lastSyncDate.Load().(int64)
 
+	lastSync := testDS.lastSyncDate.Load().(int64)
 	for _, v := range repositoryStore {
 		assert.Equal(t, lastSync, v.Timestamp)
 	}
-	cancel()
+	ctx.Done()
 
-	// test with fake errors
+	t.Log("test with fake errors")
 	repositoryStore = make(map[string]store.RegistryEntry) // clear data in mock registry
 
 	ctx = context.WithValue(context.Background(), ctxKey, errorCreate)
@@ -88,14 +89,12 @@ func TestDataService_SyncExistedRepositories(t *testing.T) {
 	assert.Equal(t, errorManifest, errs.currentError)
 
 	repositoryStore = make(map[string]store.RegistryEntry) // clear data in mock registry
-	// errs.listError = errorList
 	ctx = context.WithValue(context.Background(), ctxKey, errorList)
 	testDS.doSyncRepositories(ctx)
 	assert.Equal(t, 0, len(repositoryStore))
 	assert.Equal(t, errorList, errs.currentError)
 
 	repositoryStore = make(map[string]store.RegistryEntry) // clear data in mock registry
-	// errs.catalogError = errorCatalog
 	ctx = context.WithValue(context.Background(), ctxKey, errorCatalog)
 	testDS.doSyncRepositories(ctx)
 	assert.Equal(t, 0, len(repositoryStore))
