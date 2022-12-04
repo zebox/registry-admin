@@ -1,0 +1,21 @@
+/.vscode/
+/.idea/
+/bin/
+/.git/
+/testdata/
+/app/web
+
+# frontend files not needed in docker image
+/frontend/node_modules/
+
+# source files
+docker-compose.yml
+
+# generated files
+*.cov
+.cover
+target
+debug
+debug.test
+*.prof
+*.test
