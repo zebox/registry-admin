@@ -15,7 +15,7 @@ func TestSQLite_Connect(t *testing.T) {
 	ctx, ctxCancel := context.WithCancel(context.Background())
 	defer ctxCancel()
 
-	_ = os.Remove(dbPath)
+	_ = os.Remove(dbPath) // clear if exist on previously tests
 	db := Embedded{Path: dbPath}
 
 	err := db.Connect(ctx)
@@ -41,6 +41,11 @@ func TestSQLite_Connect(t *testing.T) {
 	assert.NoError(t, db.Close(ctx))
 	assert.NoError(t, os.Remove(dbPath))
 
+	t.Log("test with bad db path ")
+	dbPath = os.TempDir() + "/unknown_path/test.db"
+	db = Embedded{Path: dbPath}
+	err = db.Connect(ctx)
+	require.Error(t, err)
 }
 
 func TestSQlite_initTables(t *testing.T) {

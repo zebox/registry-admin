@@ -4,15 +4,17 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"os"
+	"reflect"
+	"regexp"
+	"strings"
+
 	"github.com/hashicorp/go-multierror"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/opencontainers/go-digest"
 	"github.com/pkg/errors"
 	"github.com/zebox/registry-admin/app/store"
 	"github.com/zebox/registry-admin/app/store/engine"
-	"reflect"
-	"regexp"
-	"strings"
 )
 
 const (
@@ -45,6 +47,7 @@ func NewEmbedded(pathToDB string) *Embedded {
 }
 
 func (e *Embedded) Connect(ctx context.Context) (err error) {
+
 	e.db, err = sql.Open("sqlite3", e.Path)
 	if err != nil {
 		return err
@@ -76,6 +79,9 @@ func (e *Embedded) initTables(ctx context.Context) (err error) {
 		err = multierror.Append(err, errors.Errorf("failed to create %s table", repositoriesTable))
 	}
 
+	if _, errStat := os.Stat(e.Path); os.IsNotExist(errStat) {
+		return fmt.Errorf("[ERROR] database path is invalid '%s'. Can't create database file", e.Path)
+	}
 	return err
 }
 
