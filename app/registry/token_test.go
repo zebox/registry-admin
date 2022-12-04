@@ -51,7 +51,7 @@ func TestNewRegistryToken(t *testing.T) {
 			tmpDir + "/test.pub",
 			tmpDir + "/test_ca.crt",
 		}),
-		ServiceIpHost("127.0.0.2", "domain.local.test"),
+		ServiceIPHost("127.0.0.2", "domain.local.test"),
 	)
 
 	require.NoError(t, err)

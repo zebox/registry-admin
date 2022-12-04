@@ -203,7 +203,7 @@ func NewRegistry(login, password, secret string, settings Settings) (*Registry, 
 			if len(parts) == 3 {
 				hostName = parts[2]
 			}
-			r.registryToken, err = NewRegistryToken(secret, TokenIssuer(settings.Issuer), CertsName(settings.CertificatesPaths), ServiceIpHost(r.settings.IP, hostName))
+			r.registryToken, err = NewRegistryToken(secret, TokenIssuer(settings.Issuer), CertsName(settings.CertificatesPaths), ServiceIPHost(r.settings.IP, hostName))
 			if err != nil {
 				return nil, err
 			}

@@ -13,13 +13,10 @@ import (
 	log "github.com/go-pkgz/lgr"
 )
 
-const (
-	version = "unknown"
-)
-
 var (
-	opts *Options
-	err  error
+	version = "unknown"
+	opts    *Options
+	err     error
 )
 
 func main() {
@@ -27,14 +24,14 @@ func main() {
 	opts, err = parseArgs()
 
 	if err != nil {
-		log.Fatalf("failed to parse config parameters: %v", err)
+		log.Fatalf("[ERROR] failed to parse config parameters: %v", err)
 	}
 	setupLog(opts.Debug)
 
 	log.Print("[INFO] server starting...")
 
 	if err = run(); err != nil && err != http.ErrServerClosed {
-		log.Printf("failed to run server: %v", err)
+		log.Printf("[ERROR] failed to run server: %v", err)
 		os.Exit(1)
 	}
 }

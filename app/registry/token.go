@@ -151,8 +151,8 @@ func CertsName(certs Certs) TokenOption {
 	}
 }
 
-// ServiceIpHost define service host values
-func ServiceIpHost(ip, host string) TokenOption {
+// ServiceIPHost define service host values
+func ServiceIPHost(ip, host string) TokenOption {
 	return func(rt *registryToken) {
 		rt.serviceIP = ip
 		rt.serviceHost = host
@@ -227,7 +227,7 @@ func (rt *registryToken) Generate(tokenRequest *TokenRequest) (ClientToken, erro
 		KeyID:      rt.publicKey.KeyID(),
 	}
 
-	headerJson, err := json.Marshal(header)
+	headerJSON, err := json.Marshal(header)
 	if err != nil {
 		return ClientToken{}, err
 	}
@@ -261,7 +261,7 @@ func (rt *registryToken) Generate(tokenRequest *TokenRequest) (ClientToken, erro
 		Actions: tokenRequest.Actions,
 	})
 
-	claimJson, err := json.Marshal(claim)
+	claimJSON, err := json.Marshal(claim)
 	if err != nil {
 		return ClientToken{}, err
 	}
@@ -270,7 +270,7 @@ func (rt *registryToken) Generate(tokenRequest *TokenRequest) (ClientToken, erro
 		return strings.TrimRight(base64.URLEncoding.EncodeToString(b), "=")
 	}
 
-	payload := fmt.Sprintf("%s%s%s", encodeToBase64(headerJson), token.TokenSeparator, encodeToBase64(claimJson))
+	payload := fmt.Sprintf("%s%s%s", encodeToBase64(headerJSON), token.TokenSeparator, encodeToBase64(claimJSON))
 	sig, sigAlgo, err := rt.privateKey.Sign(strings.NewReader(payload), 0)
 	if err != nil && sigAlgo != algo {
 		return ClientToken{}, err
