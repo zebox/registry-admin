@@ -188,7 +188,3 @@ func (u *userHandlers) userDeleteCtrl(w http.ResponseWriter, r *http.Request) {
 		u.l.Logf("failed to update htpasswd: %v", err)
 	}
 }
-
-func (u *userHandlers) updateHtpasswdUsersAtStart() error {
-	return u.registryService.UpdateHtpasswd(u.userAdapter)
-}
