@@ -19,6 +19,7 @@ import (
 type userHandlers struct {
 	endpointsHandler
 	registryService registryInterface
+	userAdapter     *usersRegistryAdapter
 }
 
 // usersRegistryAdapter need for bind FindUsers func in store engine with registry instance
@@ -78,7 +79,7 @@ func (u *userHandlers) userCreateCtrl(w http.ResponseWriter, r *http.Request) {
 
 	R.RenderJSON(w, responseMessage{Error: false, Message: "user created", ID: user.ID, Data: user})
 
-	if err = u.registryService.UpdateHtpasswd(newUsersRegistryAdapter(r.Context(), engine.QueryFilter{}, u.dataStore.FindUsers)); err != nil {
+	if err = u.registryService.UpdateHtpasswd(u.userAdapter); err != nil {
 		u.l.Logf("failed to update htpasswd: %v", err)
 	}
 
@@ -183,7 +184,11 @@ func (u *userHandlers) userDeleteCtrl(w http.ResponseWriter, r *http.Request) {
 
 	R.RenderJSON(w, responseMessage{Message: "user deleted"})
 
-	if err = u.registryService.UpdateHtpasswd(newUsersRegistryAdapter(r.Context(), engine.QueryFilter{}, u.dataStore.FindUsers)); err != nil {
+	if err = u.registryService.UpdateHtpasswd(u.userAdapter); err != nil {
 		u.l.Logf("failed to update htpasswd: %v", err)
 	}
+}
+
+func (u *userHandlers) updateHtpasswdUsersAtStart() error {
+	return u.registryService.UpdateHtpasswd(u.userAdapter)
 }

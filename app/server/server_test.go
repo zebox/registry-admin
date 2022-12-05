@@ -8,10 +8,6 @@ import (
 	"crypto/x509/pkix"
 	"encoding/json"
 	"fmt"
-	"github.com/go-chi/chi/v5"
-	log "github.com/go-pkgz/lgr"
-	"github.com/zebox/gojwk/storage"
-	"github.com/zebox/registry-admin/app/store/engine/embedded"
 	"io"
 	"io/ioutil"
 	"math/big"
@@ -25,15 +21,19 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/go-pkgz/auth"
 	"github.com/go-pkgz/auth/avatar"
 	"github.com/go-pkgz/auth/token"
+	log "github.com/go-pkgz/lgr"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/zebox/gojwk"
+	"github.com/zebox/gojwk/storage"
 	"github.com/zebox/registry-admin/app/store"
 	"github.com/zebox/registry-admin/app/store/engine"
+	"github.com/zebox/registry-admin/app/store/engine/embedded"
 )
 
 const (
@@ -646,6 +646,19 @@ func prepareTestStorage(t *testing.T) *engine.InterfaceMock {
 		},
 		CloseFunc: func(ctx context.Context) error {
 			return nil
+		},
+
+		FindUsersFunc: func(ctx context.Context, filter engine.QueryFilter) (engine.ListResponse, error) {
+			testUser := store.User{
+				ID:   testUserID,
+				Name: "test_user",
+				Role: "user",
+			}
+			result := engine.ListResponse{
+				Total: int64(1),
+			}
+			result.Data = append(result.Data, testUser)
+			return result, nil
 		},
 	}
 }

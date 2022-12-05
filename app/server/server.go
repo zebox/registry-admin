@@ -223,9 +223,6 @@ func (s *Server) routes() chi.Router {
 	authHandler, _ := s.Authenticator.Handlers()
 	authMiddleware := s.Authenticator.Middleware()
 
-	// router.Get("/", http.RedirectHandler("/web/index.html", 301).ServeHTTP)
-	// router.NotFound(http.RedirectHandler("/index.html", 301).ServeHTTP)
-
 	router.Group(func(r chi.Router) {
 		r.Use(middleware.Timeout(5 * time.Second))
 		r.Use(tollbooth_chi.LimitHandler(tollbooth.NewLimiter(10, nil)), middleware.NoCache)
@@ -249,11 +246,21 @@ func (s *Server) routes() chi.Router {
 	}
 
 	// main endpoints routes
-	uh := userHandlers{eh, s.RegistryService}
 	router.Route("/api/v1", func(rootApi chi.Router) {
 		rootApi.Group(func(rootRoute chi.Router) {
 			rootRoute.Use(tollbooth_chi.LimitHandler(tollbooth.NewLimiter(10, nil)))
 			rootRoute.Use(authMiddleware.Trace, middleware.NoCache)
+
+			uh := userHandlers{
+				endpointsHandler: eh,
+				registryService:  s.RegistryService,
+				userAdapter:      newUsersRegistryAdapter(s.ctx, engine.QueryFilter{}, s.Storage.FindUsers),
+			}
+
+			// try to update users list in htpasswd from store if htpasswd is defined
+			if err := uh.registryService.UpdateHtpasswd(uh.userAdapter); err != nil {
+				panic(fmt.Errorf("failed to update htpasswd: %v", err))
+			}
 
 			// this route expose api for manipulation with User entries
 			rootRoute.Route("/users", func(routeUser chi.Router) {
