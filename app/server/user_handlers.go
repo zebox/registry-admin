@@ -112,7 +112,7 @@ func (u *userHandlers) userInfoCtrl(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *userHandlers) userFindCtrl(w http.ResponseWriter, r *http.Request) {
-	filter, err := engine.FilterFromUrlExtractor(r.URL)
+	filter, err := engine.FilterFromURLExtractor(r.URL)
 	if err != nil {
 		SendErrorJSON(w, r, u.l, http.StatusInternalServerError, err, "failed to parse URL parameters for make query filter")
 		return

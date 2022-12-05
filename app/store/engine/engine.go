@@ -12,11 +12,13 @@ import (
 	"strconv"
 )
 
-var ErrNotFound = errors.New("record not found")
-
 // RepositoriesByUserAccess allow filtered repositories result list by assigned user access
 // it's relevant only for role 'user' only
 const RepositoriesByUserAccess = "access.owner_id"
+
+type engineOptionsCtx string
+
+var ErrNotFound = errors.New("record not found")
 
 // ListResponse is a container for return list of result data
 type ListResponse struct {
@@ -76,8 +78,8 @@ type QueryFilter struct {
 	GroupByField bool
 }
 
-// FilterFromUrlExtractor extracts param from URL and pass it to query which manipulation data in storage
-func FilterFromUrlExtractor(url *url.URL) (filters QueryFilter, err error) {
+// FilterFromURLExtractor extracts param from URL and pass it to query which manipulation data in storage
+func FilterFromURLExtractor(url *url.URL) (filters QueryFilter, err error) {
 	_range, isRange := url.Query()["range"]
 	sort, isSort := url.Query()["sort"]
 	search, isSearch := url.Query()["filter"]
@@ -135,4 +137,21 @@ func getRange(sRange string) (r [2]int64, err error) {
 		r[0], r[1] = int64(first), int64(last)+1 // +1 because js want range with start ZERO(0) index, but skip/limit DB function start from ONE(1)
 	}
 	return r, nil
+}
+
+const adminDefaultPasswordKey = "admin_default_key"
+
+// SetAdminDefaultPassword allows defining default password for user admin when database with users created first
+func SetAdminDefaultPassword(ctx *context.Context, passwd *string) {
+	*ctx = context.WithValue(*ctx, engineOptionsCtx(adminDefaultPasswordKey), *passwd)
+	*passwd = "" // clear default password from runtime memory
+}
+
+// GetAdminDefaultPassword allows get default password for user admin from context
+func GetAdminDefaultPassword(ctx context.Context) string {
+	p := ctx.Value(engineOptionsCtx(adminDefaultPasswordKey))
+	if p != nil {
+		return p.(string)
+	}
+	return ""
 }

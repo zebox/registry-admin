@@ -62,21 +62,21 @@ func (e *Embedded) Connect(ctx context.Context) (err error) {
 
 }
 
-func (e *Embedded) initTables(ctx context.Context) (err error) {
-	if err = e.initUserTable(ctx); err != nil {
-		err = multierror.Append(err, errors.Errorf("failed to create %s table", usersTable))
+func (e *Embedded) initTables(ctx context.Context) (errs error) {
+	if err := e.initUserTable(ctx); err != nil {
+		errs = fmt.Errorf("%v: failed to create %s table", err, usersTable)
 	}
 
-	if err = e.initGroupsTable(ctx); err != nil {
-		err = multierror.Append(err, errors.Errorf("failed to create %s table", groupsTable))
+	if err := e.initGroupsTable(ctx); err != nil {
+		errs = fmt.Errorf("%v: failed to create %s table", err, groupsTable)
 	}
 
-	if err = e.initAccessTable(ctx); err != nil {
-		err = multierror.Append(err, errors.Errorf("failed to create %s table", accessTable))
+	if err := e.initAccessTable(ctx); err != nil {
+		errs = fmt.Errorf("%v: failed to create %s table", err, accessTable)
 	}
 
-	if err = e.initRepositoriesTable(ctx); err != nil {
-		err = multierror.Append(err, errors.Errorf("failed to create %s table", repositoriesTable))
+	if err := e.initRepositoriesTable(ctx); err != nil {
+		err = fmt.Errorf("%v: failed to create %s table", err, repositoriesTable)
 	}
 
 	// SQLite driver doesn't catch error if file doesn't exist and try to create a new database file.
@@ -85,7 +85,7 @@ func (e *Embedded) initTables(ctx context.Context) (err error) {
 	if _, errStat := os.Stat(e.Path); os.IsNotExist(errStat) {
 		return fmt.Errorf("[ERROR] database path is invalid '%s'. Can't create database file", e.Path)
 	}
-	return err
+	return errs
 }
 
 func (e *Embedded) initGroupsTable(ctx context.Context) (err error) {
@@ -143,11 +143,16 @@ func (e *Embedded) initUserTable(ctx context.Context) error {
 		return errors.Wrapf(err, "failed to create %s table", usersTable)
 	}
 
+	defaultPassword := engine.GetAdminDefaultPassword(ctx)
+	if defaultPassword == "" {
+		defaultPassword = "admin"
+	}
+
 	// create default admin user if new database creation
 	user := store.User{
-		Login:       "admin",
-		Name:        "admin", // default login
-		Password:    "admin", // default password
+		Login:       "admin", // is the default login
+		Name:        "admin",
+		Password:    defaultPassword,
 		Role:        "admin",
 		Group:       1,
 		Description: "Default user with administration role ",

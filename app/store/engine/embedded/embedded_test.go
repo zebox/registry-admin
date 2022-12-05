@@ -13,6 +13,7 @@ import (
 func TestSQLite_Connect(t *testing.T) {
 	dbPath := os.TempDir() + "/test.db"
 	ctx, ctxCancel := context.WithCancel(context.Background())
+
 	defer ctxCancel()
 
 	_ = os.Remove(dbPath) // clear if exist on previously tests

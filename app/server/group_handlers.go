@@ -61,7 +61,7 @@ func (g *groupHandlers) groupInfoCtrl(w http.ResponseWriter, r *http.Request) {
 }
 
 func (g *groupHandlers) groupFindCtrl(w http.ResponseWriter, r *http.Request) {
-	filter, err := engine.FilterFromUrlExtractor(r.URL)
+	filter, err := engine.FilterFromURLExtractor(r.URL)
 	if err != nil {
 		SendErrorJSON(w, r, g.l, http.StatusInternalServerError, err, "failed to parse URL parameters for make query filter")
 		return

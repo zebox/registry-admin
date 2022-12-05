@@ -249,6 +249,7 @@ func makeDataStore(ctx context.Context, storeOpts StoreGroup) (iStore engine.Int
 	switch storeOpts.Type {
 	case "embed":
 		e := embedded.NewEmbedded(storeOpts.Embed.Path)
+		engine.SetAdminDefaultPassword(&ctx, &storeOpts.AdminPassword)
 		err = e.Connect(ctx)
 		if err != nil && !errors.Is(err, embedded.ErrTableAlreadyExist) {
 			return nil, err

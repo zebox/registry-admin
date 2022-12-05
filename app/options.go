@@ -65,9 +65,10 @@ type Options struct {
 // StoreGroup options which defined main storage instance
 // Type implement as options for add support for different storage
 type StoreGroup struct {
-	Type  string `long:"type" env:"DB_TYPE" description:"type of storage" choice:"embed" default:"embed" json:"type"` // nolint
-	Embed struct {
-		Path string `long:"path" env:"DB_PATH" default:"./data.db" description:"parent directory for the sqlite files" json:"path"`
+	Type          string `long:"type" env:"DB_TYPE" description:"type of storage" choice:"embed" default:"embed" json:"type"` // nolint
+	AdminPassword string `long:"admin-password" env:"ADMIN_PASSWORD" description:"Define password for default admin user when storage create first" default:"admin" json:"admin_password"`
+	Embed         struct {
+		Path string `long:"path" env:"DB_PATH" default:"./data.db" description:"Parent directory for the sqlite files" json:"path"`
 	} `group:"embed" namespace:"embed" env-namespace:"EMBED" json:"embed"`
 }
 
