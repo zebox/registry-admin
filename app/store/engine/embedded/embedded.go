@@ -49,7 +49,7 @@ func NewEmbedded(pathToDB string) *Embedded {
 func (e *Embedded) Connect(ctx context.Context) (err error) {
 
 	e.db, err = sql.Open("sqlite3", e.Path)
-	if err != nil {
+	if err != nil || e.Path == "" {
 		return err
 	}
 
@@ -79,6 +79,9 @@ func (e *Embedded) initTables(ctx context.Context) (err error) {
 		err = multierror.Append(err, errors.Errorf("failed to create %s table", repositoriesTable))
 	}
 
+	// SQLite driver doesn't catch error if file doesn't exist and try to create a new database file.
+	// But if path which passed to drive has invalid path name SQLite doesn't throw error too.
+	// Because check for file exist required after first write transaction (such create table or other)
 	if _, errStat := os.Stat(e.Path); os.IsNotExist(errStat) {
 		return fmt.Errorf("[ERROR] database path is invalid '%s'. Can't create database file", e.Path)
 	}
@@ -147,7 +150,7 @@ func (e *Embedded) initUserTable(ctx context.Context) error {
 		Password:    "admin", // default password
 		Role:        "admin",
 		Group:       1,
-		Description: "Default administration user",
+		Description: "Default user with administration role ",
 	}
 
 	// hashing password
