@@ -173,7 +173,7 @@ func (j *yamlConfigParser) ReadConfigFromFile(pathToFile string, options *Option
 	}
 	errParse = yaml.Unmarshal(data, &options)
 	if errParse != nil {
-		fmt.Errorf("failed to unmarshal yaml config data: %v", errParse)
+		return fmt.Errorf("failed to unmarshal yaml config data: %v", errParse)
 	}
 	return nil
 }
