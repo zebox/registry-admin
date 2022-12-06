@@ -24,9 +24,8 @@ type configReader interface {
 
 // Options the main parameters for the service
 type Options struct {
-	Version    string
 	Listen     string `long:"listen" env:"RA_LISTEN" description:"listen on host:port (127.0.0.1:80/443 without)" json:"listen"`
-	HostName   string `long:"hostname" env:"RA_HOST_NAME" default:"localhost" description:"Main hostname of service" json:"host_name"`
+	HostName   string `long:"hostname" env:"RA_HOST_NAME" default:"localhost" description:"Main hostname of service" json:"hostname"`
 	Port       int    `long:"port" env:"RA_PORT" description:"Main web-service port. Default:80" default:"80" json:"port"`
 	ConfigPath string `long:"config-file" env:"RA_CONFIG_FILE" description:"Path to config file"`
 
@@ -34,33 +33,34 @@ type Options struct {
 
 	Auth struct {
 		TokenSecret    string `long:"token-secret" env:"TOKEN_SECRET" description:"Main secret for auth token sign" json:"token_secret" yaml:"token_secret"`
-		IssuerName     string `long:"jwt-issuer" env:"ISSUER_NAME" default:"zebox" description:"Token issuer signature" json:"issuer_name"` //
-		TokenDuration  string `long:"jwt-ttl" env:"JWT_TTL" default:"1h" description:"Define JWT expired timeout" json:"jwt_ttl"`
-		CookieDuration string `long:"cookie-ttl" env:"COOKIE_TTL" default:"24h" description:"Define cookies expired timeout" json:"cookie_ttl"`
+		IssuerName     string `long:"jwt-issuer" env:"ISSUER_NAME" default:"zebox" description:"Token issuer signature" json:"issuer_name" yaml:"issuer_name"` //
+		TokenDuration  string `long:"jwt-ttl" env:"JWT_TTL" default:"1h" description:"Define JWT expired timeout" json:"jwt_ttl" yaml:"jwt_ttl"`
+		CookieDuration string `long:"cookie-ttl" env:"COOKIE_TTL" default:"24h" description:"Define cookies expired timeout" json:"cookie_ttl" yaml:"cookie_ttl"`
 	} `group:"auth" namespace:"auth" env-namespace:"RA_AUTH" json:"auth"`
 
 	Logger struct {
-		StdOut     bool   `long:"stdout" env:"STDOUT" description:"enable stdout logging" json:"stdout"`
+		StdOut     bool   `long:"stdout" env:"STDOUT" description:"enable stdout logging" json:"stdout" yaml:"stdout"`
 		Enabled    bool   `long:"enabled" env:"ENABLED" description:"enable access and error rotated logs" json:"enabled"`
-		FileName   string `long:"file" env:"FILE"  default:"access.log" description:"location of access log" json:"file_name"`
-		MaxSize    string `long:"max-size" env:"SIZE" default:"100M" description:"maximum size before it gets rotated" json:"max_size"`
-		MaxBackups int    `long:"max-backups" env:"BACKUPS" default:"10" description:"maximum number of old log files to retain" json:"max_backups"`
+		FileName   string `long:"file" env:"FILE"  default:"access.log" description:"location of access log" json:"filename" yaml:"filename"`
+		MaxSize    string `long:"max-size" env:"SIZE" default:"10M" description:"maximum size before it gets rotated" json:"max_size"  yaml:"max_size"`
+		MaxBackups int    `long:"max-backups" env:"BACKUPS" default:"10" description:"maximum number of old log files to retain" json:"max_backups" yaml:"max_backups"`
 	} `group:"logger" namespace:"logger" env-namespace:"RA_LOGGER"`
 
 	SSL struct {
 		Type          string   `long:"type" env:"TYPE" description:"ssl (auto) support. Default is 'none'" choice:"none" choice:"static" choice:"auto" default:"none" json:"type"` // nolint
 		Cert          string   `long:"cert" env:"CERT" description:"path to cert.pem file" json:"cert"`
 		Key           string   `long:"key" env:"KEY" description:"path to key.pem file" json:"key"`
-		ACMELocation  string   `long:"acme-location" env:"ACME_LOCATION" description:"dir where certificates will be stored by autocert manager" default:"./acme" json:"acme_location"`
-		ACMEEmail     string   `long:"acme-email" env:"ACME_EMAIL" description:"admin email for certificate notifications" json:"acme_email"`
+		ACMELocation  string   `long:"acme-location" env:"ACME_LOCATION" description:"dir where certificates will be stored by autocert manager" default:"./acme" json:"acme_location" yaml:"acme_location"`
+		ACMEEmail     string   `long:"acme-email" env:"ACME_EMAIL" description:"admin email for certificate notifications" json:"acme_email" yaml:"acme_email"`
 		Port          int      `long:"port" env:"PORT" description:"Main web-service secure SSL port. Default:443" default:"443" json:"port"`
-		RedirHTTPPort int      `long:"http-port" env:"ACME_HTTP_PORT" description:"http port for redirect to https and acme challenge test (default: 80)" json:"redir_http_port"`
-		FQDNs         []string `long:"fqdn" env:"ACME_FQDN" env-delim:"," description:"FQDN(s) for ACME certificates" json:"acme_fqdns"`
+		RedirHTTPPort int      `long:"http-port" env:"ACME_HTTP_PORT" description:"http port for redirect to https and acme challenge test (default: 80)" json:"redir_http_port" yaml:"redir_http_port"`
+		FQDNs         []string `long:"fqdn" env:"ACME_FQDN" env-delim:"," description:"FQDN(s) for ACME certificates" json:"acme_fqdns" yaml:"acme_fqdns"`
 	} `group:"ssl" namespace:"ssl" env-namespace:"RA_SSL" json:"ssl"`
 
 	Store StoreGroup `group:"store" namespace:"store" env-namespace:"RA_STORE" json:"store" yaml:"store"`
-	Debug bool       `long:"debug" env:"RA_DEBUG" description:"debug mode" json:"debug"`
+	Debug bool       `long:"debug" env:"RA_DEBUG" description:"enable the debug mode" json:"debug"`
 
+	// implement interface for parse different types of config files
 	configReader
 }
 
@@ -68,7 +68,7 @@ type Options struct {
 // Type implement as options for add support for different storage
 type StoreGroup struct {
 	Type          string `long:"type" env:"DB_TYPE" description:"type of storage" choice:"embed" default:"embed" json:"type"` // nolint
-	AdminPassword string `long:"admin-password" env:"ADMIN_PASSWORD" description:"Define password for default admin user when storage create first" default:"admin" json:"admin_password"`
+	AdminPassword string `long:"admin-password" env:"ADMIN_PASSWORD" description:"Define password for default admin user when storage create first" default:"admin" json:"admin_password" yaml:"admin_password"`
 	Embed         struct {
 		Path string `long:"path" env:"DB_PATH" default:"./data.db" description:"Parent directory for the sqlite files" json:"path" yaml:"path"`
 	} `group:"embed" namespace:"embed" env-namespace:"EMBED" json:"embed" yaml:"embed"`
@@ -78,20 +78,20 @@ type RegistryGroup struct {
 	Host                     string `long:"host" env:"HOST" required:"true" description:"Main host or address to docker registry service" json:"host"`
 	IP                       string `long:"ip" env:"IP" description:"Address which appends to certificate SAN (Subject Alternative Name)" json:"ip"`
 	Port                     uint   `long:"port" env:"PORT" description:"Port which registry accept requests. Default:5000" default:"5000" json:"port"`
-	AuthType                 string `long:"auth-type" env:"AUTH_TYPE" description:"Type for auth to docker registry service. Available 'basic' and 'token'. Default 'basic'" choice:"basic" choice:"token" default:"basic" json:"auth_type"`
+	AuthType                 string `long:"auth-type" env:"AUTH_TYPE" description:"Type for auth to docker registry service. Available 'basic' and 'token'. Default 'basic'" choice:"basic" choice:"token" default:"basic" json:"auth_type" yaml:"auth_type"`
 	Secret                   string `long:"token-secret" env:"TOKEN_SECRET" description:"Token secret for sign token when using 'token' auth type"  json:"token_secret"`
 	Login                    string `long:"login" env:"LOGIN" description:"Username is a credential for access to registry service using basic auth type" json:"login"`
 	Password                 string `long:"password" env:"PASSWORD" description:"Password is a credential for access to registry service using basic auth type" json:"password"`
 	Htpasswd                 string `long:"htpasswd" env:"HTPASSWD" description:"Path to htpasswd file when basic auth type selected" json:"htpasswd"`
 	InsecureConnection       bool   `long:"https-insecure" env:"HTTPS_INSECURE" description:"Set https connection to registry insecure" json:"https_insecure"`
 	Service                  string `long:"service" env:"SERVICE" description:"A service name which defined in registry settings" json:"service"`
-	Issuer                   string `long:"issuer" env:"TOKEN_ISSUER" description:"A token issuer name which defined in registry settings" json:"token_issuer"`
-	GarbageCollectorInterval int64  `long:"gc-interval" env:"GC_INTERVAL" description:"Use for define custom time interval for garbage collector call (in hour), default 1 hours" json:"gc_interval"`
+	Issuer                   string `long:"issuer" env:"TOKEN_ISSUER" description:"A token issuer name which defined in registry settings" json:"issuer"`
+	GarbageCollectorInterval int64  `long:"gc-interval" env:"GC_INTERVAL" description:"Use for define custom time interval for garbage collector call (in hour), default 1 hours" json:"gc_interval" yaml:"gc_interval"`
 	Certs                    struct {
-		Path      string `long:"path" env:"CERT_PATH" description:"A path where will be stored new self-signed cert,keys and CA files, when 'token' auth type is used" json:"certs_path"`
+		Path      string `long:"path" env:"CERT_PATH" description:"A path to directory where will be stored new self-signed cert,keys and CA files, when 'token' auth type is used" json:"path" yaml:"path"`
 		Key       string `long:"key" env:"KEY_PATH" description:"A path where will be stored new self-signed private key file, when 'token' auth type is used" json:"key"`
-		PublicKey string `long:"public-key" env:"PUBLIC_KEY_PATH" description:"A path where will be stored new self-signed public key file, when 'token' auth type is used" json:"public_key"`
-		CARoot    string `long:"ca-root" env:"CA_ROOT_PATH" description:"A path where will be stored new CA bundles file, when 'token' auth type is used" json:"ca_root"`
+		PublicKey string `long:"public-key" env:"PUBLIC_KEY_PATH" description:"A path where will be stored new self-signed public key file, when 'token' auth type is used" json:"public_key" yaml:"public_key"`
+		CARoot    string `long:"ca-root" env:"CA_ROOT_PATH" description:"A path where will be stored new CA bundles file, when 'token' auth type is used" json:"ca_root" yaml:"ca_root"`
 	} `group:"certs" namespace:"certs" env-namespace:"CERTS" json:"certs"`
 }
 

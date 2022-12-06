@@ -299,7 +299,7 @@ func (r *Registry) GetBlob(ctx context.Context, name, digest string) (blob []byt
 
 	resp, err := r.newHttpRequest(ctx, baseURL, "GET", nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed get blob data err: %v", err)
 	}
 
 	if resp != nil {

@@ -9,7 +9,7 @@ import (
 	"testing"
 )
 
-var testJsonConfig = `
+var testJSONConfig = `
 {
   "listen": "127.0.0.1",
   "port": 8088,
@@ -128,6 +128,7 @@ func Test_parseArgs(t *testing.T) {
 		testMatcherOptions.Registry.AuthType = "basic"
 
 		testMatcherOptions.Store.Type = "embed"
+		testMatcherOptions.Store.AdminPassword = "admin"
 		testMatcherOptions.Store.Embed.Path = "./db/data.db"
 		testMatcherOptions.Debug = true
 	}
@@ -165,7 +166,7 @@ func TestJsonConfigParser_ReadConfigFromFile(t *testing.T) {
 		assert.NoError(t, errUnlink)
 	}(f.Name())
 
-	errParse = ioutil.WriteFile(f.Name(), []byte(testJsonConfig), 0444)
+	errParse = ioutil.WriteFile(f.Name(), []byte(testJSONConfig), 0444)
 	require.NoError(t, errParse)
 
 	var (

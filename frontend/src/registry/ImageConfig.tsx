@@ -9,11 +9,12 @@ import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
+import CircularProgress from '@mui/material/CircularProgress';
 import Paper from '@mui/material/Paper';
 import CloseIcon from '@mui/icons-material/Close';
 import Slide from '@mui/material/Slide';
 import { TransitionProps } from '@mui/material/transitions';
-import { useGetOne, useTranslate } from 'react-admin';
+import { useGetOne, useTranslate, useNotify, Error } from 'react-admin';
 import { repositoryBaseResource } from './RepositoryShow';
 import { Buffer } from 'buffer';
 
@@ -31,7 +32,9 @@ const Transition = React.forwardRef(function Transition(
 export default function ImageConfigPage({ record, isOpen, handleShowFn }: any) {
     const [open, setOpen] = React.useState(false);
     const [manifest, setManifest] = React.useState(Object);
+    const [errLoad, setErrLoad] = React.useState(undefined);
     const translate = useTranslate();
+    const notify = useNotify();
 
     const { data, isLoading, error } = useGetOne(
         repositoryBaseResource,
@@ -47,6 +50,18 @@ export default function ImageConfigPage({ record, isOpen, handleShowFn }: any) {
         setOpen(isOpen);
     }, [isOpen])
 
+    React.useEffect(() => {
+        if (error && error !== null) {
+            console.error(error);
+            const err: any = error;
+            if (err.message) {
+                notify(err["message"], { type: "warning" });
+                setErrLoad(err.message)
+                return;
+            }
+        }
+        setErrLoad(undefined)
+    }, [error])
 
     React.useEffect(() => {
         if (isLoading || !data) {
@@ -56,7 +71,7 @@ export default function ImageConfigPage({ record, isOpen, handleShowFn }: any) {
         if (cfg && cfg !== null) {
             setManifest(cfg);
         }
-    }, [isLoading,data])
+    }, [isLoading, data])
 
     // if (isLoading) { return <Loading />; }
 
@@ -71,7 +86,7 @@ export default function ImageConfigPage({ record, isOpen, handleShowFn }: any) {
     }
 
     const ConfigData = () => {
-        const  config: any  = manifest.config;
+        const config: any = manifest.config;
         return config && (
             <List dense={true}>
                 {config.ExposedPorts ? <ListItemText disableTypography primary={<div style={{ fontWeight: "bolder", float: "left" }}>Exposed port:</div>} secondary={JSON.stringify(config.ExposedPorts)} /> : null}
@@ -150,18 +165,22 @@ export default function ImageConfigPage({ record, isOpen, handleShowFn }: any) {
                         >
                             <CloseIcon />
                         </IconButton>
+                       
                         <Typography sx={{ ml: 2, flex: 1 }} variant="h6" component="div">
                             {record.repository_name}:{record.tag}
+                            {isLoading ? <CircularProgress color="inherit"/>:null}
                         </Typography>
+                      
                     </Toolbar>
                 </AppBar>
+              
                 {!isLoading && error === null ?
                     <Box sx={{ flexGrow: 1, padding: 2 }}>
                         <Grid container spacing={2}>
                             {/* ----------- MAIN SECTION ----------- */}
                             <Grid item xs={12} md={6}>
                                 <Typography sx={{ mt: 4, mb: 2 }} variant="h6" component="div">
-                                {translate('resources.repository.image_platform_details')}
+                                    {translate('resources.repository.image_platform_details')}
                                 </Typography>
                                 <Paper elevation={3} sx={{ paddingLeft: 1 }}>
                                     {<MainData />}
@@ -172,7 +191,7 @@ export default function ImageConfigPage({ record, isOpen, handleShowFn }: any) {
 
                             <Grid item xs={12} md={6}>
                                 <Typography sx={{ mt: 4, mb: 2 }} variant="h6" component="div">
-                                {translate('resources.repository.image_config_details')}
+                                    {translate('resources.repository.image_config_details')}
                                 </Typography>
                                 <Paper elevation={3} sx={{ paddingLeft: 1 }}>
                                     {<ConfigData />}
@@ -183,7 +202,7 @@ export default function ImageConfigPage({ record, isOpen, handleShowFn }: any) {
 
                             <Grid item xs={12} md={8}>
                                 <Typography sx={{ mt: 4, mb: 2 }} variant="h6" component="div">
-                                {translate('resources.repository.image_history_details')}
+                                    {translate('resources.repository.image_history_details')}
                                 </Typography>
                                 <Paper elevation={3} sx={{ paddingLeft: 1 }}>
                                     {<HistoryData />}
@@ -192,8 +211,8 @@ export default function ImageConfigPage({ record, isOpen, handleShowFn }: any) {
                         </Grid>
                     </Box>
                     :
-                    (
-                        translate('resources.repository.message_config_data_not_loading'))}
+                    (errLoad ? errLoad : translate('resources.repository.message_config_data_not_loading')
+                     )}
             </Dialog>
         </div >
     );

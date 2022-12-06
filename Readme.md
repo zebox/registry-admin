@@ -88,3 +88,8 @@ Latest stable version has :vX.Y.Z docker tag (with :latest alias) and the curren
 
 ### Configuration
 
+
+### Development Guidelines
+- For local `frontend` development your should run **RegistryAdmin** server on port `80` and SSL disabled 
+otherwise provider inside frontend can't get access to **RegistryAdmin** service. 
+Also, you need use environment variable `RA_DEV_HOST=http://127.0.0.1:3000` for prevent `CORS` error in a browser.  

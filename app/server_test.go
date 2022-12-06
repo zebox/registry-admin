@@ -151,10 +151,10 @@ func Test_createRegistryConnection(t *testing.T) {
 			Password: "test_password",
 			Htpasswd: ".test_htpasswd",
 			Certs: struct {
-				Path      string `long:"path" env:"CERT_PATH" description:"A path where will be stored new self-signed cert,keys and CA files, when 'token' auth type is used" json:"certs_path"`
+				Path      string `long:"path" env:"CERT_PATH" description:"A path to directory where will be stored new self-signed cert,keys and CA files, when 'token' auth type is used" json:"path" yaml:"path"`
 				Key       string `long:"key" env:"KEY_PATH" description:"A path where will be stored new self-signed private key file, when 'token' auth type is used" json:"key"`
-				PublicKey string `long:"public-key" env:"PUBLIC_KEY_PATH" description:"A path where will be stored new self-signed public key file, when 'token' auth type is used" json:"public_key"`
-				CARoot    string `long:"ca-root" env:"CA_ROOT_PATH" description:"A path where will be stored new CA bundles file, when 'token' auth type is used" json:"ca_root"`
+				PublicKey string `long:"public-key" env:"PUBLIC_KEY_PATH" description:"A path where will be stored new self-signed public key file, when 'token' auth type is used" json:"public_key" yaml:"public_key"`
+				CARoot    string `long:"ca-root" env:"CA_ROOT_PATH" description:"A path where will be stored new CA bundles file, when 'token' auth type is used" json:"ca_root" yaml:"ca_root"`
 			}(struct {
 				Path      string
 				Key       string

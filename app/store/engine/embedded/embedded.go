@@ -64,19 +64,19 @@ func (e *Embedded) Connect(ctx context.Context) (err error) {
 
 func (e *Embedded) initTables(ctx context.Context) (errs error) {
 	if err := e.initUserTable(ctx); err != nil {
-		errs = fmt.Errorf("%v: failed to create %s table", err, usersTable)
+		errs = multierror.Append(errs, err, errors.Errorf("failed to create %s table", usersTable))
 	}
 
 	if err := e.initGroupsTable(ctx); err != nil {
-		errs = fmt.Errorf("%v: failed to create %s table", err, groupsTable)
+		errs = multierror.Append(errs, err, errors.Errorf("failed to create %s table", groupsTable))
 	}
 
 	if err := e.initAccessTable(ctx); err != nil {
-		errs = fmt.Errorf("%v: failed to create %s table", err, accessTable)
+		errs = multierror.Append(errs, err, errors.Errorf("failed to create %s table", accessTable))
 	}
 
 	if err := e.initRepositoriesTable(ctx); err != nil {
-		err = fmt.Errorf("%v: failed to create %s table", err, repositoriesTable)
+		errs = multierror.Append(errs, err, errors.Errorf("failed to create %s table", repositoriesTable))
 	}
 
 	// SQLite driver doesn't catch error if file doesn't exist and try to create a new database file.
@@ -205,7 +205,7 @@ func (e *Embedded) initAccessTable(ctx context.Context) (err error) {
 	return nil
 }
 
-func (e *Embedded) initRepositoriesTable(ctx context.Context) (err error) {
+func (e *Embedded) initRepositoriesTable(ctx context.Context) error {
 	if exist, err := e.isTableExist(ctx, repositoriesTable); err != nil || exist {
 		return ErrTableAlreadyExist
 	}
@@ -222,7 +222,7 @@ func (e *Embedded) initRepositoriesTable(ctx context.Context) (err error) {
 		raw TEXT,
 		UNIQUE(repository_name,tag))`, repositoriesTable)
 
-	_, err = e.db.Exec(sqlText)
+	_, err := e.db.Exec(sqlText)
 	if err != nil {
 		return multierror.Append(err, errors.Errorf("failed to create %s table", repositoriesTable))
 	}

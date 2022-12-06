@@ -173,7 +173,9 @@ func (ds *DataService) doSyncRepositories(ctx context.Context) {
 		}
 	}
 
-	ds.lastSyncDate.Store(now)
+	if totalTags > 0 {
+		ds.lastSyncDate.Store(now)
+	}
 }
 
 // RepositoriesMaintenance check repositories for outdated or updated data in repository storage
