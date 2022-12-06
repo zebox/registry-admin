@@ -46,6 +46,18 @@ var testJsonConfig = `
 }
 `
 
+var testYmlConfig = `
+listen: 127.0.0.1
+port: 8080
+
+auth:
+  token_secret: super-secret-test-token
+
+store:
+  embed:
+    path: ./test.db
+`
+
 func Test_parseArgs(t *testing.T) {
 	{
 		assert.NoError(t, os.Setenv("RA_LISTEN", "127.0.0.9"))
@@ -121,31 +133,31 @@ func Test_parseArgs(t *testing.T) {
 	}
 
 	os.Args = []string{os.Args[0]} // clear Go test flags
-	opts, err := parseArgs()
-	require.NoError(t, err)
-	require.NotNil(t, opts)
-	assert.Equal(t, &testMatcherOptions, opts)
+	testOpts, errParse := parseArgs()
+	require.NoError(t, errParse)
+	require.NotNil(t, testOpts)
+	assert.Equal(t, &testMatcherOptions, testOpts)
 
 	// test for random token generated for main auth token
 	assert.NoError(t, os.Setenv("RA_AUTH_TOKEN_SECRET", ""))
-	opts, err = parseArgs()
-	require.NoError(t, err)
-	require.NotNil(t, opts)
-	assert.NotEmpty(t, opts.Auth.TokenSecret)
+	testOpts, errParse = parseArgs()
+	require.NoError(t, errParse)
+	require.NotNil(t, testOpts)
+	assert.NotEmpty(t, testOpts.Auth.TokenSecret)
 
 	// test for random token generated for registry auth token
 	assert.NoError(t, os.Setenv("RA_REGISTRY_TOKEN_SECRET", ""))
 	assert.NoError(t, os.Setenv("RA_REGISTRY_AUTH_TYPE", "token"))
-	opts, err = parseArgs()
-	require.NoError(t, err)
-	require.NotNil(t, opts)
-	assert.NotEmpty(t, opts.Registry.Secret)
+	testOpts, errParse = parseArgs()
+	require.NoError(t, errParse)
+	require.NotNil(t, testOpts)
+	assert.NotEmpty(t, testOpts.Registry.Secret)
 }
 
 func TestJsonConfigParser_ReadConfigFromFile(t *testing.T) {
 	// create config test file
-	f, err := ioutil.TempFile("", "test_config.json")
-	require.NoError(t, err)
+	f, errParse := ioutil.TempFile(os.TempDir(), "test_config.json")
+	require.NoError(t, errParse)
 
 	defer func(path string) {
 		assert.NoError(t, f.Close())
@@ -153,19 +165,47 @@ func TestJsonConfigParser_ReadConfigFromFile(t *testing.T) {
 		assert.NoError(t, errUnlink)
 	}(f.Name())
 
-	err = ioutil.WriteFile(f.Name(), []byte(testJsonConfig), 0444)
-	require.NoError(t, err)
+	errParse = ioutil.WriteFile(f.Name(), []byte(testJsonConfig), 0444)
+	require.NoError(t, errParse)
 
 	var (
 		jcp         jsonConfigParser
 		testOptions Options
 	)
 
-	err = jcp.ReadConfigFromFile(f.Name(), &testOptions)
-	assert.NoError(t, err)
+	errParse = jcp.ReadConfigFromFile(f.Name(), &testOptions)
+	assert.NoError(t, errParse)
 	assert.Equal(t, testOptions.Auth.TokenSecret, "super-secret-test-token")
 
 	// test with fake file
-	err = jcp.ReadConfigFromFile("unknown.file", &testOptions)
-	assert.Error(t, err)
+	errParse = jcp.ReadConfigFromFile("unknown.file", &testOptions)
+	assert.Error(t, errParse)
+}
+
+func TestYamlConfigParser_ReadConfigFromFile(t *testing.T) {
+	// create config test file
+	f, errParse := ioutil.TempFile(os.TempDir(), "test_config.yml")
+	require.NoError(t, errParse)
+
+	defer func(path string) {
+		assert.NoError(t, f.Close())
+		errUnlink := syscall.Unlink(path)
+		assert.NoError(t, errUnlink)
+	}(f.Name())
+
+	errParse = ioutil.WriteFile(f.Name(), []byte(testYmlConfig), 0444)
+	require.NoError(t, errParse)
+
+	var (
+		ycp         yamlConfigParser
+		testOptions Options
+	)
+
+	errParse = ycp.ReadConfigFromFile(f.Name(), &testOptions)
+	assert.NoError(t, errParse)
+	assert.Equal(t, testOptions.Auth.TokenSecret, "super-secret-test-token")
+
+	// test with fake file
+	errParse = ycp.ReadConfigFromFile("unknown.file", &testOptions)
+	assert.Error(t, errParse)
 }
