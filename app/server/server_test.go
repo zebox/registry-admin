@@ -31,6 +31,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/zebox/gojwk"
 	"github.com/zebox/gojwk/storage"
+
 	"github.com/zebox/registry-admin/app/store"
 	"github.com/zebox/registry-admin/app/store/engine"
 	"github.com/zebox/registry-admin/app/store/engine/embedded"

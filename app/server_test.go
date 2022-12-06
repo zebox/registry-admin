@@ -103,8 +103,10 @@ func Test_makeDataStore(t *testing.T) {
 	sg := StoreGroup{
 		Type: "embed",
 		Embed: struct {
+			Path string `long:"path" env:"DB_PATH" default:"./data.db" description:"Parent directory for the sqlite files" json:"path"`
+		}(struct {
 			Path string `long:"path" env:"DB_PATH" default:"./data.db" description:"parent directory for the sqlite files" json:"path"`
-		}(struct{ Path string }{Path: os.TempDir() + "/test_db"}),
+		}(struct{ Path string }{Path: os.TempDir() + "/test_db"})),
 	}
 	var (
 		iStore       engine.Interface
