@@ -75,6 +75,7 @@ func TestDataService_SyncExistedRepositories(t *testing.T) {
 	ctx.Done()
 
 	t.Log("test with fake errors")
+
 	repositoryStore = make(map[string]store.RegistryEntry) // clear data in mock registry
 
 	ctx = context.WithValue(context.Background(), ctxKey, errorCreate)
@@ -82,6 +83,7 @@ func TestDataService_SyncExistedRepositories(t *testing.T) {
 	assert.Equal(t, 0, len(repositoryStore))
 	assert.Equal(t, errorCreate, errs.currentError)
 
+	testDS.lastSyncDate.Store(int64(0))
 	repositoryStore = make(map[string]store.RegistryEntry) // clear data in mock registry
 	ctx = context.WithValue(context.Background(), ctxKey, errorManifest)
 	testDS.doSyncRepositories(ctx)
@@ -91,12 +93,14 @@ func TestDataService_SyncExistedRepositories(t *testing.T) {
 	repositoryStore = make(map[string]store.RegistryEntry) // clear data in mock registry
 	ctx = context.WithValue(context.Background(), ctxKey, errorList)
 	testDS.doSyncRepositories(ctx)
+	assert.Equal(t, int64(0), testDS.lastSyncDate.Load().(int64))
 	assert.Equal(t, 0, len(repositoryStore))
 	assert.Equal(t, errorList, errs.currentError)
 
 	repositoryStore = make(map[string]store.RegistryEntry) // clear data in mock registry
 	ctx = context.WithValue(context.Background(), ctxKey, errorCatalog)
 	testDS.doSyncRepositories(ctx)
+	assert.Equal(t, int64(0), testDS.lastSyncDate.Load().(int64))
 	assert.Equal(t, 0, len(repositoryStore))
 	assert.Equal(t, errorCatalog, errs.currentError)
 }

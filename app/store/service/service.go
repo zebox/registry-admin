@@ -72,7 +72,7 @@ func (ds *DataService) doSyncRepositories(ctx context.Context) {
 		if errCatalog != nil && errCatalog != registry.ErrNoMorePages {
 			log.Printf("[ERROR] failed to fetch catalog list: %v", errCatalog)
 			log.Printf("[ERROR] sync operation aborted")
-			break
+			return
 		}
 
 		totalRepos += uint64(len(repos.List))
@@ -162,7 +162,6 @@ func (ds *DataService) doSyncRepositories(ctx context.Context) {
 		}
 
 		if errors.Is(errCatalog, registry.ErrNoMorePages) {
-			log.Printf("[INFO] Repositories synced. Total: %d\n", totalRepos)
 			break
 		}
 
@@ -175,6 +174,7 @@ func (ds *DataService) doSyncRepositories(ctx context.Context) {
 
 	if totalTags > 0 {
 		ds.lastSyncDate.Store(now)
+		log.Printf("[INFO] Repositories synced. Total: %d\n", totalRepos)
 	}
 }
 
