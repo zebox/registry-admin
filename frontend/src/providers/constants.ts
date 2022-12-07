@@ -20,9 +20,10 @@ function getBaseUrl(): string {
 }
 
 const isDev = process.env.NODE_ENV;
+const REGISTRY_ADMIN_DEV_URL= process.env.REACT_APP_RA_DEV_URL ? (process.env.REACT_APP_RA_DEV_URL as string) : `http://${window.location.hostname}`
 
 export const API_BASE: string = '/api/v1';
 export const API_AUTH: string = '/auth';
-export const BASE_URL: string = isDev === "development" ? `http://${window.location.hostname}` : getBaseUrl();
+export const BASE_URL: string = isDev === "development" ? REGISTRY_ADMIN_DEV_URL : getBaseUrl();
 export const BASENAME: string = "web";
 
