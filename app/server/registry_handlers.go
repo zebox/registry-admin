@@ -44,9 +44,6 @@ func (rh *registryHandlers) tokenAuth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// define instance for error response
-	regErrs := registryErrors{Errors: []registry.ApiError{}}
-
 	user, errUser := rh.dataStore.GetUser(r.Context(), username)
 	if errUser != nil {
 		w.WriteHeader(http.StatusUnauthorized)
@@ -59,74 +56,7 @@ func (rh *registryHandlers) tokenAuth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	queryParams, err := url.ParseQuery(r.URL.RawQuery)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	// processing push and pull requests
-	if queryParams.Get("scope") != "" {
-		scopeParts := strings.Split(queryParams.Get("scope"), ":")
-		if len(scopeParts) != 3 || queryParams.Get("account") != user.Login {
-			rh.l.Logf("[ERROR] wrong scope or user and account doesn't match: %s :user %s", r.RequestURI, user.Login)
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-
-		tokenRequest := registry.TokenRequest{
-			Account: queryParams.Get("account"),
-			Service: queryParams.Get("service"),
-			Type:    scopeParts[0],
-			Name:    scopeParts[1],
-			Actions: strings.Split(scopeParts[2], ","),
-		}
-
-		if expireTime := queryParams.Get("expire"); expireTime != "" {
-			expireValue, errExpireConvert := strconv.ParseInt(expireTime, 10, 64)
-			if errExpireConvert != nil {
-				errValue := fmt.Errorf("expire value must be a number: %v", errExpireConvert)
-				rh.l.Logf("[ERROR] %v", errValue)
-				renderJSONWithStatus(w, responseMessage{Message: errValue.Error()}, http.StatusBadRequest)
-				return
-			}
-			tokenRequest.ExpireTime = expireValue
-		}
-
-		if allow, errCheck := rh.checkUserAccess(r.Context(), user, tokenRequest); !allow || errCheck != nil {
-			errMsg := fmt.Errorf("[ERROR] access to registry resource not allowed for user %s: %v", user.Login, errCheck)
-			regErrs.Errors = append(regErrs.Errors, registry.ApiError{Code: "", Message: errMsg.Error()})
-			rh.l.Logf("%v", errMsg)
-			renderJSONWithStatus(w, regErrs, http.StatusForbidden)
-			return
-		}
-
-		tokenString, errToken := rh.registryService.Token(tokenRequest)
-		if errToken != nil {
-			rh.l.Logf("[ERROR] failed to issue token for request: %s", r.RequestURI)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-
-		w.Header().Add("Content-Type", "application/json")
-		_, _ = w.Write([]byte(tokenString))
-		return
-	}
-
-	// processing docker login requests
-	if queryParams.Get("account") != "" && queryParams.Get("client_id") != "" {
-		userToken, errLogin := rh.registryService.Login(user)
-		if errLogin != nil || queryParams.Get("account") != user.Login {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-
-		w.Header().Add("Content-Type", "application/json")
-		_, _ = w.Write([]byte(userToken))
-		return
-	}
-
-	w.WriteHeader(http.StatusNoContent)
+	rh.parseTokenRequestParams(w, r, user)
 }
 
 // health checks availability a registry service
@@ -240,6 +170,85 @@ func (rh *registryHandlers) catalogList(w http.ResponseWriter, r *http.Request) 
 
 }
 
+func (rh *registryHandlers) parseTokenRequestParams(w http.ResponseWriter, r *http.Request, user store.User) {
+	queryParams, err := url.ParseQuery(r.URL.RawQuery)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	// processing push and pull requests
+	if queryParams.Get("scope") != "" {
+		scopeParts := strings.Split(queryParams.Get("scope"), ":")
+		if len(scopeParts) != 3 || queryParams.Get("account") != user.Login {
+			rh.l.Logf("[ERROR] wrong scope or user and account doesn't match: %s :user %s", r.RequestURI, user.Login)
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		tokenRequest := registry.TokenRequest{
+			Account: queryParams.Get("account"),
+			Service: queryParams.Get("service"),
+			Type:    scopeParts[0],
+			Name:    scopeParts[1],
+			Actions: strings.Split(scopeParts[2], ","),
+		}
+
+		if expireTime := queryParams.Get("expire"); expireTime != "" {
+			expireValue, errExpireConvert := strconv.ParseInt(expireTime, 10, 64)
+			if errExpireConvert != nil {
+				errValue := fmt.Errorf("expire value must be a number: %v", errExpireConvert)
+				rh.l.Logf("[ERROR] %v", errValue)
+				renderJSONWithStatus(w, responseMessage{Message: errValue.Error()}, http.StatusBadRequest)
+				return
+			}
+			tokenRequest.ExpireTime = expireValue
+		}
+
+		// define instance for error response
+		regErrs := registryErrors{Errors: []registry.ApiError{}}
+
+		if allow, errCheck := rh.checkUserAccess(r.Context(), user, tokenRequest); !allow || errCheck != nil {
+			errMsg := fmt.Errorf("[ERROR] access to registry resource not allowed for user %s: %v", user.Login, errCheck)
+			regErrs.Errors = append(regErrs.Errors, registry.ApiError{Code: "", Message: errMsg.Error()})
+			rh.l.Logf("%v", errMsg)
+			renderJSONWithStatus(w, regErrs, http.StatusForbidden)
+			return
+		}
+
+		tokenString, errToken := rh.registryService.Token(tokenRequest)
+		if errToken != nil {
+			rh.l.Logf("[ERROR] failed to issue token for request: %s", r.RequestURI)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Add("Content-Type", "application/json")
+		if _, err = w.Write([]byte(tokenString)); err != nil {
+			rh.l.Logf("[ERROR] failed to response for token request: %v", err)
+		}
+		return
+	}
+
+	// processing docker login requests
+	if queryParams.Get("account") != "" && queryParams.Get("client_id") != "" {
+		userToken, errLogin := rh.registryService.Login(user)
+		if errLogin != nil || queryParams.Get("account") != user.Login {
+			rh.l.Logf("[ERROR] failed to processing docker login request: %v", errLogin)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Add("Content-Type", "application/json")
+		if _, err = w.Write([]byte(userToken)); err != nil {
+			rh.l.Logf("[ERROR] failed to response for docker login: %v", err)
+		}
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func (rh *registryHandlers) checkUserAccess(ctx context.Context, user store.User, tokenRequest registry.TokenRequest) (bool, error) {
 
 	if user.Role == "admin" {
@@ -247,12 +256,13 @@ func (rh *registryHandlers) checkUserAccess(ctx context.Context, user store.User
 	}
 
 	filter := engine.QueryFilter{
-		IDs: []int64{user.ID},
+		// IDs: []int64{user.ID},
 		Filters: map[string]interface{}{
 			"owner_id":      user.ID,
 			"resource_type": tokenRequest.Type,
 			"resource_name": tokenRequest.Name,
 			"action":        tokenRequest.Actions,
+			"disabled":      false,
 		},
 	}
 	access, err := rh.dataStore.FindAccesses(ctx, filter)

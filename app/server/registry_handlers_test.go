@@ -579,18 +579,18 @@ func prepareAccessStoreMock(t *testing.T) *engine.InterfaceMock {
 			testListResponse := engine.ListResponse{}
 
 			// fetch by ids and filter values
-			if len(filter.IDs) > 0 {
-				for _, id := range filter.IDs {
-					if val, ok := testAccesses[id]; ok {
-						if val.Type == filter.Filters["resource_type"].(string) && val.ResourceName == filter.Filters["resource_name"].(string) && val.Action == filter.Filters["action"].([]string)[0] {
-							testListResponse.Total++
-							testListResponse.Data = append(testListResponse.Data, val)
-						}
-					}
+			for _, val := range testAccesses {
+				if val.Type == filter.Filters["resource_type"].(string) &&
+					val.ResourceName == filter.Filters["resource_name"].(string) &&
+					val.Action == filter.Filters["action"].([]string)[0] &&
+					val.ID == filter.Filters["owner_id"].(int64) {
+
+					testListResponse.Total++
+					testListResponse.Data = append(testListResponse.Data, val)
 				}
-				if testListResponse.Total == 0 {
-					return testListResponse, errors.New("access records not found")
-				}
+			}
+			if testListResponse.Total == 0 {
+				return testListResponse, errors.New("access records not found")
 			}
 			return testListResponse, nil
 		},
@@ -616,7 +616,6 @@ func prepareAccessStoreMock(t *testing.T) *engine.InterfaceMock {
 			}
 			return result, err
 		},
-
 		UpdateRepositoryFunc: func(ctx context.Context, conditionClause map[string]interface{}, data map[string]interface{}) error {
 			return nil
 		},
