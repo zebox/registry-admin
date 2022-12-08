@@ -43,6 +43,13 @@ func TestRegistryHandlers_tokenAuth(t *testing.T) {
 		expectedStatus  int
 	}{
 		{
+			name:           "test with access for valid user to public repositories (shared for all users)",
+			login:          "baz",
+			password:       "baz_password",
+			query:          "?account=baz&scope=repository:test_resource_5:pull&service=container_registry",
+			expectedStatus: http.StatusOK,
+		},
+		{
 			name:           "test with empty password without query params",
 			login:          "test",
 			password:       "",
@@ -512,8 +519,7 @@ func prepareRegistryMock(_ *testing.T) *registryInterfaceMock {
 		},
 		APIVersionCheckFunc: func(ctx context.Context) error {
 
-			switch val := ctx.Value(ctxKey).(type) {
-			case bool:
+			if val, ok := ctx.Value(ctxKey).(bool); ok {
 				if !val {
 					return errors.New("failed to make health request")
 				}
@@ -560,8 +566,7 @@ func prepareAccessStoreMock(t *testing.T) *engine.InterfaceMock {
 
 		GetUserFunc: func(ctx context.Context, id interface{}) (store.User, error) {
 
-			switch val := id.(type) {
-			case string:
+			if val, ok := id.(string); ok {
 				for _, user := range testUsers {
 					if val == user.Login {
 						return user, nil
@@ -593,14 +598,14 @@ func prepareAccessStoreMock(t *testing.T) *engine.InterfaceMock {
 				if val.Type == filter.Filters["resource_type"].(string) &&
 					val.ResourceName == filter.Filters["resource_name"].(string) &&
 					val.Action == filter.Filters["action"].([]string)[0] &&
-					val.ID == filter.Filters["owner_id"].(int64) {
+					val.Owner == filter.Filters["owner_id"].(int64) {
 
 					testListResponse.Total++
 					testListResponse.Data = append(testListResponse.Data, val)
 				}
 			}
 			if testListResponse.Total == 0 {
-				return testListResponse, errors.New("access records not found")
+				return testListResponse, engine.ErrNotFound
 			}
 			return testListResponse, nil
 		},

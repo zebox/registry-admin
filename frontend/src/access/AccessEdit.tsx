@@ -14,6 +14,7 @@ import {
 import {RepositoryAutocomplete} from "../components/RepositoryAutocompleteField";
 import RepositoryAction from "../components/RepositoryAction";
 import {requirePermission} from '../helpers/Helpers';
+import { UserAccessSelector } from '../components/UserAccessSelector';
 
 const AccessEdit = (props:any) => {
     const { source, ...rest } = props;
@@ -25,11 +26,12 @@ const AccessEdit = (props:any) => {
                 <SimpleForm>
                     <TextInput sx={{width: "30%"}} label={translate('resources.accesses.fields.name')} source="name"
                                validate={required()}/>
-                    <ReferenceInput source="owner_id" reference="users">
+                    {/* <ReferenceInput source="owner_id" reference="users">
                         <AutocompleteInput sx={{width: "30%"}} optionText="name" optionValue="id"
                                            label={translate('resources.accesses.fields.owner_id')}
                                            validate={required()}/>
-                    </ReferenceInput>
+                    </ReferenceInput> */}
+                    <UserAccessSelector source="owner_id" label={translate('resources.accesses.fields.owner_id')}/>
                     <RepositoryAutocomplete source="resource_name" validate={required()} {...rest} />
                     <RepositoryAction source="action"/>
                     <TextInput

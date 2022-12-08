@@ -55,6 +55,11 @@ const customRussianMessages: TranslationMessages = {
                 action:"Вид операции",
                 disabled:"Отключен"
             },
+            labels: {
+                label_special_permission:"Особые разрешения",
+                label_for_all_users: "Все",
+                label_for_registered_users: "Только зарегистрированные"
+            },
             messages:{
                 access_tooltip:"Показать доступные репозитории"
             }

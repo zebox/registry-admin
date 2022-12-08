@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/docker/distribution/notifications"
 	"github.com/go-pkgz/auth/token"
@@ -42,7 +43,7 @@ func (rh *registryHandlers) tokenAuth(w http.ResponseWriter, r *http.Request) {
 	if !ok || password == "" {
 		// check access for all (guest), public repository access
 		// owner_id equal '0' for anonymous user
-		user := store.User{ID: 0}
+		user := store.User{ID: engine.AnonymousUserID}
 		rh.parseTokenRequestParams(w, r, user)
 		return
 	}
@@ -58,6 +59,7 @@ func (rh *registryHandlers) tokenAuth(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusForbidden)
 		return
 	}
+
 	rh.parseTokenRequestParams(w, r, user)
 }
 
@@ -182,7 +184,9 @@ func (rh *registryHandlers) parseTokenRequestParams(w http.ResponseWriter, r *ht
 	// processing push and pull requests
 	if queryParams.Get("scope") != "" {
 		scopeParts := strings.Split(queryParams.Get("scope"), ":")
-		if len(scopeParts) != 3 {
+
+		// skips account scope check for anonymous users only
+		if len(scopeParts) != 3 || (user.ID != engine.AnonymousUserID && queryParams.Get("account") != user.Login) {
 			rh.l.Logf("[ERROR] wrong scope or user and account doesn't match: %s :user %s", r.RequestURI, user.Login)
 			w.WriteHeader(http.StatusBadRequest)
 			return
@@ -258,7 +262,6 @@ func (rh *registryHandlers) checkUserAccess(ctx context.Context, user store.User
 	}
 
 	filter := engine.QueryFilter{
-		// IDs: []int64{user.ID},
 		Filters: map[string]interface{}{
 			"owner_id":      user.ID,
 			"resource_type": tokenRequest.Type,
@@ -269,7 +272,15 @@ func (rh *registryHandlers) checkUserAccess(ctx context.Context, user store.User
 	}
 	access, err := rh.dataStore.FindAccesses(ctx, filter)
 	if err != nil {
-		return false, err
+		// check access to repository with for all users permission
+		if errors.Is(err, engine.ErrNotFound) {
+			filter.Filters["owner_id"] = int64(engine.AnonymousUserID)
+			if access, err = rh.dataStore.FindAccesses(ctx, filter); err != nil {
+				return false, err
+			}
+		} else {
+			return false, err
+		}
 	}
 	// if at least one item exist it's mean that access for user exist
 	return access.Total > 0, nil

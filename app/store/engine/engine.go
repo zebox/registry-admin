@@ -14,7 +14,10 @@ import (
 
 // RepositoriesByUserAccess allow filtered repositories result list by assigned user access
 // it's relevant only for role 'user' only
-const RepositoriesByUserAccess = "access.owner_id"
+const (
+	RepositoriesByUserAccess = "access.owner_id"
+	AnonymousUserID          = int64(-1000) // uses for share access for anonymous and not registered users
+)
 
 type engineOptionsCtx string
 

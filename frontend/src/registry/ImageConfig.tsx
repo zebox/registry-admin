@@ -14,7 +14,7 @@ import Paper from '@mui/material/Paper';
 import CloseIcon from '@mui/icons-material/Close';
 import Slide from '@mui/material/Slide';
 import { TransitionProps } from '@mui/material/transitions';
-import { useGetOne, useTranslate, useNotify, Error } from 'react-admin';
+import { useGetOne, useTranslate, useNotify } from 'react-admin';
 import { repositoryBaseResource } from './RepositoryShow';
 import { Buffer } from 'buffer';
 
@@ -61,7 +61,7 @@ export default function ImageConfigPage({ record, isOpen, handleShowFn }: any) {
             }
         }
         setErrLoad(undefined)
-    }, [error])
+    }, [error,notify])
 
     React.useEffect(() => {
         if (isLoading || !data) {
@@ -72,8 +72,6 @@ export default function ImageConfigPage({ record, isOpen, handleShowFn }: any) {
             setManifest(cfg);
         }
     }, [isLoading, data])
-
-    // if (isLoading) { return <Loading />; }
 
     const MainData = () => {
         return manifest && (

@@ -169,7 +169,7 @@ func (e *Embedded) DeleteAccess(ctx context.Context, key string, id interface{})
 
 // AccessGarbageCollector check outdated repositories in repositories table and delete ones from access list
 func (e *Embedded) AccessGarbageCollector(ctx context.Context) error {
-	res, err := e.db.ExecContext(ctx, "DELETE FROM access WHERE resource_name NOT IN (SELECT repository_name from repositories)")
+	res, err := e.db.ExecContext(ctx, "DELETE FROM access WHERE resource_name NOT IN (SELECT repository_name FROM repositories)")
 	if err != nil {
 		return errors.Wrapf(err, "failed execute query for execute garbage collector for access ")
 	}
