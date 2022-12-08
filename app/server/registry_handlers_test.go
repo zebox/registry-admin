@@ -36,9 +36,6 @@ func TestRegistryHandlers_tokenAuth(t *testing.T) {
 
 	filledTestEntries(t, &testRegistryHandlers)
 
-	// test without credentials
-	request(t, "GET", "/api/v1/registry/auth", testRegistryHandlers.tokenAuth, nil, http.StatusUnauthorized)
-
 	tests := []struct {
 		name            string
 		login, password string
@@ -46,11 +43,18 @@ func TestRegistryHandlers_tokenAuth(t *testing.T) {
 		expectedStatus  int
 	}{
 		{
+			name:           "test with empty password without query params",
+			login:          "test",
+			password:       "",
+			expectedStatus: http.StatusNoContent,
+		},
+		{
 
 			name:           "test with empty password",
 			login:          "test",
 			password:       "",
-			expectedStatus: http.StatusUnauthorized,
+			query:          "?account=baz&scope=repository:test_resource_5:pull&service=container_registry",
+			expectedStatus: http.StatusOK,
 		},
 		{
 			name:           "test with unknown user",
@@ -147,7 +151,6 @@ func TestRegistryHandlers_tokenAuth(t *testing.T) {
 	for _, entry := range tests {
 		t.Logf("test entry: %v", entry.name)
 		requestWithCredentials(t, ctx, entry.login, entry.password, "GET", fmt.Sprintf("/api/v1/registry/auth%s", entry.query), testRegistryHandlers.tokenAuth, nil, entry.expectedStatus)
-
 	}
 }
 
@@ -442,6 +445,13 @@ func filledTestEntries(t *testing.T, testRegistryHandlers *registryHandlers) {
 			Owner:        4,
 			Type:         "repository",
 			ResourceName: "test_resource_4",
+			Action:       "pull",
+		},
+		{
+			Name:         "test_access_5",
+			Owner:        0,
+			Type:         "repository",
+			ResourceName: "test_resource_5",
 			Action:       "pull",
 		},
 	}

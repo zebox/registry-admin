@@ -40,7 +40,10 @@ func (rh *registryHandlers) tokenAuth(w http.ResponseWriter, r *http.Request) {
 
 	username, password, ok := r.BasicAuth()
 	if !ok || password == "" {
-		w.WriteHeader(http.StatusUnauthorized)
+		// check access for all (guest), public repository access
+		// owner_id equal '0' for anonymous user
+		user := store.User{ID: 0}
+		rh.parseTokenRequestParams(w, r, user)
 		return
 	}
 
@@ -55,7 +58,6 @@ func (rh *registryHandlers) tokenAuth(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusForbidden)
 		return
 	}
-
 	rh.parseTokenRequestParams(w, r, user)
 }
 
@@ -180,7 +182,7 @@ func (rh *registryHandlers) parseTokenRequestParams(w http.ResponseWriter, r *ht
 	// processing push and pull requests
 	if queryParams.Get("scope") != "" {
 		scopeParts := strings.Split(queryParams.Get("scope"), ":")
-		if len(scopeParts) != 3 || queryParams.Get("account") != user.Login {
+		if len(scopeParts) != 3 {
 			rh.l.Logf("[ERROR] wrong scope or user and account doesn't match: %s :user %s", r.RequestURI, user.Login)
 			w.WriteHeader(http.StatusBadRequest)
 			return
