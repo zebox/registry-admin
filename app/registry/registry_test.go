@@ -34,38 +34,34 @@ func TestNewRegistry(t *testing.T) {
 		},
 	}
 
-	_, err := NewRegistry("test_login", "test_password", "test_secret", testSetting)
+	_, err := NewRegistry("test_login", "test_password", testSetting)
 	require.NoError(t, err)
 
 	// test with bad certs path
 	testSetting.CertificatesPaths.KeyPath = "*"
-	_, err = NewRegistry("test_login", "test_password", "test_secret", testSetting)
-	require.Error(t, err)
-
-	// test with empty secret
-	_, err = NewRegistry("test_login", "test_password", "", testSetting)
+	_, err = NewRegistry("test_login", "test_password", testSetting)
 	require.Error(t, err)
 
 	// test with empty one of certs path fields
 	testSetting.CertificatesPaths.PublicKeyPath = ""
-	_, err = NewRegistry("test_login", "test_password", "test_secret", testSetting)
+	_, err = NewRegistry("test_login", "test_password", testSetting)
 	require.Error(t, err)
 
 	// test with empty last filed entry
 	testSetting.CertificatesPaths = Certs{
 		CARootPath: CAName,
 	}
-	_, err = NewRegistry("test_login", "test_password", "test_secret", testSetting)
+	_, err = NewRegistry("test_login", "test_password", testSetting)
 	require.Error(t, err)
 
 	// test with empty certs path
 	testSetting.CertificatesPaths = Certs{}
-	_, err = NewRegistry("test_login", "test_password", "test_secret", testSetting)
+	_, err = NewRegistry("test_login", "test_password", testSetting)
 	require.NoError(t, err)
 
 	// test with empty basic login
 	testSetting.AuthType = Basic
-	_, err = NewRegistry("", "test_password", "test_secret", testSetting)
+	_, err = NewRegistry("", "test_password", testSetting)
 	require.Error(t, err)
 
 }
@@ -79,7 +75,7 @@ func TestRegistry_ApiCheck(t *testing.T) {
 		Host: "http://127.0.0.1",
 		Port: testPort,
 	}
-	r, err := NewRegistry("test_login", "test_password", "test_secret", testSetting)
+	r, err := NewRegistry("test_login", "test_password", testSetting)
 	require.NoError(t, err)
 	require.NotNil(t, r)
 
@@ -108,7 +104,7 @@ func TestRegistry_GetBlob(t *testing.T) {
 		Host: "http://127.0.0.1",
 		Port: testPort,
 	}
-	r, err := NewRegistry("test_admin", "test_password", "test_secret", testSetting)
+	r, err := NewRegistry("test_admin", "test_password", testSetting)
 	require.NoError(t, err)
 	require.NotNil(t, r)
 
@@ -133,7 +129,7 @@ func TestRegistry_Catalog(t *testing.T) {
 		Host: "http://127.0.0.1",
 		Port: testPort,
 	}
-	r, err := NewRegistry(defaultMockUsername, defaultMockPassword, "test_secret", testSetting)
+	r, err := NewRegistry(defaultMockUsername, defaultMockPassword, testSetting)
 	require.NoError(t, err)
 
 	repos, err := r.Catalog(context.Background(), "", "")
@@ -176,7 +172,7 @@ func TestRegistry_ListingImageTags(t *testing.T) {
 		Host: "http://127.0.0.1",
 		Port: testPort,
 	}
-	r, errRegistry := NewRegistry(defaultMockUsername, defaultMockPassword, "test_secret", testSetting)
+	r, errRegistry := NewRegistry(defaultMockUsername, defaultMockPassword, testSetting)
 	require.NoError(t, errRegistry)
 
 	for _, repoName := range testRegistry.repositories.List {
@@ -227,7 +223,7 @@ func TestRegistry_Manifest(t *testing.T) {
 		Host: "http://127.0.0.1",
 		Port: testPort,
 	}
-	r, errRegistry := NewRegistry(defaultMockUsername, defaultMockPassword, "test_secret", testSetting)
+	r, errRegistry := NewRegistry(defaultMockUsername, defaultMockPassword, testSetting)
 	require.NoError(t, errRegistry)
 
 	manifest, err := r.Manifest(context.Background(), "test_repo_1", "test_tag_10")
@@ -255,7 +251,7 @@ func TestRegistry_DeleteTag(t *testing.T) {
 		Host: "http://127.0.0.1",
 		Port: testPort,
 	}
-	r, errRegistry := NewRegistry(defaultMockUsername, defaultMockPassword, "test_secret", testSetting)
+	r, errRegistry := NewRegistry(defaultMockUsername, defaultMockPassword, testSetting)
 	require.NoError(t, errRegistry)
 
 	digest := makeDigest("test_tag_10")
@@ -326,7 +322,7 @@ func TestRegistry_Login(t *testing.T) {
 		},
 	}
 
-	testRegistry, err := NewRegistry("test_login", "test_password", "test_secret", testSetting)
+	testRegistry, err := NewRegistry("test_login", "test_password", testSetting)
 	require.NoError(t, err)
 	u := store.User{Login: "test_login"}
 	tokenString, errLogin := testRegistry.Login(u)
@@ -353,7 +349,7 @@ func TestRegistry_Token(t *testing.T) {
 		},
 	}
 
-	testRegistry, err := NewRegistry("test_login", "test_password", "test_secret", testSetting)
+	testRegistry, err := NewRegistry("test_login", "test_password", testSetting)
 	require.NoError(t, err)
 
 	testRequestHeaderValue := `Bearer realm="https://auth.docker.io/token",service="registry.docker.io",scope="repository:samalba/my-app:pull,push"`
@@ -398,7 +394,7 @@ func Test_WithTokenAuth(t *testing.T) {
 		},
 	}
 
-	testRegistry, err := NewRegistry("test_login", "test_password", "test_secret", testSetting)
+	testRegistry, err := NewRegistry("test_login", "test_password", testSetting)
 	require.NoError(t, err)
 
 	// create registry mock after public key created

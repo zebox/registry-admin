@@ -137,7 +137,7 @@ type Schema2Descriptor struct {
 }
 
 // NewRegistry is main constructor for create registry access API instance
-func NewRegistry(login, password, secret string, settings Settings) (*Registry, error) {
+func NewRegistry(login, password string, settings Settings) (*Registry, error) {
 
 	var r = new(Registry)
 
@@ -189,10 +189,6 @@ func NewRegistry(login, password, secret string, settings Settings) (*Registry, 
 
 	if r.settings.AuthType == SelfToken {
 
-		if len(secret) == 0 {
-			return nil, errors.New("token secret must be defined for 'token' auth type")
-		}
-
 		r.htpasswd = nil // not needed for token auth
 		var err error
 		if certsPathIsFilled {
@@ -203,12 +199,12 @@ func NewRegistry(login, password, secret string, settings Settings) (*Registry, 
 			if len(parts) == 3 {
 				hostName = parts[2]
 			}
-			r.registryToken, err = NewRegistryToken(secret, TokenIssuer(settings.Issuer), CertsName(settings.CertificatesPaths), ServiceIPHost(r.settings.IP, hostName))
+			r.registryToken, err = NewRegistryToken(TokenIssuer(settings.Issuer), CertsName(settings.CertificatesPaths), ServiceIPHost(r.settings.IP, hostName))
 			if err != nil {
 				return nil, err
 			}
 		} else {
-			r.registryToken, err = NewRegistryToken(secret, TokenIssuer(settings.Issuer))
+			r.registryToken, err = NewRegistryToken(TokenIssuer(settings.Issuer))
 			if err != nil {
 				return nil, err
 			}

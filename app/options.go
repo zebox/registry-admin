@@ -79,7 +79,6 @@ type RegistryGroup struct {
 	IP                       string `long:"ip" env:"IP" description:"Address which appends to certificate SAN (Subject Alternative Name)" json:"ip"`
 	Port                     uint   `long:"port" env:"PORT" description:"Port which registry accept requests. Default:5000" default:"5000" json:"port"`
 	AuthType                 string `long:"auth-type" env:"AUTH_TYPE" description:"Type for auth to docker registry service. Available 'basic' and 'token'. Default 'basic'" choice:"basic" choice:"token" default:"basic" json:"auth_type" yaml:"auth_type"`
-	Secret                   string `long:"token-secret" env:"TOKEN_SECRET" description:"Token secret for sign token when using 'token' auth type"  json:"token_secret"`
 	Login                    string `long:"login" env:"LOGIN" description:"Username is a credential for access to registry service using basic auth type" json:"login"`
 	Password                 string `long:"password" env:"PASSWORD" description:"Password is a credential for access to registry service using basic auth type" json:"password"`
 	Htpasswd                 string `long:"htpasswd" env:"HTPASSWD" description:"Path to htpasswd file when basic auth type selected" json:"htpasswd"`
@@ -133,13 +132,6 @@ func parseArgs() (*Options, error) {
 		log.Print("No TokenSecret secret provided - generated random secret. To provide a TokenSecret, fill in " +
 			"'token_secret' at 'auth' section in the configuration file, set the 'RA_AUTH_TOKEN_SECRET' environment variable " +
 			"or use '--auth.token-secret' CLI flag.")
-	}
-
-	if options.Registry.AuthType == "token" && options.Registry.Secret == "" {
-		options.Registry.Secret = generateRandomSecureToken(64)
-		log.Print("No TokenSecret secret provided for registry auth token - generated random secret. To provide a Secret, fill in " +
-			"'token_secret' at 'registry' section in the configuration file, set the 'RA_AUTH_TOKEN_SECRET' environment variable " +
-			"or use '--registry.token-secret' CLI flag.")
 	}
 
 	return &options, nil

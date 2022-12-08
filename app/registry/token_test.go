@@ -24,7 +24,7 @@ func TestNewRegistryToken(t *testing.T) {
 	}()
 
 	// test with defaults with generate
-	rt, err := NewRegistryToken("super-secret-password")
+	rt, err := NewRegistryToken()
 	require.NoError(t, err)
 	assert.Equal(t, int64(defaultTokenExpiration), rt.tokenExpiration)
 	assert.Equal(t, defaultTokenIssuer, rt.tokenIssuer)
@@ -33,7 +33,7 @@ func TestNewRegistryToken(t *testing.T) {
 	assert.Equal(t, path+CAName, rt.CARootPath)
 
 	// test with loading exist certs
-	_, err = NewRegistryToken("super-secret-password")
+	_, err = NewRegistryToken()
 	require.NoError(t, err)
 
 	// test with options
@@ -41,7 +41,6 @@ func TestNewRegistryToken(t *testing.T) {
 	require.NoError(t, errDir)
 	rt, err = NewRegistryToken(
 
-		"super-secret-password",
 		TokenExpiration(10),
 		TokenIssuer("127.0.0.2"),
 		TokenLogger(log.Default()),
@@ -65,14 +64,12 @@ func TestNewRegistryToken(t *testing.T) {
 
 	// test with error
 	_, err = NewRegistryToken(
-		"abc",
 		TokenExpiration(0))
 	require.Error(t, err)
 
 	// test with bad certs path
 	badPath := "badPath"
 	_, err = NewRegistryToken(
-		"super-secret-password",
 		CertsName(Certs{
 			RootPath: badPath,
 		}),
@@ -80,7 +77,6 @@ func TestNewRegistryToken(t *testing.T) {
 	assert.Error(t, err)
 
 	_, err = NewRegistryToken(
-		"super-secret-password",
 		CertsName(Certs{
 			RootPath: tmpDir,
 			KeyPath:  tmpDir + "/bad_key_path.key",
@@ -89,7 +85,6 @@ func TestNewRegistryToken(t *testing.T) {
 	assert.Error(t, err)
 
 	_, err = NewRegistryToken(
-		"super-secret-password",
 		CertsName(Certs{
 			RootPath:      tmpDir,
 			KeyPath:       tmpDir + "/test.key",
@@ -99,7 +94,6 @@ func TestNewRegistryToken(t *testing.T) {
 	assert.Error(t, err)
 
 	_, err = NewRegistryToken(
-		"super-secret-password",
 		CertsName(Certs{
 			RootPath:      tmpDir,
 			KeyPath:       tmpDir + "/test.key",
@@ -118,8 +112,6 @@ func TestRegistryToken_Generate(t *testing.T) {
 	}()
 
 	rt, err := NewRegistryToken(
-
-		"super-secret-password",
 		TokenIssuer("OLYMP TESTER"),
 		TokenExpiration(3),
 		CertsName(Certs{

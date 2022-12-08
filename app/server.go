@@ -200,7 +200,7 @@ func createRegistryConnection(opts RegistryGroup) (*registry.Registry, error) {
 		registrySettings.CertificatesPaths.CARootPath = opts.Certs.CARoot
 	}
 
-	return registry.NewRegistry(opts.Login, opts.Password, opts.Secret, registrySettings)
+	return registry.NewRegistry(opts.Login, opts.Password, registrySettings)
 }
 
 func sizeParse(inp string) (uint64, error) {

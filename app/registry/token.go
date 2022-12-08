@@ -8,14 +8,11 @@ package registry
 
 import (
 	"bytes"
-	crand "crypto/rand"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	"github.com/hashicorp/go-multierror"
-	"github.com/pkg/errors"
 	"io/ioutil"
 	"math/rand"
 	"net"
@@ -27,7 +24,10 @@ import (
 
 	"github.com/docker/distribution/registry/auth/token"
 	"github.com/docker/libtrust"
+	"github.com/hashicorp/go-multierror"
+	"github.com/pkg/errors"
 
+	crand "crypto/rand"
 	log "github.com/go-pkgz/lgr"
 )
 
@@ -105,9 +105,6 @@ type registryToken struct {
 	// registryToken life
 	tokenExpiration int64
 
-	// main secret phrase for registryToken signing
-	secret string
-
 	// certificates for generate JWT signature
 	privateKey libtrust.PrivateKey
 	publicKey  libtrust.PublicKey
@@ -162,10 +159,9 @@ func ServiceIPHost(ip, host string) TokenOption {
 
 // NewRegistryToken will construct new tokenRegistry instance with required options
 // and allow re-define default option for token generator
-func NewRegistryToken(secretPhrase string, opts ...TokenOption) (*registryToken, error) {
+func NewRegistryToken(opts ...TokenOption) (*registryToken, error) {
 
 	rt := &registryToken{
-		secret:          secretPhrase,
 		serviceIP:       defaultTokenIssuer,
 		serviceHost:     "localhost",
 		tokenExpiration: defaultTokenExpiration,
@@ -195,10 +191,6 @@ func NewRegistryToken(secretPhrase string, opts ...TokenOption) (*registryToken,
 		return nil, errors.Wrap(err, "failed to create default directory for save certificates")
 	}
 
-	if len(secretPhrase) < 10 {
-		log.Print("[WARN] the secret for token sign is weak\n")
-	}
-
 	if rt.tokenExpiration < 1 {
 		return nil, errors.Errorf("token expiration time is invalid, should great more than one")
 	}
@@ -215,7 +207,7 @@ func NewRegistryToken(secretPhrase string, opts ...TokenOption) (*registryToken,
 
 func (rt *registryToken) Generate(tokenRequest *TokenRequest) (ClientToken, error) {
 	// sign any string to get the used signing Algorithm for the private key
-	_, algo, err := rt.privateKey.Sign(strings.NewReader(rt.secret), 0)
+	_, algo, err := rt.privateKey.Sign(strings.NewReader(""), 0)
 
 	if err != nil {
 		return ClientToken{}, err
@@ -360,7 +352,7 @@ func (rt registryToken) saveKeys() error {
 		return errors.Wrap(err, "failed to save public key to file")
 	}
 
-	// a .Raw field hasn't Subject Alternative Name for requested IP and Domain when creating with libtrust
+	// generated keys hasn't Subject Alternative Name for requested IP and Domain when creating with libtrust
 	// and that should add this values after certificate created and extracting raw bytes after that
 	caBytes, err := x509.CreateCertificate(crand.Reader, rt.caRoot, rt.caRoot, rt.publicKey.CryptoPublicKey(), rt.privateKey.CryptoPrivateKey())
 	if err != nil {

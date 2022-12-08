@@ -146,7 +146,6 @@ func Test_createRegistryConnection(t *testing.T) {
 			IP:       "127.0.0.1",
 			Port:     5000,
 			AuthType: "token",
-			Secret:   "test_secret",
 			Login:    "test_login",
 			Password: "test_password",
 			Htpasswd: ".test_htpasswd",
