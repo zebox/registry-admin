@@ -72,7 +72,7 @@ func TestSQlite_initTables(t *testing.T) {
 
 }
 func TestNewEmbedded(t *testing.T) {
-	testPathToDB := "/var/test/store.db"
+	testPathToDB := "/var/test/_store.db"
 	embedded := NewEmbedded(testPathToDB)
 	assert.Equal(t, embedded.Path, testPathToDB)
 }

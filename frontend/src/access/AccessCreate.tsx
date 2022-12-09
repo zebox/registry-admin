@@ -13,8 +13,8 @@ import {
 } from 'react-admin';
 import { RepositoryAutocomplete } from '../components/RepositoryAutocompleteField';
 import RepositoryAction from "../components/RepositoryAction";
-import { requirePermission } from '../helpers/Helpers';
-import { UserAccessSelector } from '../components/UserAccessSelector';
+import {requirePermission} from '../helpers/Helpers';
+import {UserAccessSelector} from './UserAccessSelector';
 
 export const AccessCreate = (props: any) => {
     const { source, ...rest } = props;

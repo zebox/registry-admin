@@ -14,7 +14,7 @@ import {
 import {RepositoryAutocomplete} from "../components/RepositoryAutocompleteField";
 import RepositoryAction from "../components/RepositoryAction";
 import {requirePermission} from '../helpers/Helpers';
-import { UserAccessSelector } from '../components/UserAccessSelector';
+import {UserAccessSelector} from './UserAccessSelector';
 
 const AccessEdit = (props:any) => {
     const { source, ...rest } = props;
