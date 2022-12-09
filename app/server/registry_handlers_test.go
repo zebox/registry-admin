@@ -67,7 +67,7 @@ func TestRegistryHandlers_tokenAuth(t *testing.T) {
 			name:           "test with unknown user",
 			login:          "no_foo",
 			password:       "foo_password",
-			expectedStatus: http.StatusUnauthorized,
+			expectedStatus: http.StatusNoContent,
 		},
 		{
 			name:           "test with bad user password",
@@ -456,9 +456,16 @@ func filledTestEntries(t *testing.T, testRegistryHandlers *registryHandlers) {
 		},
 		{
 			Name:         "test_access_5",
-			Owner:        0,
+			Owner:        engine.AnonymousUserID,
 			Type:         "repository",
 			ResourceName: "test_resource_5",
+			Action:       "pull",
+		},
+		{
+			Name:         "test_access_6",
+			Owner:        engine.RegisteredUserID,
+			Type:         "repository",
+			ResourceName: "test_resource_6",
 			Action:       "pull",
 		},
 	}
