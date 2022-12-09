@@ -10,25 +10,25 @@ import {
 import {Box, Card, CardContent, Checkbox, FormControlLabel} from '@mui/material';
 import {useEffect, useState} from "react";
 
+export const specPermissionList = [
+    {id: -1000, name: 'resources.accesses.labels.label_for_all_users'},
+    {id: -999, name: 'resources.accesses.labels.label_for_registered_users'}
+];
+
 export const UserAccessSelector = (props: any) => {
     const translate = useTranslate();
     const record = useRecordContext();
     const [specialPermission, setSpecialPermission] = useState(false);
     const {onChange, onBlur, ...rest} = props;
     const {
-        field,
-        fieldState: {isTouched, error},
-        formState: {isSubmitted},
+        field
     } = useInput({
         onChange,
         onBlur,
         ...props,
     });
 
-    const choices = [
-        {_id: -1000, name: 'resources.accesses.labels.label_for_all_users'},
-        {_id: -999, name: 'resources.accesses.labels.label_for_registered_users'}
-    ];
+   
 
     useEffect(() => {
         if (record && record.owner_id && record.owner_id < 0) {
@@ -55,7 +55,7 @@ export const UserAccessSelector = (props: any) => {
                         <Checkbox checked={specialPermission} onChange={(e) => setSpecialPermission(e.target.checked)}/>
                     }
                 />
-                <RadioButtonGroupInput
+                { specialPermission ? <RadioButtonGroupInput
                     defaultValue={-1000}
                     parse={handleParse}
                     label=""
@@ -63,9 +63,9 @@ export const UserAccessSelector = (props: any) => {
                     {...field}
                     disabled={!specialPermission}
                     source={specialPermission ? "owner_id" : ""}
-                    choices={choices}
-                    optionValue="_id"
-                />
+                    choices={specPermissionList}
+                    optionValue="id"
+                />:""}
 
             </CardContent>
         </Card>

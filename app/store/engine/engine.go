@@ -17,6 +17,7 @@ import (
 const (
 	RepositoriesByUserAccess = "access.owner_id"
 	AnonymousUserID          = int64(-1000) // uses for share access for anonymous and not registered users
+	RegisteredUserID         = int64(-999)  // uses for share access for registered users only
 )
 
 type engineOptionsCtx string

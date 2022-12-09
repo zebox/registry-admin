@@ -58,7 +58,7 @@ const customEnglishMessages: TranslationMessages = {
             },
             labels: {
                 label_special_permission: "Special permission",
-                label_for_all_users: "Any",
+                label_for_all_users: "Anonymous",
                 label_for_registered_users: "Registered user only"
             },
             messages: {

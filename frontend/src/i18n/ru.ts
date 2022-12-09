@@ -46,7 +46,7 @@ const customRussianMessages: TranslationMessages = {
         accesses:{
             name: "Управление доступом",
             add_title: "Добавить доступ",
-            edit_title: "Изменить",
+            edit_title: "Редактирование доступа",
             fields: {
                 name: "Наименование",
                 owner_id: "Пользователь",
@@ -57,7 +57,7 @@ const customRussianMessages: TranslationMessages = {
             },
             labels: {
                 label_special_permission:"Особые разрешения",
-                label_for_all_users: "Все",
+                label_for_all_users: "Анонимные",
                 label_for_registered_users: "Только зарегистрированные"
             },
             messages:{

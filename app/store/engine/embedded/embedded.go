@@ -412,6 +412,13 @@ func castValueTypeToString(value interface{}) string {
 		return fmt.Sprintf("%d", v)
 	case float32, float64:
 		return fmt.Sprintf("%.f", v)
+	case bool:
+		return fmt.Sprintf("%d", func(b bool) int {
+			if b {
+				return 1
+			}
+			return 0
+		}(v))
 	}
 	return ""
 }

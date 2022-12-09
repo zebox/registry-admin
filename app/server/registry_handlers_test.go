@@ -44,8 +44,8 @@ func TestRegistryHandlers_tokenAuth(t *testing.T) {
 	}{
 		{
 			name:           "test with access for valid user to public repositories (shared for all users)",
-			login:          "baz",
-			password:       "baz_password",
+			login:          "",
+			password:       "",
 			query:          "?account=baz&scope=repository:test_resource_5:pull&service=container_registry",
 			expectedStatus: http.StatusOK,
 		},

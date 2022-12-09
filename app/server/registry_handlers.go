@@ -50,7 +50,8 @@ func (rh *registryHandlers) tokenAuth(w http.ResponseWriter, r *http.Request) {
 
 	user, errUser := rh.dataStore.GetUser(r.Context(), username)
 	if errUser != nil {
-		w.WriteHeader(http.StatusUnauthorized)
+		user := store.User{ID: engine.AnonymousUserID}
+		rh.parseTokenRequestParams(w, r, user)
 		return
 	}
 
@@ -273,15 +274,22 @@ func (rh *registryHandlers) checkUserAccess(ctx context.Context, user store.User
 	access, err := rh.dataStore.FindAccesses(ctx, filter)
 	if err != nil {
 		// check access to repository with for all users permission
-		if errors.Is(err, engine.ErrNotFound) {
-			filter.Filters["owner_id"] = int64(engine.AnonymousUserID)
-			if access, err = rh.dataStore.FindAccesses(ctx, filter); err != nil {
-				return false, err
+		if !errors.Is(err, engine.ErrNotFound) {
+			return false, err
+		}
+		if user.ID > 0 {
+			filter.Filters["owner_id"] = engine.RegisteredUserID
+			if access, err = rh.dataStore.FindAccesses(ctx, filter); access.Total > 0 {
+				return true, err
 			}
-		} else {
+		}
+
+		filter.Filters["owner_id"] = engine.AnonymousUserID
+		if access, err = rh.dataStore.FindAccesses(ctx, filter); err != nil {
 			return false, err
 		}
 	}
+
 	// if at least one item exist it's mean that access for user exist
 	return access.Total > 0, nil
 }

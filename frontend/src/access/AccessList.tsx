@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react";
+import { useEffect, useState } from "react";
 import {
     List,
     Datagrid,
@@ -7,54 +7,81 @@ import {
     TextField,
     EditButton,
     ReferenceField,
-    SelectInput,
     useTranslate,
     usePermissions,
-    useRecordContext
+    useRecordContext,
+    FilterLiveSearch,
+    FilterList,
+    FilterListItem,
 } from 'react-admin';
+
 import { DeleteCustomButtonWithConfirmation } from '../components/DeleteCustomButtonWithConfirmation';
-import {DisabledField} from "../components/DisabledField";
-import {SearchFieldTranslated, requirePermission} from '../helpers/Helpers'
+import { DisabledField } from "../components/DisabledField";
+import { requirePermission } from '../helpers/Helpers'
+import { Box, Card, CardContent } from '@mui/material';
+import UserIcon from '@mui/icons-material/AccountBox';
 
 
-const ActionList: Array<IActionList> = [
-    { id: 'push', name: 'push' },
-    { id: 'pull', name: 'pull' }
-];
+const AccessFilterSidebar = () => {
+    const translate = useTranslate();
+    return <Box
+        sx={{
+            display: {
+                xs: 'none',
+                sm: 'block'
+            },
+            mt: 8,
+            order: -1, // display on the left rather than on the right of the list
+            width: '15em',
+            marginRight: '0.5em',
+        }}
+    >
+        <Card>
+            <CardContent>
+                <FilterLiveSearch />
+                <FilterList label={translate('resources.accesses.labels.label_special_permission')} icon={<UserIcon />}>
+                    <FilterListItem label={translate('resources.accesses.labels.label_for_all_users')} value={{ owner_id: -1000 }} />
+                    <FilterListItem label={translate('resources.accesses.labels.label_for_registered_users')} value={{ owner_id: -999 }} />
+                </FilterList>
+                <FilterList label={translate('resources.accesses.fields.action')} icon={<UserIcon />}>
+                    <FilterListItem label="Pull" value={{ action: 'pull' }} />
+                    <FilterListItem label="Push" value={{  action: 'push' }} />
+                </FilterList>
+            </CardContent>
+        </Card>
+    </Box>
+};
+
+const AccessList = (props: any) => {
+    const translate = useTranslate();
+    const { permissions } = usePermissions();
 
 
-const AccessList = (props:any) => {
-  const translate = useTranslate();
-  const { permissions } = usePermissions();
-
-  return  <List
-        hasCreate={requirePermission(permissions,'admin')}
+    return <List
+        aside={<AccessFilterSidebar />}
+        hasCreate={requirePermission(permissions, 'admin')}
         sort={{ field: 'name', order: 'ASC' }}
         perPage={25}
-        filters={SearchFieldTranslated(translate,[
-        <ReferenceInput source="owner_id" reference="users" label={translate('resources.accesses.fields.owner_id')}>
-            <AutocompleteInput  optionText="name" optionValue="id" label={translate('resources.accesses.fields.owner_id')} />
-        </ReferenceInput>,
-        <SelectInput
-        label={translate('resources.accesses.fields.action')}
-        source="action"
-        choices={ActionList} />
-    ])}
-    >
+        filters={[
+            <ReferenceInput source="owner_id" reference="users" label={translate('resources.accesses.fields.owner_id')}>
+                <AutocompleteInput optionText="name" optionValue="id" label={translate('resources.accesses.fields.owner_id')} />
+            </ReferenceInput>
+        ]} >
         <Datagrid bulkActionButtons={false} >
-            <TextField source="name" label={translate('resources.accesses.fields.name')}/>
-            <CustomUsersReference label={translate('resources.accesses.fields.owner_id')}/>
-            <TextField source="type" label={translate('resources.accesses.fields.resource_type')}/>
+            <TextField source="name" label={translate('resources.accesses.fields.name')} />
+            <CustomUsersReference label={translate('resources.accesses.fields.owner_id')} />
+            <TextField source="type" label={translate('resources.accesses.fields.resource_type')} />
             <TextField source="resource_name" label={translate('resources.accesses.fields.resource_name')} />
-            <TextField source="action" label={translate('resources.accesses.fields.action')}/>
-            <DisabledField source="disabled" label={translate('resources.accesses.fields.disabled')}/>
+            <TextField source="action" label={translate('resources.accesses.fields.action')} />
+            <DisabledField source="disabled" label={translate('resources.accesses.fields.disabled')} />
             {requirePermission(permissions, 'admin') ? <>
-                <EditButton alignIcon="right"/>
-                <DeleteCustomButtonWithConfirmation source="name" {...props}/>
+                <EditButton alignIcon="right" />
+                <DeleteCustomButtonWithConfirmation source="name" {...props} />
             </> : null}
         </Datagrid>
-  </List>
+    </List>
 };
+
 
 
 const CustomUsersReference = (props: any) => {
@@ -63,31 +90,24 @@ const CustomUsersReference = (props: any) => {
     const [isUserReference, setIsUserREference] = useState(false);
 
     const specsPermissionRefs = [
-        {name: translate('resources.accesses.labels.label_for_all_users')},
-        {name: translate('resources.accesses.labels.label_for_registered_users')}
+        { name: translate('resources.accesses.labels.label_for_all_users') },
+        { name: translate('resources.accesses.labels.label_for_registered_users') }
     ];
 
     useEffect(() => {
         if (record && record.owner_id < 0) {
             setIsUserREference(true)
-            console.log(record)
         }
     }, [record])
 
     return (
         !isUserReference ?
             <ReferenceField source="owner_id" reference="users" label={translate('resources.accesses.fields.owner_id')}>
-                <TextField source="name"/>
+                <TextField source="name" />
             </ReferenceField> :
             <>{record.owner_id === -1000 ? specsPermissionRefs[0].name : specsPermissionRefs[1].name}</>
     )
 }
-
-interface IActionList {
-    id: string;
-    name: string;
-};
-
 
 export default AccessList;
 

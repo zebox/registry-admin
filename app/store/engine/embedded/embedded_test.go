@@ -82,13 +82,13 @@ func TestFilterBuilder(t *testing.T) {
 	// http://192.168.12.58/api/v1/sessions?filter={"status":2000,"area_id":3276989022,"q":"пр"}&range=[0,24]&sort=["start_time","DESC"]
 	filter := engine.QueryFilter{
 		Range:   [2]int64{1, 10},
-		Filters: map[string]interface{}{"q": "test", "disabled": 1},
+		Filters: map[string]interface{}{"q": "test", "disabled": false},
 		Sort:    []string{"id", "asc"},
 	}
 
 	{
 		f := filtersBuilder(filter, "role", "login")
-		checkWhere := "WHERE (role LIKE '%test%' OR login LIKE '%test%') AND (disabled = 1) ORDER BY id asc  LIMIT 9 OFFSET 1"
+		checkWhere := "WHERE (role LIKE '%test%' OR login LIKE '%test%') AND (disabled = 0) ORDER BY id asc  LIMIT 9 OFFSET 1"
 		assert.Equal(t, checkWhere, f.allClauses)
 	}
 
@@ -101,7 +101,7 @@ func TestFilterBuilder(t *testing.T) {
 	{
 
 		ids := []interface{}{float64(1019101756), float64(1334517373)}
-		filter.Filters = map[string]interface{}{"q": "test", "disabled": 1}
+		filter.Filters = map[string]interface{}{"q": "test", "disabled": true}
 		filter.Filters["ids"] = ids
 		f2 := filtersBuilder(filter, "role", "login")
 		checkWhere2 := "WHERE id IN (1019101756, 1334517373) AND (role LIKE '%test%' OR login LIKE '%test%') AND (disabled = 1) ORDER BY id asc  LIMIT 9 OFFSET 1"

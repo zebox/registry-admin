@@ -1,12 +1,10 @@
 
 import {
-    AutocompleteInput,
     BooleanInput,
     Edit,
     NotFound,
     TextInput,
     SimpleForm,
-    ReferenceInput,
     useTranslate,
     usePermissions,
     required
@@ -22,15 +20,10 @@ const AccessEdit = (props:any) => {
     const {permissions} = usePermissions();
 
     return (requirePermission(permissions, 'admin') ?
-            <Edit title={translate('resources.groups.edit_title')}>
+            <Edit title={translate('resources.accesses.edit_title')}>
                 <SimpleForm>
                     <TextInput sx={{width: "30%"}} label={translate('resources.accesses.fields.name')} source="name"
                                validate={required()}/>
-                    {/* <ReferenceInput source="owner_id" reference="users">
-                        <AutocompleteInput sx={{width: "30%"}} optionText="name" optionValue="id"
-                                           label={translate('resources.accesses.fields.owner_id')}
-                                           validate={required()}/>
-                    </ReferenceInput> */}
                     <UserAccessSelector source="owner_id" label={translate('resources.accesses.fields.owner_id')}/>
                     <RepositoryAutocomplete source="resource_name" validate={required()} {...rest} />
                     <RepositoryAction source="action"/>
