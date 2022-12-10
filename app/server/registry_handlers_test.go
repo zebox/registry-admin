@@ -117,6 +117,13 @@ func TestRegistryHandlers_tokenAuth(t *testing.T) {
 			expectedStatus: http.StatusOK,
 		},
 		{
+			name:           "test access for permit for only registered users",
+			login:          "baz",
+			password:       "baz_password",
+			query:          "?account=baz&scope=repository:test_resource_6:pull&service=container_registry",
+			expectedStatus: http.StatusOK,
+		},
+		{
 			name:           "test with resource fetch params for user role, but with denied scope",
 			login:          "baz",
 			password:       "baz_password",
