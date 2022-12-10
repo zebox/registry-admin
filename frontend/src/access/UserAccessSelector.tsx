@@ -28,7 +28,7 @@ export const UserAccessSelector = (props: any) => {
         ...props,
     });
 
-   
+
 
     useEffect(() => {
         if (record && record.owner_id && record.owner_id < 0) {
@@ -44,8 +44,9 @@ export const UserAccessSelector = (props: any) => {
         <Card>
             <CardContent>
                 <ReferenceInput source={!specialPermission ? "owner_id" : ""} reference="users"
-                                label={translate('resources.accesses.fields.owner_id')}>
-                    <AutocompleteInput sx={{width: "60%"}} optionText="name" optionValue="id"
+                >
+                    <AutocompleteInput label={translate('resources.accesses.fields.owner_id')} sx={{width: "60%"}}
+                                       optionText="name" optionValue="id"
                                        disabled={specialPermission}
                                        validate={required()}/>
                 </ReferenceInput>

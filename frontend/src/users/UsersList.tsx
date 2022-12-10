@@ -68,7 +68,7 @@ const UserList = (props:any) => {
         filters={SearchFieldTranslated(translate,[<SelectInput
             source="role"
             defaultValue={"user"}
-            emptyValue={null}
+            emptyValue=""
             choices={RoleList} />,
             <ReferenceInput source="user_group" reference="groups" label={translate('resources.groups.name')}>
                <AutocompleteInput  optionText="name" optionValue="id" label={translate('resources.groups.name')} />

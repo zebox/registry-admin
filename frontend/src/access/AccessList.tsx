@@ -10,17 +10,17 @@ import {
     useTranslate,
     usePermissions,
     useRecordContext,
+    useListContext,
     FilterLiveSearch,
     FilterList,
     FilterListItem,
 } from 'react-admin';
-
-import { DeleteCustomButtonWithConfirmation } from '../components/DeleteCustomButtonWithConfirmation';
-import { DisabledField } from "../components/DisabledField";
-import { requirePermission } from '../helpers/Helpers'
-import { Box, Card, CardContent } from '@mui/material';
-import UserIcon from '@mui/icons-material/AccountBox';
-
+import {DeleteCustomButtonWithConfirmation} from '../components/DeleteCustomButtonWithConfirmation';
+import {DisabledField} from "../components/DisabledField";
+import {requirePermission} from '../helpers/Helpers'
+import {Box, Card, CardContent} from '@mui/material';
+import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
+import SwapVerticalCircleOutlinedIcon from '@mui/icons-material/SwapVerticalCircleOutlined';
 
 const AccessFilterSidebar = () => {
     const translate = useTranslate();
@@ -38,14 +38,18 @@ const AccessFilterSidebar = () => {
     >
         <Card>
             <CardContent>
-                <FilterLiveSearch />
-                <FilterList label={translate('resources.accesses.labels.label_special_permission')} icon={<UserIcon />}>
-                    <FilterListItem label={translate('resources.accesses.labels.label_for_all_users')} value={{ owner_id: -1000 }} />
-                    <FilterListItem label={translate('resources.accesses.labels.label_for_registered_users')} value={{ owner_id: -999 }} />
+                <FilterLiveSearch/>
+                <FilterList label={translate('resources.accesses.labels.label_special_permission')}
+                            icon={<WorkspacePremiumIcon/>}>
+                    <FilterListItem label={translate('resources.accesses.labels.label_for_all_users')}
+                                    value={{owner_id: -1000}}/>
+                    <FilterListItem label={translate('resources.accesses.labels.label_for_registered_users')}
+                                    value={{owner_id: -999}}/>
                 </FilterList>
-                <FilterList label={translate('resources.accesses.fields.action')} icon={<UserIcon />}>
-                    <FilterListItem label="Pull" value={{ action: 'pull' }} />
-                    <FilterListItem label="Push" value={{  action: 'push' }} />
+                <FilterList label={translate('resources.accesses.fields.action')}
+                            icon={<SwapVerticalCircleOutlinedIcon/>}>
+                    <FilterListItem label="- PULL" value={{action: 'pull'}}/>
+                    <FilterListItem label="- PUSH" value={{action: 'push'}}/>
                 </FilterList>
             </CardContent>
         </Card>
