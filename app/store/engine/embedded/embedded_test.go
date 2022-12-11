@@ -79,7 +79,7 @@ func TestNewEmbedded(t *testing.T) {
 
 func TestFilterBuilder(t *testing.T) {
 
-	// http://192.168.12.58/api/v1/sessions?filter={"status":2000,"area_id":3276989022,"q":"пр"}&range=[0,24]&sort=["start_time","DESC"]
+	// Filter string in URL example: http://{host}/api/v1/sessions?filter={"status":2000,"area_id":3276989022,"q":"пр"}&range=[0,24]&sort=["start_time","DESC"]
 	filter := engine.QueryFilter{
 		Range:   [2]int64{1, 10},
 		Filters: map[string]interface{}{"q": "test", "disabled": false},

@@ -24,7 +24,7 @@ type configReader interface {
 
 // Options the main parameters for the service
 type Options struct {
-	Listen     string `long:"listen" env:"RA_LISTEN" description:"listen on host:port (127.0.0.1:80/443 without)" json:"listen"`
+	Listen     string `long:"listen" env:"RA_LISTEN" default:"*" description:"listen on host:port (127.0.0.1:80/443 without)" json:"listen"`
 	HostName   string `long:"hostname" env:"RA_HOST_NAME" default:"localhost" description:"Main hostname of service" json:"hostname"`
 	Port       int    `long:"port" env:"RA_PORT" description:"Main web-service port. Default:80" default:"80" json:"port"`
 	ConfigPath string `long:"config-file" env:"RA_CONFIG_FILE" description:"Path to config file"`
@@ -78,7 +78,7 @@ type RegistryGroup struct {
 	Host                     string `long:"host" env:"HOST" required:"true" description:"Main host or address to docker registry service" json:"host"`
 	IP                       string `long:"ip" env:"IP" description:"Address which appends to certificate SAN (Subject Alternative Name)" json:"ip"`
 	Port                     uint   `long:"port" env:"PORT" description:"Port which registry accept requests. Default:5000" default:"5000" json:"port"`
-	AuthType                 string `long:"auth-type" env:"AUTH_TYPE" description:"Type for auth to docker registry service. Available 'basic' and 'token'. Default 'basic'" choice:"basic" choice:"token" default:"basic" json:"auth_type" yaml:"auth_type"`
+	AuthType                 string `long:"auth-type" env:"AUTH_TYPE" description:"Type for auth to docker registry service. Available 'basic' and 'token'. Default 'token'" choice:"basic" choice:"token" default:"basic" json:"auth_type" yaml:"auth_type"`
 	Login                    string `long:"login" env:"LOGIN" description:"Username is a credential for access to registry service using basic auth type" json:"login"`
 	Password                 string `long:"password" env:"PASSWORD" description:"Password is a credential for access to registry service using basic auth type" json:"password"`
 	Htpasswd                 string `long:"htpasswd" env:"HTPASSWD" description:"Path to htpasswd file when basic auth type selected" json:"htpasswd"`

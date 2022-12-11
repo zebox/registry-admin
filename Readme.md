@@ -1,12 +1,12 @@
 ### Registry Admin
-This  project allows manage repositories, images and users access  for self-hosted private docker registry with web UI. 
-Main idea for implement this project to make high-level API for management user access to private registry 
-and restrict their action (push/pull) for specific repositories (only with `token` auth) based 
-on [official](https://docs.docker.com/registry/) private docker registry [image](https://hub.docker.com/_/registry). 
-But someone need simple management to registry without split access to repositories. 
-RegistryAdmin allows use either `password` or `token` authentication scheme for access management, 
-depending on your task.  This application can be deployed with existed private registry for add access management 
-UI tools to it.
+
+The RegistryAdmin project is a tool that allows users to manage access to a private Docker registry. 
+It provides a web-based user interface for managing repositories, images, and user access, and allows users to authenticate 
+using either `password`. The main goal of the project is to provide a high-level API for managing user access 
+to a private registry, and to restrict user actions (such as push and pull) for specific repositories based on 
+the [official](https://docs.docker.com/registry/) private Docker registry [image](https://hub.docker.com/_/registry).
+This can be useful for users who want to have more control over their registry and who want to be able to manage access 
+to it more easily. 
 
 Web user interface create with [React-Admin](https://marmelab.com/react-admin) framework and [MUI](https://mui.com/) components.
 
@@ -18,6 +18,8 @@ Web user interface create with [React-Admin](https://marmelab.com/react-admin) f
 * Display tag and image data
 * Display image history
 * Delete image tag
+* Share anonymous access to specific repositories
+* Share access to specific repositories for registered user only
 * Built in self-signed certificate builder
 * Single binary distribution
 * Docker container distribution
@@ -61,18 +63,18 @@ notifications:
     includereferences: true
   endpoints:
     - name: ra-listener
-    disabled: false
-    url: http://{registry-admin-host}/api/v1/registry/events
-    headers:
+      disabled: false
+      url: http://{registry-admin-host}/api/v1/registry/events
+      headers:
       Authorization: [ Basic Y2xpZW50MDg6Y0t1cnNrQWdybzA4 ]
-    timeout: 1s
-    threshold: 5
-    backoff: 3s
-    ignoredmediatypes:
-      - application/octet-stream
-    ignore:
-      mediatypes:
+      timeout: 1s
+      threshold: 5
+      backoff: 3s
+      ignoredmediatypes:
         - application/octet-stream
+      ignore:
+        mediatypes:
+          - application/octet-stream
 ```
 
 ### Install
@@ -88,7 +90,45 @@ Latest stable version has :vX.Y.Z docker tag (with :latest alias) and the curren
 
 ### Configuration
 
+#### 1. RegistryAdmin
+At first, you need setup required parameters in compose file or using command line flags. Various configuration example 
+you can find in the `example` folder.
 
+**1. Application setting**
+- `hostname` - defines host name or ip address which includes to `AllowedOrigins` header and using for `CORS` requests check
+- `port` - defines port which application uses for listening http requests (default `80`)
+- `store.type` - define storage type for store main data (users, accesses, repositories). Default (`embed`)
+
+[^note]: `Now implement only embed storage type`
+
+- `store.admin_password` - overrides the default admin password when storage creating first (default password: `admin`)
+- `store.embed.path ` - defined path and name for embed storage file (default password: `./data.db`)
+
+**2. Registry settings**
+
+- `registry.host` - defines main host or ip address of private registry instance with protocol scheme prefix.
+  It's hostname will be included to certificate extension field (`4.2.1.7  Subject Alternative Name`) if self-signed certificate defined
+
+[^note]: `host: https://{registry-host}`
+- `registry.ip` - need for included to certificate extension field only. If it omitted certificate error can be occurred.
+- `registry.port` - port of private docker registry instance (default `5000`)
+- `registry.auth_type` - defines authenticate type `token` or `basic` (default: `token`).
+
+`basic` option using `.htpasswd` file and doesn't support restrict access to specific repositories. For use `basic`
+you required following options:
+- `login` - username for access to docker registry
+- `password` - password for access to docker registry
+
+[^note]: `Keep a mind for `token` auth type required `certs` options must be defined.`
+- `registry.certs.path` - root directory where will be generated and stored certificates for token signing
+- `registry.certs.key` - path to private key for token signing
+- `registry.certs.public_key` - path to public key for verify token sign
+- `registry.certs.ca` - path to certificate authority bundle 
+
+
+
+
+ 
 ### Development Guidelines
 - For local `frontend` development your should run **RegistryAdmin** server on port `80` and SSL disabled 
 otherwise provider inside frontend can't get access to **RegistryAdmin** service. 
