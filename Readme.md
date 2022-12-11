@@ -94,7 +94,7 @@ Latest stable version has :vX.Y.Z docker tag (with :latest alias) and the curren
 At first, you need setup required parameters in compose file or using command line flags. Various configuration example 
 you can find in the `example` folder.
 
-**1. Application setting**
+[^1]: Application setting
 - `hostname` - defines host name or ip address which includes to `AllowedOrigins` header and using for `CORS` requests check
 - `port` - defines port which application uses for listening http requests (default `80`)
 - `store.type` - define storage type for store main data (users, accesses, repositories). Default (`embed`)
@@ -104,7 +104,7 @@ you can find in the `example` folder.
 - `store.admin_password` - overrides the default admin password when storage creating first (default password: `admin`)
 - `store.embed.path ` - defined path and name for embed storage file (default password: `./data.db`)
 
-**2. Registry settings**
+[^2]: Registry settings
 
 - `registry.host` - defines main host or ip address of private registry instance with protocol scheme prefix.
   It's hostname will be included to certificate extension field (`4.2.1.7  Subject Alternative Name`) if self-signed certificate defined
