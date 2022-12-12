@@ -43,8 +43,8 @@ func (e *Embedded) CreateUser(ctx context.Context, user *store.User) (err error)
 	}
 
 	// hashing password value
-	if err = user.HashAndSalt(); err != nil {
-		return err
+	if errHash := user.HashAndSalt(); errHash != nil {
+		return errHash
 	}
 
 	createUserSQL := fmt.Sprintf(`INSERT INTO %s (
@@ -83,7 +83,7 @@ func (e *Embedded) GetUser(ctx context.Context, id interface{}) (user store.User
 		queryString = fmt.Sprintf("select id,login,name,password,role,user_group,disabled,description from %s where login = ?", usersTable)
 
 		// cast ID value when ID as string type
-		if _, err := strconv.ParseInt(val, 10, 64); err == nil {
+		if _, errParse := strconv.ParseInt(val, 10, 64); errParse == nil {
 			queryString = fmt.Sprintf("select id,login,name,password,role,user_group,disabled,description from %s where id = ?", usersTable)
 		}
 	case int, int64:
@@ -165,8 +165,8 @@ func (e *Embedded) UpdateUser(ctx context.Context, user store.User) (err error) 
 	}
 	var res sql.Result
 	if user.Password != "" {
-		if err = user.HashAndSalt(); err != nil {
-			return err
+		if errHash := user.HashAndSalt(); errHash != nil {
+			return errHash
 		}
 		res, err = e.db.ExecContext(ctx, fmt.Sprintf("UPDATE %s SET name=?, password=?, role=?, user_group=?, disabled=?, description=? WHERE id = ?", usersTable),
 			user.Name, user.Password, user.Role, user.Group, user.Disabled, user.Description, user.ID)

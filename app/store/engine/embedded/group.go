@@ -10,8 +10,12 @@ import (
 )
 
 var (
+
+	// ErrRequiredFieldInGroupIsEmpty report about group name shouldn't be empty
 	ErrRequiredFieldInGroupIsEmpty = errors.New("empty group name not allowed")
-	ErrFailedToCreateGroup         = errors.New("failed to create new group")
+
+	// ErrFailedToCreateGroup report about error when group creating
+	ErrFailedToCreateGroup = errors.New("failed to create new group")
 )
 
 // CreateGroup create a new group record

@@ -10,11 +10,12 @@ import (
 	"strings"
 
 	"github.com/hashicorp/go-multierror"
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/opencontainers/go-digest"
 	"github.com/pkg/errors"
 	"github.com/zebox/registry-admin/app/store"
 	"github.com/zebox/registry-admin/app/store/engine"
+
+	_ "github.com/mattn/go-sqlite3" // required for sql driver init
 )
 
 const (
@@ -25,9 +26,11 @@ const (
 )
 
 var (
+	// ErrTableAlreadyExist for indicate table already exist error
 	ErrTableAlreadyExist = errors.New("table already exist or has an error")
 )
 
+// Embedded implement internal data storage for users, access, group  and repositories
 type Embedded struct {
 	Path string `json:"path"`
 	db   *sql.DB
@@ -42,10 +45,12 @@ type queryFilter struct {
 	groupBy    string
 }
 
+// NewEmbedded builder for create new instance of embedded storage
 func NewEmbedded(pathToDB string) *Embedded {
 	return &Embedded{Path: pathToDB}
 }
 
+// Connect init connection to embedded storage instance
 func (e *Embedded) Connect(ctx context.Context) (err error) {
 
 	e.db, err = sql.Open("sqlite3", e.Path)
@@ -88,7 +93,7 @@ func (e *Embedded) initTables(ctx context.Context) (errs error) {
 	return errs
 }
 
-func (e *Embedded) initGroupsTable(ctx context.Context) (err error) {
+func (e *Embedded) initGroupsTable(ctx context.Context) error {
 	if exist, err := e.isTableExist(ctx, groupsTable); err != nil || exist {
 		return ErrTableAlreadyExist
 	}
@@ -98,7 +103,7 @@ func (e *Embedded) initGroupsTable(ctx context.Context) (err error) {
 	name TEXT UNIQUE,
 	description TEXT)`, groupsTable)
 
-	_, err = e.db.Exec(sqlText)
+	_, err := e.db.Exec(sqlText)
 	if err != nil {
 		return errors.Wrapf(err, "failed to create %s table", groupsTable)
 	}
@@ -158,9 +163,9 @@ func (e *Embedded) initUserTable(ctx context.Context) error {
 		Description: "Default user with administration role ",
 	}
 
-	// hashing password
-	if err = user.HashAndSalt(); err != nil {
-		return err
+	// hashing user password
+	if errHash := user.HashAndSalt(); errHash != nil {
+		return errHash
 	}
 
 	createUserSQL := fmt.Sprintf(`INSERT OR REPLACE INTO %s (
@@ -182,7 +187,7 @@ func (e *Embedded) initUserTable(ctx context.Context) error {
 	return err
 }
 
-func (e *Embedded) initAccessTable(ctx context.Context) (err error) {
+func (e *Embedded) initAccessTable(ctx context.Context) error {
 	if exist, err := e.isTableExist(ctx, accessTable); err != nil || exist {
 		return ErrTableAlreadyExist
 	}
@@ -198,7 +203,7 @@ func (e *Embedded) initAccessTable(ctx context.Context) (err error) {
 		disabled INTEGER,
 		UNIQUE(owner_id,resource_type,resource_name,action))`, accessTable)
 
-	_, err = e.db.Exec(sqlText)
+	_, err := e.db.Exec(sqlText)
 	if err != nil {
 		return multierror.Append(err, errors.Errorf("failed to create %s table", accessTable))
 	}
@@ -243,6 +248,7 @@ func (e *Embedded) isTableExist(_ context.Context, tableName string) (exist bool
 	return false, nil
 }
 
+// Close exposed closed method for embedded storage instance
 func (e *Embedded) Close(_ context.Context) error {
 	return e.db.Close()
 }
@@ -267,7 +273,7 @@ func filtersBuilder(filter engine.QueryFilter, fieldsName ...string) (f queryFil
 
 	var (
 		like             string
-		strongConditions []string
+		strongConditions = make([]string, 0)
 	)
 
 	// search query statement and parse queryFilter value
@@ -374,6 +380,8 @@ func (e *Embedded) getTotalRecordsExcludeRange(tableName string, filter engine.Q
 	}
 
 	f := filtersBuilder(filter, searchFields...)
+
+	//nolint:gosec // all values passed to query sanitized before past
 	queryString := fmt.Sprintf("SELECT %s FROM %s %s", countType, tableName, f.allClauses)
 
 	// check for select repositories by user access
@@ -451,32 +459,29 @@ func sanitizeKeyValue(key string, value interface{}) (cleanKey string, cleanValu
 	cleanValue = value
 	switch val := value.(type) {
 	case string:
-		{
 
-			tmpString := val
+		tmpString := val
+		for {
+			isPatternDetected := false
 
-			for {
-				isPatternDetected := false
-
-				// full text query value string sanitizing
-				if cleanKey == "q" {
-					for _, match := range queryValueRegExp.FindAllString(tmpString, -1) {
-						tmpString = strings.Replace(tmpString, match, "", -1)
-						isPatternDetected = true
-					}
-
-					// sanitize a filter value
-				} else {
-					for _, match := range keyNameValueRegExp.FindAllString(tmpString, -1) {
-						tmpString = strings.Replace(tmpString, match, "", -1)
-						isPatternDetected = true
-					}
+			// full text query value string sanitizing
+			if cleanKey == "q" {
+				for _, match := range queryValueRegExp.FindAllString(tmpString, -1) {
+					tmpString = strings.Replace(tmpString, match, "", -1)
+					isPatternDetected = true
 				}
 
-				if !isPatternDetected {
-					cleanValue = tmpString
-					break
+				// sanitize a filter value
+			} else {
+				for _, match := range keyNameValueRegExp.FindAllString(tmpString, -1) {
+					tmpString = strings.Replace(tmpString, match, "", -1)
+					isPatternDetected = true
 				}
+			}
+
+			if !isPatternDetected {
+				cleanValue = tmpString
+				break
 			}
 		}
 	}

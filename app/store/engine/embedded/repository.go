@@ -117,19 +117,21 @@ func (e *Embedded) FindRepositories(ctx context.Context, filter engine.QueryFilt
 // UpdateRepository update repository entry data
 func (e *Embedded) UpdateRepository(ctx context.Context, conditionClause, data map[string]interface{}) (err error) {
 	// filled fields set for sql query
-	var fields []string
+	var fields = make([]string, 0)
 	for k, v := range data {
 		fields = append(fields, fmt.Sprintf("%s=%s", k, castValueTypeToString(v)))
 	}
 	fieldSet := strings.Join(fields, ", ")
 
 	// parse WHERE clause keys and values
-	var conditions []string
+	var conditions = make([]string, 0)
 	for k, v := range conditionClause {
 		conditions = append(conditions, fmt.Sprintf("%s=%s", k, castValueTypeToString(v)))
 	}
 	conditionSet := strings.Join(conditions, " AND ")
-	queryString := fmt.Sprintf(`UPDATE %s SET %s WHERE %s`, repositoriesTable, fieldSet, conditionSet) //nolint:gosec
+
+	//nolint:gosec // WHERE clause is a combination of conditions which prepared from filter and can't be paste with ? value
+	queryString := fmt.Sprintf(`UPDATE %s SET %s WHERE %s`, repositoriesTable, fieldSet, conditionSet)
 
 	res, err := e.db.ExecContext(ctx, queryString)
 	if err != nil {
@@ -150,7 +152,7 @@ func (e *Embedded) UpdateRepository(ctx context.Context, conditionClause, data m
 
 // DeleteRepository delete repository entry by ID
 func (e *Embedded) DeleteRepository(ctx context.Context, key string, id interface{}) (err error) {
-	deleteSQL := fmt.Sprintf("DELETE FROM %s WHERE %s=?", repositoriesTable, key) //nolint:gosec
+	deleteSQL := fmt.Sprintf("DELETE FROM %s WHERE %s=?", repositoriesTable, key)
 	res, err := e.db.ExecContext(ctx, deleteSQL, id)
 	if err != nil {
 		return errors.Wrapf(err, "failed execute query for user delete")
@@ -170,7 +172,8 @@ func (e *Embedded) DeleteRepository(ctx context.Context, key string, id interfac
 // RepositoryGarbageCollector deletes outdated repositories
 func (e *Embedded) RepositoryGarbageCollector(ctx context.Context, syncDate int64) (err error) {
 
-	deleteSQL := fmt.Sprintf("DELETE FROM %s WHERE %s<?", repositoriesTable, store.RegistryTimestampField) //nolint:gosec
+	//nolint:gosec // SQL query prepares from static value inside code logic and doesn't pass key name from outside
+	deleteSQL := fmt.Sprintf("DELETE FROM %s WHERE %s<?", repositoriesTable, store.RegistryTimestampField)
 	res, err := e.db.ExecContext(ctx, deleteSQL, syncDate)
 	if err != nil {
 		return errors.Wrapf(err, "failed execute query for user delete")

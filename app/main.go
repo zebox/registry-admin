@@ -4,23 +4,21 @@
 package main
 
 import (
+	log "github.com/go-pkgz/lgr"
 	"net/http"
 	"os"
-	"os/signal"
 	"runtime"
-	"syscall"
-
-	log "github.com/go-pkgz/lgr"
 )
 
 var (
 	version = "unknown"
 	opts    *Options
-	err     error
 )
 
 func main() {
 	log.Printf("REGISTRY ADMIN PORTAL: %s\n", version)
+
+	var err error
 	opts, err = parseArgs()
 
 	if err != nil {
@@ -54,15 +52,4 @@ func getDump() string {
 		length = maxSize
 	}
 	return string(stacktrace[:length])
-}
-
-func init() {
-	// catch SIGQUIT and print stack traces
-	sigChan := make(chan os.Signal, 1)
-	go func() {
-		for range sigChan {
-			log.Printf("[INFO] SIGQUIT detected, dump:\n%s", getDump())
-		}
-	}()
-	signal.Notify(sigChan, syscall.SIGQUIT) //nolint:govet
 }

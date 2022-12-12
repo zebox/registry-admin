@@ -82,28 +82,28 @@ func TestEmbedded_GetUser(t *testing.T) {
 
 	{
 		// test with int ID
-		userData, err := db.GetUser(ctx, user.ID)
-		assert.NoError(t, err)
+		userData, errGetUser := db.GetUser(ctx, user.ID)
+		assert.NoError(t, errGetUser)
 		assert.Equal(t, *user, userData)
 	}
 
 	{
 		// test with ID as string type
-		userData, err := db.GetUser(ctx, "2")
-		assert.NoError(t, err)
+		userData, errGetUser := db.GetUser(ctx, "2")
+		assert.NoError(t, errGetUser)
 		assert.Equal(t, *user, userData)
 	}
 	{
 		// test with login as ID
-		userData, err := db.GetUser(ctx, "test_user")
-		assert.NoError(t, err)
+		userData, errGetUser := db.GetUser(ctx, "test_user")
+		assert.NoError(t, errGetUser)
 		assert.Equal(t, *user, userData)
 	}
 
 	{
 		// test with doesn't exist ID
-		_, err := db.GetUser(ctx, -1)
-		assert.Error(t, err)
+		_, errGetUser := db.GetUser(ctx, -1)
+		assert.Error(t, errGetUser)
 	}
 	_, err = db.GetUser(ctx, struct{}{})
 	assert.Error(t, err)
