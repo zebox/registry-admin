@@ -94,36 +94,47 @@ Latest stable version has :vX.Y.Z docker tag (with :latest alias) and the curren
 At first, you need setup required parameters in compose file or using command line flags. Various configuration example 
 you can find in the `example` folder.
 
-[^1]: Application setting
+#### 1.1. Main setting
 - `hostname` - defines host name or ip address which includes to `AllowedOrigins` header and using for `CORS` requests check
 - `port` - defines port which application uses for listening http requests (default `80`)
 - `store.type` - define storage type for store main data (users, accesses, repositories). Default (`embed`)
 
-[^note]: `Now implement only embed storage type`
+>`Now implement only embed storage type`
 
 - `store.admin_password` - overrides the default admin password when storage creating first (default password: `admin`)
 - `store.embed.path ` - defined path and name for embed storage file (default password: `./data.db`)
 
-[^2]: Registry settings
+#### 1.2.  Registry settings
 
 - `registry.host` - defines main host or ip address of private registry instance with protocol scheme prefix.
   It's hostname will be included to certificate extension field (`4.2.1.7  Subject Alternative Name`) if self-signed certificate defined
 
-[^note]: `host: https://{registry-host}`
+>`host: https://{registry-host}`
 - `registry.ip` - need for included to certificate extension field only. If it omitted certificate error can be occurred.
 - `registry.port` - port of private docker registry instance (default `5000`)
 - `registry.auth_type` - defines authenticate type `token` or `basic` (default: `token`).
 
-`basic` option using `.htpasswd` file and doesn't support restrict access to specific repositories. For use `basic`
-you required following options:
-- `login` - username for access to docker registry
-- `password` - password for access to docker registry
+>`Keep a mind for `token` auth type required `certs` options must be defined.`
 
-[^note]: `Keep a mind for `token` auth type required `certs` options must be defined.`
 - `registry.certs.path` - root directory where will be generated and stored certificates for token signing
 - `registry.certs.key` - path to private key for token signing
 - `registry.certs.public_key` - path to public key for verify token sign
-- `registry.certs.ca` - path to certificate authority bundle 
+- `registry.certs.ca` - path to certificate authority bundle
+
+Certificates will be generated automatically if `registry.certs.path` is valid and directory is empty. If `certs` 
+options isn't defined certificates will be created at a user home directory in sub folder `.registry-certs`:
+```text
+$HOME/.registry-certs/
+    registry_auth.key
+    registry_auth.pub
+    registry_auth_ca.crt
+```
+
+`basic` option using `.htpasswd` file and doesn't support restrict access to specific repositories. For use `basic`
+you required following options:
+
+- `login` - username for access to docker registry
+- `password` - password for access to docker registry
 
 
 

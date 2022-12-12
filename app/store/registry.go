@@ -20,7 +20,7 @@ type RegistryEntry struct {
 
 // Contract with storage for a registry data
 const (
-	RegistryIdFieID             = "id"
+	RegistryIdField             = "id"
 	RegistryRepositoryNameField = "repository_name"
 	RegistryTagField            = "tag"
 	RegistryContentDigestField  = "digest"

@@ -3,7 +3,7 @@ package registry
 // Token need for authenticate and manage authorizations clients using a separate access control manager.
 // A service is used by the official Docker Registry to authenticate clients and verify their authorization to Docker image repositories.
 // A client should contact the registry first. If the registry server requires authentication it will return a 401 Unauthorized response with a WWW-Authenticate header
-// with details how to authenticate to registry. After authenticate is successfully service will issue an opaque Bearer registryToken that clients should supply to subsequent requests
+// with details how to authenticate to registry. After authenticate is successfully service will issue an opaque Bearer AccessToken that clients should supply to subsequent requests
 // in the Authorization header. More details by link https://docs.docker.com/registry/spec/auth/jwt/
 
 import (
@@ -13,7 +13,6 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	"io/ioutil"
 	"math/rand"
 	"net"
 	"os"
@@ -39,10 +38,10 @@ const (
 	certsDirName   = ".registry-certs"
 	privateKeyName = "/registry_auth.key"
 	publicKeyName  = "/registry_auth.pub"
-	CAName         = "/registry_auth_ca.crt"
+	caName         = "/registry_auth_ca.crt"
 )
 
-var ErrTemplateCertFileAlreadyExist = "cert file '%s' already exist"
+var errTemplateCertFileAlreadyExist = "cert file '%s' already exist"
 
 // TokenRequest is the authorization request data from registry when client auth call
 // for detailed description go to https://docs.docker.com/registry/spec/auth/jwt/
@@ -80,18 +79,19 @@ type Certs struct {
 	CARootPath    string
 }
 
-// ClientToken is Bearer registryToken representing authorized access for a client
+// ClientToken is Bearer AccessToken representing authorized access for a client
 type ClientToken struct {
 	// An opaque Bearer token that clients should supply to subsequent requests in the Authorization header.
 	Token string `json:"token"`
 
-	// For compatibility with OAuth 2.0, we will also accept registryToken under the name access_token.
+	// For compatibility with OAuth 2.0, we will also accept AccessToken under the name access_token.
 	// At least one of these fields must be specified, but both may also appear (for compatibility with older clients).
 	// When both are specified, they should be equivalent; if they differ the client's choice is undefined.
 	AccessToken string `json:"access_token"`
 }
 
-type registryToken struct {
+// AccessToken is a token instance using for authorization in registry
+type AccessToken struct {
 	Certs
 
 	// append Subject Alternative Name for requested IP and Domain to certificate
@@ -99,10 +99,10 @@ type registryToken struct {
 	// https://oidref.com/2.5.29.17
 	serviceIP, serviceHost string
 
-	// registryToken claims field
+	// AccessToken claims field
 	tokenIssuer string
 
-	// registryToken life
+	// AccessToken life
 	tokenExpiration int64
 
 	// certificates for generate JWT signature
@@ -112,11 +112,13 @@ type registryToken struct {
 
 	l log.L
 }
-type TokenOption func(option *registryToken)
+
+// TokenOption defines options which pass to token
+type TokenOption func(option *AccessToken)
 
 // TokenExpiration option define custom token expiration time
 func TokenExpiration(expirationTime int64) TokenOption {
-	return func(rt *registryToken) {
+	return func(rt *AccessToken) {
 		rt.tokenExpiration = expirationTime
 	}
 }
@@ -126,21 +128,21 @@ func TokenIssuer(issuer string) TokenOption {
 	if issuer == "" {
 		issuer = defaultTokenIssuer
 	}
-	return func(rt *registryToken) {
+	return func(rt *AccessToken) {
 		rt.tokenIssuer = issuer
 	}
 }
 
 // TokenLogger define logger instance
 func TokenLogger(l log.L) TokenOption {
-	return func(rt *registryToken) {
+	return func(rt *AccessToken) {
 		rt.l = l
 	}
 }
 
 // CertsName define custom certs file name
 func CertsName(certs Certs) TokenOption {
-	return func(rt *registryToken) {
+	return func(rt *AccessToken) {
 		rt.RootPath = certs.RootPath
 		rt.PublicKeyPath = certs.PublicKeyPath
 		rt.KeyPath = certs.KeyPath
@@ -150,7 +152,7 @@ func CertsName(certs Certs) TokenOption {
 
 // ServiceIPHost define service host values
 func ServiceIPHost(ip, host string) TokenOption {
-	return func(rt *registryToken) {
+	return func(rt *AccessToken) {
 		rt.serviceIP = ip
 		rt.serviceHost = host
 
@@ -159,9 +161,9 @@ func ServiceIPHost(ip, host string) TokenOption {
 
 // NewRegistryToken will construct new tokenRegistry instance with required options
 // and allow re-define default option for token generator
-func NewRegistryToken(opts ...TokenOption) (*registryToken, error) {
+func NewRegistryToken(opts ...TokenOption) (*AccessToken, error) {
 
-	rt := &registryToken{
+	rt := &AccessToken{
 		serviceIP:       defaultTokenIssuer,
 		serviceHost:     "localhost",
 		tokenExpiration: defaultTokenExpiration,
@@ -181,7 +183,7 @@ func NewRegistryToken(opts ...TokenOption) (*registryToken, error) {
 	rt.RootPath = path
 	rt.PublicKeyPath = rt.RootPath + publicKeyName
 	rt.KeyPath = rt.RootPath + privateKeyName
-	rt.CARootPath = rt.RootPath + CAName
+	rt.CARootPath = rt.RootPath + caName
 
 	for _, opt := range opts {
 		opt(rt)
@@ -205,7 +207,7 @@ func NewRegistryToken(opts ...TokenOption) (*registryToken, error) {
 	return rt, nil
 }
 
-func (rt *registryToken) Generate(tokenRequest *TokenRequest) (ClientToken, error) {
+func (rt *AccessToken) generate(tokenRequest *TokenRequest) (ClientToken, error) {
 	// sign any string to get the used signing Algorithm for the private key
 	_, algo, err := rt.privateKey.Sign(strings.NewReader(""), 0)
 
@@ -235,7 +237,7 @@ func (rt *registryToken) Generate(tokenRequest *TokenRequest) (ClientToken, erro
 		expr = now + tokenRequest.ExpireTime
 	}
 
-	// init default registryToken claims
+	// init default AccessToken claims
 	claim := token.ClaimSet{
 		Issuer:     rt.tokenIssuer,
 		Subject:    tokenRequest.Account,
@@ -272,7 +274,7 @@ func (rt *registryToken) Generate(tokenRequest *TokenRequest) (ClientToken, erro
 	return ClientToken{Token: tokenString, AccessToken: tokenString}, nil
 }
 
-func (rt *registryToken) createCerts() (err error) {
+func (rt *AccessToken) createCerts() (err error) {
 
 	rt.privateKey, err = libtrust.GenerateRSA2048PrivateKey()
 	if err != nil {
@@ -294,7 +296,7 @@ func (rt *registryToken) createCerts() (err error) {
 	return rt.saveKeys()
 }
 
-func (rt *registryToken) loadCerts() (err error) {
+func (rt *AccessToken) loadCerts() (err error) {
 
 	if _, err = os.Stat(rt.Certs.RootPath); err != nil {
 		return err
@@ -319,22 +321,22 @@ func (rt *registryToken) loadCerts() (err error) {
 	return nil
 }
 
-func (rt registryToken) saveKeys() error {
+func (rt *AccessToken) saveKeys() error {
 
 	var errExist error
 	// check if certs already exist
 	if _, err := os.Stat(rt.KeyPath); err == nil {
-		err = errors.Errorf(ErrTemplateCertFileAlreadyExist, rt.KeyPath)
+		err = errors.Errorf(errTemplateCertFileAlreadyExist, rt.KeyPath)
 		errExist = multierror.Append(errExist, err)
 	}
 
 	if _, err := os.Stat(rt.PublicKeyPath); err == nil {
-		err = errors.Errorf(ErrTemplateCertFileAlreadyExist, rt.PublicKeyPath)
+		err = errors.Errorf(errTemplateCertFileAlreadyExist, rt.PublicKeyPath)
 		errExist = multierror.Append(errExist, err)
 	}
 
 	if _, err := os.Stat(rt.CARootPath); err == nil {
-		err = errors.Errorf(ErrTemplateCertFileAlreadyExist, rt.CARootPath)
+		err = errors.Errorf(errTemplateCertFileAlreadyExist, rt.CARootPath)
 		errExist = multierror.Append(errExist, err)
 
 	}
@@ -369,7 +371,7 @@ func (rt registryToken) saveKeys() error {
 		return errors.Wrap(err, "failed to encode certificate for file save")
 	}
 
-	err = ioutil.WriteFile(rt.CARootPath, certPEM.Bytes(), os.ModePerm)
+	err = os.WriteFile(rt.CARootPath, certPEM.Bytes(), os.ModePerm)
 	if err != nil {
 		return errors.Wrap(err, "failed to save CA bundle to file")
 	}
@@ -377,7 +379,7 @@ func (rt registryToken) saveKeys() error {
 }
 
 // parseToken convert token string set to ClientToken struct
-func (rt registryToken) parseToken(tokenString string) (ct ClientToken, err error) {
+func (rt *AccessToken) parseToken(tokenString string) (ct ClientToken, err error) {
 	if err := json.Unmarshal([]byte(tokenString), &ct); err != nil {
 		return ClientToken{}, err
 	}
@@ -385,7 +387,7 @@ func (rt registryToken) parseToken(tokenString string) (ct ClientToken, err erro
 }
 
 // appendDSnToCertificate appends Subject Alternative Name for requested IP and Domain to certificate
-func (rt *registryToken) appendDSnToCertificate() {
+func (rt *AccessToken) appendDSnToCertificate() {
 	if rt.serviceIP != "" {
 		var ipAddressRegExp = regexp.MustCompile(`(?m)^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$`)
 		if ipAddressRegExp.MatchString(rt.serviceIP) {

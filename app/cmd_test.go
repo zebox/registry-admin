@@ -167,18 +167,14 @@ func Test_createRegistryConnection(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, rc)
 
-	{
-		opts.Registry.AuthType = "basic"
-		rc, err = createRegistryConnection(opts.Registry)
-		assert.NoError(t, err)
-		assert.NotNil(t, rc)
-	}
+	opts.Registry.AuthType = "basic"
+	rc, err = createRegistryConnection(opts.Registry)
+	assert.NoError(t, err)
+	assert.NotNil(t, rc)
 
-	{
-		opts.Registry.Htpasswd = ""
-		_, err = createRegistryConnection(opts.Registry)
-		assert.Error(t, err)
-	}
+	opts.Registry.Htpasswd = ""
+	_, err = createRegistryConnection(opts.Registry)
+	assert.Error(t, err)
 
 	// test for error
 	opts.Registry.AuthType = "unknown"

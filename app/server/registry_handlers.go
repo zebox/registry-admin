@@ -34,7 +34,7 @@ type registryHandlers struct {
 // registryErrors when registry response is failure, covered in detail in their relevant sections, are reported as part of 4xx responses, in a json response body.
 // One or more errors will be returned in this format
 type registryErrors struct {
-	Errors []registry.ApiError `json:"errors"`
+	Errors []registry.APIError `json:"errors"`
 }
 
 func (rh *registryHandlers) tokenAuth(w http.ResponseWriter, r *http.Request) {
@@ -163,7 +163,7 @@ func (rh *registryHandlers) catalogList(w http.ResponseWriter, r *http.Request) 
 		}
 	}
 
-	filter.GroupByField = !isGroupBy || (groupBy != nil && groupBy[0] != "none")
+	filter.GroupByField = !isGroupBy || (groupBy != nil && len(groupBy) > 0 && groupBy[0] != "none")
 	repoList, errReposList := rh.dataStore.FindRepositories(r.Context(), filter)
 
 	if errReposList != nil {
@@ -213,11 +213,11 @@ func (rh *registryHandlers) parseTokenRequestParams(w http.ResponseWriter, r *ht
 		}
 
 		// define instance for error response
-		regErrs := registryErrors{Errors: []registry.ApiError{}}
+		regErrs := registryErrors{Errors: []registry.APIError{}}
 
 		if allow, errCheck := rh.checkUserAccess(r.Context(), user, tokenRequest); !allow || errCheck != nil {
 			errMsg := fmt.Errorf("[ERROR] access to registry resource not allowed for user %s: %v", user.Login, errCheck)
-			regErrs.Errors = append(regErrs.Errors, registry.ApiError{Code: "", Message: errMsg.Error()})
+			regErrs.Errors = append(regErrs.Errors, registry.APIError{Code: "", Message: errMsg.Error()})
 			rh.l.Logf("%v", errMsg)
 			renderJSONWithStatus(w, regErrs, http.StatusForbidden)
 			return

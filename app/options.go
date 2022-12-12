@@ -12,7 +12,6 @@ import (
 	"github.com/jessevdk/go-flags"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v3"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 )
@@ -74,6 +73,7 @@ type StoreGroup struct {
 	} `group:"embed" namespace:"embed" env-namespace:"EMBED" json:"embed" yaml:"embed"`
 }
 
+// RegistryGroup main setting for connection to private registry instance
 type RegistryGroup struct {
 	Host                     string `long:"host" env:"HOST" required:"true" description:"Main host or address to docker registry service" json:"host"`
 	IP                       string `long:"ip" env:"IP" description:"Address which appends to certificate SAN (Subject Alternative Name)" json:"ip"`
@@ -142,7 +142,7 @@ type jsonConfigParser struct{}
 
 // ReadConfigFromFile the implement configReader interface method for json config file
 func (j *jsonConfigParser) ReadConfigFromFile(pathToFile string, options *Options) error {
-	data, errParse := ioutil.ReadFile(pathToFile)
+	data, errParse := os.ReadFile(filepath.Clean(pathToFile))
 	if errParse != nil {
 		return errors.Wrap(errParse, "failed to read json config file")
 	}
@@ -159,7 +159,7 @@ type yamlConfigParser struct{}
 
 // ReadConfigFromFile the implement configReader interface method for yaml config file
 func (j *yamlConfigParser) ReadConfigFromFile(pathToFile string, options *Options) error {
-	data, errParse := ioutil.ReadFile(pathToFile)
+	data, errParse := os.ReadFile(filepath.Clean(pathToFile))
 	if errParse != nil {
 		return errors.Wrap(errParse, "failed to read yaml config file")
 	}

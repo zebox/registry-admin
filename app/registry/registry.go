@@ -10,9 +10,10 @@ import (
 	"fmt"
 	"github.com/zebox/registry-admin/app/store"
 	"github.com/zebox/registry-admin/app/store/engine"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"reflect"
 	"regexp"
 	"strings"
@@ -39,14 +40,19 @@ type authType int8
 type UsersFn func(ctx context.Context, filter engine.QueryFilter) (users engine.ListResponse, err error)
 
 const (
-	Basic     authType = iota // allow access using auth basic credentials
-	SelfToken                 // define this service as main auth/authz server for docker registry host
+	// Basic allow access using auth basic credentials
+	Basic authType = iota
+
+	// SelfToken define this service as main auth/authz server for docker registry host
+	SelfToken
 )
 
 var (
+	// ErrNoMorePages used for cursor pagination state of registry entries
 	ErrNoMorePages = errors.New("no more pages")
 )
 
+// Settings main configuration options for communicate with registry instance
 type Settings struct {
 
 	// Host is a fqdn of docker registry host
@@ -77,8 +83,8 @@ type Settings struct {
 	Issuer string
 
 	// CertificatesPaths define a path to private, public keys and CA certificate.
-	// If CertificatesPaths has all fields are empty, registryToken will create keys by default, with default path.
-	// If CertificatesPaths has all fields are empty, but certificates files exist registryToken try to load existed keys and CA file.
+	// If CertificatesPaths has all fields are empty, AccessToken will create keys by default, with default path.
+	// If CertificatesPaths has all fields are empty, but certificates files exist AccessToken try to load existed keys and CA file.
 	CertificatesPaths Certs
 
 	// InsecureRequest define option secure for make a https request to docker registry host, false by default
@@ -93,7 +99,7 @@ type Registry struct {
 	htpasswd *htpasswd
 
 	// use when auth with token is set
-	registryToken *registryToken
+	registryToken *AccessToken
 
 	httpClient *http.Client
 }
@@ -121,15 +127,15 @@ type ImageTags struct {
 type ManifestSchemaV2 struct {
 	SchemaVersion     int                 `json:"schemaVersion"`
 	MediaType         string              `json:"mediaType"`
-	ConfigDescriptor  Schema2Descriptor   `json:"config"`
-	LayersDescriptors []Schema2Descriptor `json:"layers"`
+	ConfigDescriptor  schema2Descriptor   `json:"config"`
+	LayersDescriptors []schema2Descriptor `json:"layers"`
 
 	// additional fields which not include in schema specification and need for this service only
 	TotalSize     int64  `json:"total_size"`     // total compressed size of image data
 	ContentDigest string `json:"content_digest"` // a main content digest using for delete image from registry
 }
 
-type Schema2Descriptor struct {
+type schema2Descriptor struct {
 	MediaType string   `json:"mediaType"`
 	Size      int64    `json:"size"`
 	Digest    string   `json:"digest"`
@@ -214,7 +220,7 @@ func NewRegistry(login, password string, settings Settings) (*Registry, error) {
 	// try to create secure http client transport with defined certificates path
 	// call this after token creation attempt, because it will create a new certificate if it doesn't exist and token auth defined
 	if certsPathIsFilled {
-		transport, err := createHttpsTransport(settings.CertificatesPaths)
+		transport, err := createHTTPSTransport(settings.CertificatesPaths)
 		if err != nil {
 			return nil, err
 		}
@@ -224,6 +230,7 @@ func NewRegistry(login, password string, settings Settings) (*Registry, error) {
 	return r, nil
 }
 
+// Login implement authorization to remote registry instance with token request
 func (r *Registry) Login(user store.User) (string, error) {
 	authRequest := TokenRequest{
 		Account: user.Login,
@@ -236,7 +243,7 @@ func (r *Registry) Login(user store.User) (string, error) {
 // This method should call after credentials check at a high level api
 func (r *Registry) Token(authRequest TokenRequest) (string, error) {
 
-	clientToken, errToken := r.registryToken.Generate(&authRequest)
+	clientToken, errToken := r.registryToken.generate(&authRequest)
 	if errToken != nil {
 		return "", errToken
 	}
@@ -270,10 +277,10 @@ func (r *Registry) UpdateHtpasswd(usersFn FetchUsers) error {
 // APIVersionCheck a minimal endpoint, mounted at /v2/ will provide version support information based on its response statuses.
 // more details by link https://docs.docker.com/registry/spec/api/#api-version-check
 func (r *Registry) APIVersionCheck(ctx context.Context) error {
-	var apiError ApiError
+	var apiError APIError
 	baseURL := fmt.Sprintf("%s:%d/v2/", r.settings.Host, r.settings.Port)
 
-	resp, err := r.newHttpRequest(ctx, baseURL, "GET", nil)
+	resp, err := r.newHTTPRequest(ctx, baseURL, "GET", nil)
 	if err != nil {
 		apiError.Message = fmt.Sprintf("failed to request to registry host %s", r.settings.Host)
 		return err
@@ -293,7 +300,7 @@ func (r *Registry) APIVersionCheck(ctx context.Context) error {
 func (r *Registry) GetBlob(ctx context.Context, name, digest string) (blob []byte, err error) {
 	baseURL := fmt.Sprintf("%s:%d/v2/%s/blobs/%s", r.settings.Host, r.settings.Port, name, digest)
 
-	resp, err := r.newHttpRequest(ctx, baseURL, "GET", nil)
+	resp, err := r.newHTTPRequest(ctx, baseURL, "GET", nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed get blob data err: %v", err)
 	}
@@ -304,7 +311,7 @@ func (r *Registry) GetBlob(ctx context.Context, name, digest string) (blob []byt
 		}()
 	}
 
-	blob, err = ioutil.ReadAll(resp.Body)
+	blob, err = io.ReadAll(resp.Body)
 	if resp.StatusCode >= 300 {
 		return nil, fmt.Errorf("api return error code: %d\n %s", resp.StatusCode, blob)
 	}
@@ -322,7 +329,7 @@ func (r *Registry) Catalog(ctx context.Context, n, last string) (Repositories, e
 		baseURL = fmt.Sprintf("%s:%d/v2/_catalog?n=%s&last=%s", r.settings.Host, r.settings.Port, n, last)
 	}
 
-	resp, err := r.newHttpRequest(ctx, baseURL, "GET", nil)
+	resp, err := r.newHTTPRequest(ctx, baseURL, "GET", nil)
 	if err != nil {
 		return repos, err
 	}
@@ -361,7 +368,7 @@ func (r *Registry) ListingImageTags(ctx context.Context, repoName, n, last strin
 		baseURL = fmt.Sprintf("%s:%d/v2/%s/tags/list?n=%s&last=%s", r.settings.Host, r.settings.Port, repoName, n, last)
 	}
 
-	resp, err := r.newHttpRequest(ctx, baseURL, "GET", nil)
+	resp, err := r.newHTTPRequest(ctx, baseURL, "GET", nil)
 	if err != nil {
 		return tags, err
 	}
@@ -394,12 +401,12 @@ func (r *Registry) ListingImageTags(ctx context.Context, repoName, n, last strin
 // Manifest do fetch the manifest identified by 'name' and 'reference' where 'reference' can be a tag or digest.
 func (r *Registry) Manifest(ctx context.Context, repoName, tag string) (ManifestSchemaV2, error) {
 	var manifest ManifestSchemaV2
-	var apiError ApiError
+	var apiError APIError
 	baseURL := fmt.Sprintf("%s:%d/v2/%s/manifests/%s", r.settings.Host, r.settings.Port, repoName, tag)
 
-	resp, err := r.newHttpRequest(ctx, baseURL, "GET", nil)
+	resp, err := r.newHTTPRequest(ctx, baseURL, "GET", nil)
 	if err != nil {
-		return manifest, makeApiError("failed to make request for docker registry manifest", err.Error())
+		return manifest, makeAPIError("failed to make request for docker registry manifest", err.Error())
 	}
 
 	if resp != nil {
@@ -412,18 +419,18 @@ func (r *Registry) Manifest(ctx context.Context, repoName, tag string) (Manifest
 		if resp != nil {
 			err = json.NewDecoder(resp.Body).Decode(&apiError)
 			if err != nil {
-				return manifest, makeApiError("failed to parse request body with manifest fetch error", err.Error())
+				return manifest, makeAPIError("failed to parse request body with manifest fetch error", err.Error())
 			}
 		}
 		if resp.StatusCode == http.StatusNotFound {
-			return manifest, makeApiError("resource not found", "")
+			return manifest, makeAPIError("resource not found", "")
 		}
 		return manifest, apiError
 	}
 
 	err = json.NewDecoder(resp.Body).Decode(&manifest)
 	if err != nil {
-		return manifest, makeApiError("failed to parse request body with manifest data", err.Error())
+		return manifest, makeAPIError("failed to parse request body with manifest data", err.Error())
 	}
 
 	manifest.calculateCompressedImageSize()
@@ -435,12 +442,12 @@ func (r *Registry) Manifest(ctx context.Context, repoName, tag string) (Manifest
 // DeleteTag will delete the manifest identified by name and reference. Note that a manifest can only be deleted by digest.
 // A digest can be fetched from manifest get response header 'docker-content-digest'
 func (r *Registry) DeleteTag(ctx context.Context, repoName, digest string) error {
-	var apiError ApiError
-	baseUrl := fmt.Sprintf("%s:%d/v2/%s/manifests/%s", r.settings.Host, r.settings.Port, repoName, digest)
+	var apiError APIError
+	baseURL := fmt.Sprintf("%s:%d/v2/%s/manifests/%s", r.settings.Host, r.settings.Port, repoName, digest)
 
-	resp, err := r.newHttpRequest(ctx, baseUrl, "DELETE", nil)
+	resp, err := r.newHTTPRequest(ctx, baseURL, "DELETE", nil)
 	if err != nil {
-		return makeApiError("failed to make request for delete docker registry manifest", err.Error())
+		return makeAPIError("failed to make request for delete docker registry manifest", err.Error())
 	}
 
 	if resp != nil {
@@ -453,11 +460,11 @@ func (r *Registry) DeleteTag(ctx context.Context, repoName, digest string) error
 		if resp != nil {
 			err = json.NewDecoder(resp.Body).Decode(&apiError)
 			if err != nil {
-				return makeApiError("failed to parse request body when manifest delete", err.Error())
+				return makeAPIError("failed to parse request body when manifest delete", err.Error())
 			}
 		}
 		if resp.StatusCode == http.StatusNotFound {
-			return makeApiError("resource not found", repoName)
+			return makeAPIError("resource not found", repoName)
 		}
 		return apiError
 	}
@@ -465,8 +472,8 @@ func (r *Registry) DeleteTag(ctx context.Context, repoName, digest string) error
 	return nil
 }
 
-func createHttpsTransport(certs Certs) (*http.Transport, error) {
-	certData, err := ioutil.ReadFile(certs.CARootPath)
+func createHTTPSTransport(certs Certs) (*http.Transport, error) {
+	certData, err := os.ReadFile(certs.CARootPath)
 	if err != nil {
 		return nil, err
 	}
@@ -482,17 +489,19 @@ func createHttpsTransport(certs Certs) (*http.Transport, error) {
 	return transport, nil
 }
 
-// newHttpRequest prepare http client and execute a request to docker registry api
-func (r *Registry) newHttpRequest(ctx context.Context, url, method string, body []byte) (*http.Response, error) {
+// newHTTPRequest prepare http client and execute a request to docker registry api
+//
+//nolint:unparam // body pass as pointer for retrieve data from response in caller method
+func (r *Registry) newHTTPRequest(ctx context.Context, targetURL, method string, body []byte) (*http.Response, error) {
 
-	req, err := http.NewRequestWithContext(ctx, method, url, bytes.NewBuffer(body))
+	req, err := http.NewRequestWithContext(ctx, method, targetURL, bytes.NewBuffer(body))
 	if err != nil {
 		return nil, err
 	}
 	req.Header.Add("Accept", manifestSchemeV2)
 
 	if r.settings.AuthType == SelfToken {
-		return r.newHttpRequestWithToken(req)
+		return r.newHTTPRequestWithToken(req)
 	}
 
 	req.SetBasicAuth(r.settings.credentials.login, r.settings.credentials.password)
@@ -500,8 +509,8 @@ func (r *Registry) newHttpRequest(ctx context.Context, url, method string, body 
 
 }
 
-// newHttpRequestWithToken execute
-func (r *Registry) newHttpRequestWithToken(request *http.Request) (*http.Response, error) {
+// newHTTPRequestWithToken execute
+func (r *Registry) newHTTPRequestWithToken(request *http.Request) (*http.Response, error) {
 
 	resp, errReq := r.httpClient.Do(request)
 	if errReq != nil {
@@ -526,7 +535,7 @@ func (r *Registry) newHttpRequestWithToken(request *http.Request) (*http.Respons
 	if err != nil {
 		return nil, err
 	}
-	// req, err := http.NewRequestWithContext(ctx, method, url, bytes.NewBuffer(body))
+
 	request.Header.Add("Authorization", "Bearer "+token.Token)
 	if err != nil {
 		return nil, err
@@ -540,7 +549,8 @@ func (r *Registry) newHttpRequestWithToken(request *http.Request) (*http.Respons
 // The client may construct URLs to skip forward in the catalog.
 //
 // To get the next result set, a client would issue the request as follows, using the URL encoded in the described Link header:
-//   	GET /v2/_catalog?n=<n from the request>&last=<last repository value from previous response>
+//
+//	GET /v2/_catalog?n=<n from the request>&last=<last repository value from previous response>
 //
 // The URL for the next block is encoded in RFC 5988 (https://tools.ietf.org/html/rfc5988#section-5)
 func getPaginationNextLink(resp *http.Response) (string, error) {
@@ -559,7 +569,7 @@ func getPaginationNextLink(resp *http.Response) (string, error) {
 // Header value should be like this: Bearer realm="https://auth.docker.io/token",service="registry.docker.io",scope="repository:samalba/my-app:pull,push"
 // Input parameter 'access' contain data of access to resource for a user.
 // Method has public access for use in tests where registry mock interface use it.
-func (r Registry) ParseAuthenticateHeaderRequest(headerValue string) (authRequest TokenRequest, err error) {
+func (r *Registry) ParseAuthenticateHeaderRequest(headerValue string) (authRequest TokenRequest, err error) {
 	// realm="https://auth.docker.io/token",service="registry.docker.io",scope="repository:samalba/my-app:pull,push"
 	var re = regexp.MustCompile(`(\w+)=("[^"]*")`)
 	var isMatched bool
@@ -607,40 +617,40 @@ func (m *ManifestSchemaV2) calculateCompressedImageSize() {
 	}
 }
 
-// ParseUrlForNextLink check pagination cursor for next
-func ParseUrlForNextLink(nextLink string) (string, string, error) {
-	urlQuery, err := url.Parse(nextLink)
-	if err != nil {
-		return "", "", err
+// ParseURLForNextLink check pagination cursor for next
+func ParseURLForNextLink(nextLink string) (next, last string, err error) {
+	urlQuery, errParse := url.Parse(nextLink)
+	if errParse != nil {
+		return "", "", errParse
 	}
-	result, err := url.ParseQuery(urlQuery.RawQuery)
 
-	if err != nil {
-		return "", "", err
+	result, errParse := url.ParseQuery(urlQuery.RawQuery)
+	if errParse != nil {
+		return "", "", errParse
 	}
-	n := result.Get("n")
-	last := result.Get("last")
-	if n == "" && last == "" {
+	next = result.Get("n")
+	last = result.Get("last")
+	if next == "" && last == "" {
 		return "", "", errors.New("page index is undefined in url params")
 	}
-	return n, last, nil
+	return next, last, nil
 }
 
-// ApiError contain detail in their relevant sections,
+// APIError contain detail in their relevant sections,
 // are reported as part of 4xx responses, in a json response body.
-type ApiError struct {
+type APIError struct {
 	Code    string      `json:"code"`
 	Message string      `json:"message"`
 	Detail  interface{} `json:"detail"`
 }
 
 // Error implement error type interface
-func (ae ApiError) Error() string {
+func (ae APIError) Error() string {
 	return fmt.Sprintf("%s: %s: %v", ae.Code, ae.Message, ae.Detail)
 }
 
-func makeApiError(msg, detail string) *ApiError {
-	return &ApiError{
+func makeAPIError(msg, detail string) *APIError {
+	return &APIError{
 		Code:    "-1",
 		Message: msg,
 		Detail:  map[string]string{"error": detail},

@@ -139,7 +139,7 @@ func (ra *testUsersRegistryAdapter) Users() ([]store.User, error) {
 		return nil, err
 	}
 
-	var users []store.User
+	var users = make([]store.User, 0)
 	for _, u := range result.Data {
 		users = append(users, u.(store.User))
 	}

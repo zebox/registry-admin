@@ -4,8 +4,7 @@ import (
 	"context"
 	"embed"
 	"fmt"
-	"github.com/zebox/registry-admin/app/registry"
-	"github.com/zebox/registry-admin/app/store/engine/embedded"
+
 	"io"
 	"math"
 	"net/http"
@@ -21,8 +20,10 @@ import (
 	"github.com/go-pkgz/auth/avatar"
 	"github.com/go-pkgz/auth/token"
 	"github.com/pkg/errors"
+	"github.com/zebox/registry-admin/app/registry"
 	"github.com/zebox/registry-admin/app/server"
 	"github.com/zebox/registry-admin/app/store/engine"
+	"github.com/zebox/registry-admin/app/store/engine/embedded"
 	"gopkg.in/natefinch/lumberjack.v2"
 
 	log "github.com/go-pkgz/lgr"
@@ -150,11 +151,11 @@ func run() error {
 func checkHostnameForURL(hostname, sslMode string) string {
 
 	if !strings.HasPrefix(hostname, "http") && sslMode == "none" {
-		return "http://" + hostname[:]
+		return "http://" + hostname
 	}
 
 	if !strings.HasPrefix(hostname, "http") && sslMode != "none" {
-		return "https://" + hostname[:]
+		return "https://" + hostname
 	}
 
 	return hostname

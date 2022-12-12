@@ -14,7 +14,7 @@ import (
 // CreateRepository create a new repository record
 func (e *Embedded) CreateRepository(ctx context.Context, entry *store.RegistryEntry) (err error) {
 
-	createGroupSQL := fmt.Sprintf(`INSERT INTO %s (
+	createRepositorySQL := fmt.Sprintf(`INSERT INTO %s (
 		repository_name,
 		tag,
 		digest,
@@ -24,7 +24,7 @@ func (e *Embedded) CreateRepository(ctx context.Context, entry *store.RegistryEn
 		timestamp,
 		raw
 	) values(?, ?, ?, ?, ?, ?, ?, ?)`, repositoriesTable)
-	stmt, err := e.db.PrepareContext(ctx, createGroupSQL)
+	stmt, err := e.db.PrepareContext(ctx, createRepositorySQL)
 	if err != nil {
 		return errors.Wrap(err, "failed to create repository entry")
 	}

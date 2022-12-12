@@ -30,7 +30,7 @@ func TestNewRegistry(t *testing.T) {
 			RootPath:      tmpDir + "/" + certsDirName,
 			KeyPath:       tmpDir + "/" + privateKeyName,
 			PublicKeyPath: tmpDir + "/" + publicKeyName,
-			CARootPath:    tmpDir + "/" + CAName,
+			CARootPath:    tmpDir + "/" + caName,
 		},
 	}
 
@@ -49,7 +49,7 @@ func TestNewRegistry(t *testing.T) {
 
 	// test with empty last filed entry
 	testSetting.CertificatesPaths = Certs{
-		CARootPath: CAName,
+		CARootPath: caName,
 	}
 	_, err = NewRegistry("test_login", "test_password", testSetting)
 	require.Error(t, err)
@@ -151,7 +151,7 @@ func TestRegistry_Catalog(t *testing.T) {
 		}
 		require.NoError(t, err)
 		assert.Equal(t, 10, len(repos.List))
-		n, last, err = ParseUrlForNextLink(repos.NextLink)
+		n, last, err = ParseURLForNextLink(repos.NextLink)
 		require.NoError(t, err)
 		if total > reposNumbers {
 			require.Fail(t, "out of bound of repositories index ")
@@ -200,7 +200,7 @@ func TestRegistry_ListingImageTags(t *testing.T) {
 			}
 			require.NoError(t, err)
 			assert.Equal(t, 10, len(tags.Tags))
-			n, last, err = ParseUrlForNextLink(tags.NextLink)
+			n, last, err = ParseURLForNextLink(tags.NextLink)
 			require.NoError(t, err)
 			if total > tagsNumbers*reposNumbers {
 				require.Fail(t, "out of bound of tags index ")
@@ -233,7 +233,7 @@ func TestRegistry_Manifest(t *testing.T) {
 
 	_, err = r.Manifest(context.Background(), "test_repo_00", "test_tag_10")
 	assert.Error(t, err)
-	assert.Equal(t, "resource not found", err.(*ApiError).Message)
+	assert.Equal(t, "resource not found", err.(*APIError).Message)
 
 	r.settings.Host = ""
 	_, err = r.Manifest(context.Background(), "test_repo_00", "test_tag_10")
@@ -261,7 +261,7 @@ func TestRegistry_DeleteTag(t *testing.T) {
 
 	err = r.DeleteTag(context.Background(), "test_repo_1", "fake_digest")
 	assert.Error(t, err)
-	assert.Equal(t, "resource not found", err.(*ApiError).Message)
+	assert.Equal(t, "resource not found", err.(*APIError).Message)
 
 	r.settings.Host = ""
 	err = r.DeleteTag(context.Background(), "test_repo_00", "test_tag_10")
@@ -318,7 +318,7 @@ func TestRegistry_Login(t *testing.T) {
 			RootPath:      tmpDir + "/" + certsDirName,
 			KeyPath:       tmpDir + "/" + privateKeyName,
 			PublicKeyPath: tmpDir + "/" + publicKeyName,
-			CARootPath:    tmpDir + "/" + CAName,
+			CARootPath:    tmpDir + "/" + caName,
 		},
 	}
 
@@ -345,7 +345,7 @@ func TestRegistry_Token(t *testing.T) {
 			RootPath:      tmpDir + "/" + certsDirName,
 			KeyPath:       tmpDir + "/" + privateKeyName,
 			PublicKeyPath: tmpDir + "/" + publicKeyName,
-			CARootPath:    tmpDir + "/" + CAName,
+			CARootPath:    tmpDir + "/" + caName,
 		},
 	}
 
@@ -390,7 +390,7 @@ func Test_WithTokenAuth(t *testing.T) {
 			RootPath:      tmpDir + "/" + certsDirName,
 			KeyPath:       tmpDir + "/" + privateKeyName,
 			PublicKeyPath: tmpDir + "/" + publicKeyName,
-			CARootPath:    tmpDir + "/" + CAName,
+			CARootPath:    tmpDir + "/" + caName,
 		},
 	}
 
@@ -425,7 +425,7 @@ func Test_WithTokenAuth(t *testing.T) {
 }
 
 func TestApiError_Error(t *testing.T) {
-	apiError := ApiError{
+	apiError := APIError{
 		Code:    "test",
 		Message: "test",
 		Detail:  map[string]interface{}{"test": "test"},
@@ -437,7 +437,7 @@ func TestApiError_Error(t *testing.T) {
 
 func chooseRandomUnusedPort() (port uint) {
 	for i := 0; i < 10; i++ {
-		port = 40000 + uint(rand.Int31n(10000)) //nolint:gosec
+		port = 40000 + uint(rand.Int31n(10000)) //nolint:gosec // using for uint test only
 		if ln, err := net.Listen("tcp", fmt.Sprintf(":%d", port)); err == nil {
 			_ = ln.Close()
 			break

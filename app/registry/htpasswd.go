@@ -33,7 +33,7 @@ func (ht *htpasswd) update(users []store.User) error {
 		return err
 	}
 
-	f, err := os.OpenFile(ht.path, os.O_WRONLY|os.O_CREATE, 0600)
+	f, err := os.OpenFile(ht.path, os.O_WRONLY|os.O_CREATE, 0o0600)
 	if err != nil {
 		ht.lock.Unlock()
 		return err
@@ -55,17 +55,17 @@ func (ht *htpasswd) update(users []store.User) error {
 
 // createHtpasswdFile creates  .htpasswd file with an update user in case the file is missing
 func createHtpasswdFileIfNoExist(path string) error {
-	if f, err := os.Open(path); err == nil {
+	if f, err := os.Open(filepath.Clean(path)); err == nil {
 		_ = f.Close()
 		return nil
 	} else if !os.IsNotExist(err) {
 		return err
 	}
 
-	if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
+	if err := os.MkdirAll(filepath.Dir(path), 0o0700); err != nil {
 		return err
 	}
-	f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0600)
+	f, err := os.OpenFile(filepath.Clean(path), os.O_WRONLY|os.O_CREATE, 0o0600)
 	if err != nil {
 		return fmt.Errorf("failed to open htpasswd path %s", err)
 	}

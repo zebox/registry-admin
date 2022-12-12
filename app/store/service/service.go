@@ -152,7 +152,7 @@ func (ds *DataService) doSyncRepositories(ctx context.Context) {
 					break
 				}
 
-				_, lastTag, errTags = registry.ParseUrlForNextLink(tags.NextLink)
+				_, lastTag, errTags = registry.ParseURLForNextLink(tags.NextLink)
 				if errTags != nil {
 					log.Printf("[ERROR] failed to parse next link: %v", errTags)
 					log.Printf("[ERROR] sync operation aborted")
@@ -165,7 +165,7 @@ func (ds *DataService) doSyncRepositories(ctx context.Context) {
 			break
 		}
 
-		n, lastRepo, errCatalog = registry.ParseUrlForNextLink(repos.NextLink)
+		n, lastRepo, errCatalog = registry.ParseURLForNextLink(repos.NextLink)
 		if errCatalog != nil {
 			log.Printf("[ERROR] failed to parse next link: %v", errCatalog)
 			break

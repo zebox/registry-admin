@@ -113,7 +113,7 @@ func NewMockRegistry(t testing.TB, host string, port uint, repoNumber, tagNumber
 		if !testRegistry.authCheck(r) {
 			path := strings.Split(r.URL.Path, "/")
 			if len(path) >= 3 {
-				w.Header().Set("Www-Authenticate", fmt.Sprintf(`Bearer realm="https://auth.docker.io/token",service="%s",scope="repository:%s:pull,push"`, r.URL.Path, path[2]))
+				w.Header().Set("Www-Authenticate", fmt.Sprintf(`Bearer realm="https://auth.docker.io/token",service=%q,scope="repository:%s:pull,push"`, r.URL.Path, path[2]))
 			}
 
 			w.WriteHeader(http.StatusUnauthorized)
@@ -297,8 +297,8 @@ func (mr *MockRegistry) getCatalog(w http.ResponseWriter, r *http.Request) {
 	urlFragments, err := url.ParseQuery(r.URL.RawQuery)
 	assert.NoError(mr.t, err)
 	if urlFragments.Get("n") == "" {
-		data, err := json.Marshal(mr.repositories)
-		assert.NoError(mr.t, err)
+		data, errJSON := json.Marshal(mr.repositories)
+		assert.NoError(mr.t, errJSON)
 		_, err = w.Write(data)
 		assert.NoError(mr.t, err)
 		return
@@ -351,7 +351,7 @@ func (mr *MockRegistry) getImageTags(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !isRepoFound {
-		apiError := ApiError{
+		apiError := APIError{
 			Code:    "NAME_UNKNOWN",
 			Message: "repository name not known to registry",
 		}
@@ -364,8 +364,8 @@ func (mr *MockRegistry) getImageTags(w http.ResponseWriter, r *http.Request) {
 	urlFragments, err := url.ParseQuery(r.URL.RawQuery)
 	assert.NoError(mr.t, err)
 	if urlFragments.Get("n") == "" {
-		data, err := json.Marshal(ImageTags{Name: repoName[1], Tags: tags})
-		assert.NoError(mr.t, err)
+		data, errJSON := json.Marshal(ImageTags{Name: repoName[1], Tags: tags})
+		assert.NoError(mr.t, errJSON)
 		_, err = w.Write(data)
 		assert.NoError(mr.t, err)
 		return
@@ -478,7 +478,7 @@ func (mr *MockRegistry) getManifest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !isRepoFound || !isTagFound {
-		apiError := ApiError{
+		apiError := APIError{
 			Code:    "NAME_UNKNOWN",
 			Message: "either repository name or tag not not found in registry",
 		}
@@ -531,7 +531,7 @@ func (mr *MockRegistry) deleteManifest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !isRepoFound || !isTagFound {
-		apiError := ApiError{
+		apiError := APIError{
 			Code:    "NAME_UNKNOWN",
 			Message: "either repository name or tag not not found in registry",
 		}

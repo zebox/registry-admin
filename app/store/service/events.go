@@ -3,13 +3,15 @@ package service
 import (
 	"context"
 	"encoding/json"
+
 	"github.com/docker/distribution/manifest/schema2"
 	"github.com/docker/distribution/notifications"
-	log "github.com/go-pkgz/lgr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
 	"github.com/zebox/registry-admin/app/store"
 	"github.com/zebox/registry-admin/app/store/engine"
+
+	log "github.com/go-pkgz/lgr"
 )
 
 var ErrorSyncGcInProgress = errors.New("syncing or garbage collector operations in progress")

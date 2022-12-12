@@ -1,12 +1,12 @@
 package main
 
 import (
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"io/ioutil"
 	"os"
 	"syscall"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var testJSONConfig = `
@@ -59,79 +59,78 @@ store:
 `
 
 func Test_parseArgs(t *testing.T) {
-	{
-		assert.NoError(t, os.Setenv("RA_LISTEN", "127.0.0.9"))
-		assert.NoError(t, os.Setenv("RA_PORT", "9999"))
 
-		// test for auth args
-		assert.NoError(t, os.Setenv("RA_AUTH_TOKEN_SECRET", "test-super-token-secret"))
-		assert.NoError(t, os.Setenv("RA_AUTH_HOST_NAME", "hostname.test"))
-		assert.NoError(t, os.Setenv("RA_AUTH_ISSUER_NAME", "test-issuer"))
-		assert.NoError(t, os.Setenv("RA_AUTH_JWT_TTL", "20s"))
-		assert.NoError(t, os.Setenv("RA_AUTH_COOKIE_TTL", "30d"))
+	assert.NoError(t, os.Setenv("RA_LISTEN", "127.0.0.9"))
+	assert.NoError(t, os.Setenv("RA_PORT", "9999"))
 
-		// test for logger args
-		assert.NoError(t, os.Setenv("RA_LOGGER_STDOUT", "true"))
-		assert.NoError(t, os.Setenv("RA_LOGGER_ENABLED", "true"))
-		assert.NoError(t, os.Setenv("RA_LOGGER_FILE", "./test_logger.log"))
-		assert.NoError(t, os.Setenv("RA_LOGGER_SIZE", "999M"))
-		assert.NoError(t, os.Setenv("RA_LOGGER_BACKUPS", "99"))
+	// test for auth args
+	assert.NoError(t, os.Setenv("RA_AUTH_TOKEN_SECRET", "test-super-token-secret"))
+	assert.NoError(t, os.Setenv("RA_AUTH_HOST_NAME", "hostname.test"))
+	assert.NoError(t, os.Setenv("RA_AUTH_ISSUER_NAME", "test-issuer"))
+	assert.NoError(t, os.Setenv("RA_AUTH_JWT_TTL", "20s"))
+	assert.NoError(t, os.Setenv("RA_AUTH_COOKIE_TTL", "30d"))
 
-		// test for ssl args
-		assert.NoError(t, os.Setenv("RA_SSL_TYPE", "none"))
-		assert.NoError(t, os.Setenv("RA_SSL_CERT", "test.crt"))
-		assert.NoError(t, os.Setenv("RA_SSL_KEY", "test.key"))
-		assert.NoError(t, os.Setenv("RA_SSL_ACME_LOCATION", "./cert/path"))
-		assert.NoError(t, os.Setenv("RA_SSL_ACME_EMAIL", "test@email.local"))
-		assert.NoError(t, os.Setenv("RA_SSL_ACME_HTTP_PORT", "8080"))
-		assert.NoError(t, os.Setenv("RA_SSL_PORT", "8433"))
-		assert.NoError(t, os.Setenv("RA_SSL_ACME_FQDN", "test.domain.local"))
+	// test for logger args
+	assert.NoError(t, os.Setenv("RA_LOGGER_STDOUT", "true"))
+	assert.NoError(t, os.Setenv("RA_LOGGER_ENABLED", "true"))
+	assert.NoError(t, os.Setenv("RA_LOGGER_FILE", "./test_logger.log"))
+	assert.NoError(t, os.Setenv("RA_LOGGER_SIZE", "999M"))
+	assert.NoError(t, os.Setenv("RA_LOGGER_BACKUPS", "99"))
 
-		// args for REGISTRY
-		assert.NoError(t, os.Setenv("RA_REGISTRY_HOST", "test.registry-host.local"))
-		assert.NoError(t, os.Setenv("RA_REGISTRY_PORT", "5000"))
-		assert.NoError(t, os.Setenv("RA_REGISTRY_AUTH_TYPE", "basic"))
+	// test for ssl args
+	assert.NoError(t, os.Setenv("RA_SSL_TYPE", "none"))
+	assert.NoError(t, os.Setenv("RA_SSL_CERT", "test.crt"))
+	assert.NoError(t, os.Setenv("RA_SSL_KEY", "test.key"))
+	assert.NoError(t, os.Setenv("RA_SSL_ACME_LOCATION", "./cert/path"))
+	assert.NoError(t, os.Setenv("RA_SSL_ACME_EMAIL", "test@email.local"))
+	assert.NoError(t, os.Setenv("RA_SSL_ACME_HTTP_PORT", "8080"))
+	assert.NoError(t, os.Setenv("RA_SSL_PORT", "8433"))
+	assert.NoError(t, os.Setenv("RA_SSL_ACME_FQDN", "test.domain.local"))
 
-		// test for store args
-		assert.NoError(t, os.Setenv("RA_STORE_DB_TYPE", "embed"))
-		assert.NoError(t, os.Setenv("RA_STORE_EMBED_DB_PATH", "./db/data.db"))
+	// args for REGISTRY
+	assert.NoError(t, os.Setenv("RA_REGISTRY_HOST", "test.registry-host.local"))
+	assert.NoError(t, os.Setenv("RA_REGISTRY_PORT", "5000"))
+	assert.NoError(t, os.Setenv("RA_REGISTRY_AUTH_TYPE", "basic"))
 
-		assert.NoError(t, os.Setenv("RA_DEBUG", "true"))
-	}
+	// test for store args
+	assert.NoError(t, os.Setenv("RA_STORE_DB_TYPE", "embed"))
+	assert.NoError(t, os.Setenv("RA_STORE_EMBED_DB_PATH", "./db/data.db"))
+
+	assert.NoError(t, os.Setenv("RA_DEBUG", "true"))
+
 	var testMatcherOptions Options
-	{
-		testMatcherOptions.Listen = "127.0.0.9"
-		testMatcherOptions.Port = 9999
-		testMatcherOptions.Auth.TokenSecret = "test-super-token-secret"
-		testMatcherOptions.HostName = "localhost"
-		testMatcherOptions.Auth.IssuerName = "test-issuer"
-		testMatcherOptions.Auth.TokenDuration = "20s"
-		testMatcherOptions.Auth.CookieDuration = "30d"
 
-		testMatcherOptions.Logger.StdOut = true
-		testMatcherOptions.Logger.Enabled = true
-		testMatcherOptions.Logger.FileName = "./test_logger.log"
-		testMatcherOptions.Logger.MaxSize = "999M"
-		testMatcherOptions.Logger.MaxBackups = 99
+	testMatcherOptions.Listen = "127.0.0.9"
+	testMatcherOptions.Port = 9999
+	testMatcherOptions.Auth.TokenSecret = "test-super-token-secret"
+	testMatcherOptions.HostName = "localhost"
+	testMatcherOptions.Auth.IssuerName = "test-issuer"
+	testMatcherOptions.Auth.TokenDuration = "20s"
+	testMatcherOptions.Auth.CookieDuration = "30d"
 
-		testMatcherOptions.SSL.Type = "none"
-		testMatcherOptions.SSL.Cert = "test.crt"
-		testMatcherOptions.SSL.Key = "test.key"
-		testMatcherOptions.SSL.ACMELocation = "./cert/path"
-		testMatcherOptions.SSL.ACMEEmail = "test@email.local"
-		testMatcherOptions.SSL.RedirHTTPPort = 8080
-		testMatcherOptions.SSL.Port = 8433
-		testMatcherOptions.SSL.FQDNs = []string{"test.domain.local"}
+	testMatcherOptions.Logger.StdOut = true
+	testMatcherOptions.Logger.Enabled = true
+	testMatcherOptions.Logger.FileName = "./test_logger.log"
+	testMatcherOptions.Logger.MaxSize = "999M"
+	testMatcherOptions.Logger.MaxBackups = 99
 
-		testMatcherOptions.Registry.Host = "test.registry-host.local"
-		testMatcherOptions.Registry.Port = 5000
-		testMatcherOptions.Registry.AuthType = "basic"
+	testMatcherOptions.SSL.Type = "none"
+	testMatcherOptions.SSL.Cert = "test.crt"
+	testMatcherOptions.SSL.Key = "test.key"
+	testMatcherOptions.SSL.ACMELocation = "./cert/path"
+	testMatcherOptions.SSL.ACMEEmail = "test@email.local"
+	testMatcherOptions.SSL.RedirHTTPPort = 8080
+	testMatcherOptions.SSL.Port = 8433
+	testMatcherOptions.SSL.FQDNs = []string{"test.domain.local"}
 
-		testMatcherOptions.Store.Type = "embed"
-		testMatcherOptions.Store.AdminPassword = "admin"
-		testMatcherOptions.Store.Embed.Path = "./db/data.db"
-		testMatcherOptions.Debug = true
-	}
+	testMatcherOptions.Registry.Host = "test.registry-host.local"
+	testMatcherOptions.Registry.Port = 5000
+	testMatcherOptions.Registry.AuthType = "basic"
+
+	testMatcherOptions.Store.Type = "embed"
+	testMatcherOptions.Store.AdminPassword = "admin"
+	testMatcherOptions.Store.Embed.Path = "./db/data.db"
+	testMatcherOptions.Debug = true
 
 	os.Args = []string{os.Args[0]} // clear Go test flags
 	testOpts, errParse := parseArgs()
@@ -149,7 +148,7 @@ func Test_parseArgs(t *testing.T) {
 
 func TestJsonConfigParser_ReadConfigFromFile(t *testing.T) {
 	// create config test file
-	f, errParse := ioutil.TempFile(os.TempDir(), "test_config.json")
+	f, errParse := os.CreateTemp(os.TempDir(), "test_config.json")
 	require.NoError(t, errParse)
 
 	defer func(path string) {
@@ -158,7 +157,7 @@ func TestJsonConfigParser_ReadConfigFromFile(t *testing.T) {
 		assert.NoError(t, errUnlink)
 	}(f.Name())
 
-	errParse = ioutil.WriteFile(f.Name(), []byte(testJSONConfig), 0444)
+	errParse = os.WriteFile(f.Name(), []byte(testJSONConfig), 0o0444)
 	require.NoError(t, errParse)
 
 	var (
@@ -177,7 +176,7 @@ func TestJsonConfigParser_ReadConfigFromFile(t *testing.T) {
 
 func TestYamlConfigParser_ReadConfigFromFile(t *testing.T) {
 	// create config test file
-	f, errParse := ioutil.TempFile(os.TempDir(), "test_config.yml")
+	f, errParse := os.CreateTemp(os.TempDir(), "test_config.yml")
 	require.NoError(t, errParse)
 
 	defer func(path string) {
@@ -186,7 +185,7 @@ func TestYamlConfigParser_ReadConfigFromFile(t *testing.T) {
 		assert.NoError(t, errUnlink)
 	}(f.Name())
 
-	errParse = ioutil.WriteFile(f.Name(), []byte(testYmlConfig), 0444)
+	errParse = os.WriteFile(f.Name(), []byte(testYmlConfig), 0o0444)
 	require.NoError(t, errParse)
 
 	var (

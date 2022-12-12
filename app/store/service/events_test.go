@@ -4,6 +4,10 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/base64"
+	"strings"
+	"testing"
+	"time"
+
 	"github.com/docker/distribution"
 	"github.com/docker/distribution/manifest/schema2"
 	"github.com/docker/distribution/notifications"
@@ -13,9 +17,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/zebox/registry-admin/app/store"
 	"github.com/zebox/registry-admin/app/store/engine"
-	"strings"
-	"testing"
-	"time"
 )
 
 func TestDataService_RepositoryEventsProcessing(t *testing.T) {

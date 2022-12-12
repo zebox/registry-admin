@@ -216,16 +216,18 @@ func (e *Embedded) initRepositoriesTable(ctx context.Context) error {
 	}
 
 	sqlText := fmt.Sprintf(`CREATE TABLE %s(
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		repository_name INTEGER NOT NULL CHECK(repository_name <> ''),
-		tag TEXT NOT NULL CHECK(tag <> ''),
-		digest TEXT NOT NULL CHECK(digest <> ''),
-		config_digest TEXT NOT NULL CHECK(config_digest <> ''),
-		size INTEGER,
-		pull_counter INTEGER,
-		timestamp INTEGER,
-		raw TEXT,
-		UNIQUE(repository_name,tag))`, repositoriesTable)
+		%s INTEGER PRIMARY KEY AUTOINCREMENT,
+		%s INTEGER NOT NULL CHECK(repository_name <> ''),
+		%s TEXT NOT NULL CHECK(tag <> ''),
+		%s TEXT NOT NULL CHECK(digest <> ''),
+		%s TEXT NOT NULL CHECK(config_digest <> ''),
+		%s INTEGER,
+		%s INTEGER,
+		%s INTEGER,
+		%s TEXT,
+		UNIQUE(%s,%s))`, store.RegistryIdField, store.RegistryRepositoryNameField, store.RegistryTagField,
+		store.RegistryContentDigestField, store.RegistryConfigDigestField, store.RegistrySizeNameField, store.RegistryPullCounterField,
+		store.RegistryTimestampField, store.RegistryRawField, store.RegistryRepositoryNameField, store.RegistryTagField, repositoriesTable)
 
 	_, err := e.db.Exec(sqlText)
 	if err != nil {
@@ -364,9 +366,10 @@ func filtersBuilder(filter engine.QueryFilter, fieldsName ...string) (f queryFil
 }
 
 // getTotalRecordExcludeRange return total number of records exclude range/skip clause for pagination support
-// 		tableName - specify table name for search
-//		filter - set of params for where clause in query
-//		searchFields - define list of key fields using in where clause
+//
+//	tableName - specify table name for search
+//	filter - set of params for where clause in query
+//	searchFields - define list of key fields using in where clause
 func (e *Embedded) getTotalRecordsExcludeRange(tableName string, filter engine.QueryFilter, searchFields []string) int64 {
 	filter.Range = [2]int64{0, 0} // clear skip/offset range
 

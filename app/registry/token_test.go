@@ -30,7 +30,7 @@ func TestNewRegistryToken(t *testing.T) {
 	assert.Equal(t, defaultTokenIssuer, rt.tokenIssuer)
 	assert.Equal(t, path+privateKeyName, rt.KeyPath)
 	assert.Equal(t, path+publicKeyName, rt.PublicKeyPath)
-	assert.Equal(t, path+CAName, rt.CARootPath)
+	assert.Equal(t, path+caName, rt.CARootPath)
 
 	// test with loading exist certs
 	_, err = NewRegistryToken()
@@ -132,7 +132,7 @@ func TestRegistryToken_Generate(t *testing.T) {
 		ExpireTime: 120,
 	}
 
-	jwtToken, err := rt.Generate(&authReq)
+	jwtToken, err := rt.generate(&authReq)
 	assert.NoError(t, err)
 
 	claims := jwt.MapClaims{}
@@ -154,7 +154,7 @@ func TestRegistryToken_CreateCerts(t *testing.T) {
 
 	tmpDir = filepath.ToSlash(tmpDir)
 
-	rt := registryToken{}
+	rt := AccessToken{}
 
 	rt.serviceHost = "localhost"
 	rt.serviceIP = "127.0.0.2"
@@ -162,7 +162,7 @@ func TestRegistryToken_CreateCerts(t *testing.T) {
 	rt.RootPath = tmpDir
 	rt.KeyPath = tmpDir + privateKeyName
 	rt.PublicKeyPath = tmpDir + publicKeyName
-	rt.CARootPath = tmpDir + CAName
+	rt.CARootPath = tmpDir + caName
 
 	err := rt.createCerts()
 	require.NoError(t, err)
@@ -177,7 +177,7 @@ func TestRegistryToken_CreateCerts(t *testing.T) {
 	_, err = libtrust.LoadPublicKeyFile(tmpDir + publicKeyName)
 	assert.NoError(t, err)
 
-	_, err = libtrust.LoadCertificateBundle(tmpDir + CAName)
+	_, err = libtrust.LoadCertificateBundle(tmpDir + caName)
 	assert.NoError(t, err)
 
 	// test with error when certs exist
@@ -191,7 +191,7 @@ func TestRegistryToken_CreateCerts(t *testing.T) {
 
 	err = rt.createCerts()
 	assert.Error(t, err)
-	assert.NoError(t, os.Remove(tmpDir+CAName))
+	assert.NoError(t, os.Remove(tmpDir+caName))
 
 	// test  with error when path error
 	rt.Certs.KeyPath = "/"

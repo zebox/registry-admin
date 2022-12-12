@@ -22,6 +22,7 @@ const (
 
 type engineOptionsCtx string
 
+// ErrNotFound return empty result error with request
 var ErrNotFound = errors.New("record not found")
 
 // ListResponse is a container for return list of result data
@@ -83,10 +84,10 @@ type QueryFilter struct {
 }
 
 // FilterFromURLExtractor extracts param from URL and pass it to query which manipulation data in storage
-func FilterFromURLExtractor(url *url.URL) (filters QueryFilter, err error) {
-	_range, isRange := url.Query()["range"]
-	sort, isSort := url.Query()["sort"]
-	search, isSearch := url.Query()["filter"]
+func FilterFromURLExtractor(requestedURL *url.URL) (filters QueryFilter, err error) {
+	_range, isRange := requestedURL.Query()["range"]
+	sort, isSort := requestedURL.Query()["sort"]
+	search, isSearch := requestedURL.Query()["filter"]
 
 	// check and try to extract IDs from search string
 	if isSearch {
@@ -101,8 +102,8 @@ func FilterFromURLExtractor(url *url.URL) (filters QueryFilter, err error) {
 
 	// extract and parse range and sort params
 	if isRange || isSort {
-		rng, err := getRange(_range[0])
-		if err != nil {
+		rng, errRange := getRange(_range[0])
+		if errRange != nil {
 			return filters, err
 		}
 		filters.Range = rng
