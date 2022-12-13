@@ -7,7 +7,9 @@ import (
 	log "github.com/go-pkgz/lgr"
 	"net/http"
 	"os"
+	"os/signal"
 	"runtime"
+	"syscall"
 )
 
 var (
@@ -52,4 +54,16 @@ func getDump() string {
 		length = maxSize
 	}
 	return string(stacktrace[:length])
+}
+
+// nolint:gochecknoinits // can't avoid it in this place
+func init() {
+	// catch SIGQUIT and print stack traces
+	sigChan := make(chan os.Signal, 1)
+	go func() {
+		for range sigChan {
+			log.Printf("[INFO] SIGQUIT detected, dump:\n%s", getDump())
+		}
+	}()
+	signal.Notify(sigChan, syscall.SIGQUIT)
 }

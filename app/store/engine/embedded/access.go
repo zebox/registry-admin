@@ -150,6 +150,8 @@ func (e *Embedded) UpdateAccess(ctx context.Context, access store.Access) (err e
 
 // DeleteAccess delete access record by ID
 func (e *Embedded) DeleteAccess(ctx context.Context, key string, id interface{}) (err error) {
+
+	//nolint:gosec // key value not passed from user input and can be change in code only
 	query := fmt.Sprintf("DELETE FROM access WHERE %s = ?", key)
 	res, err := e.db.ExecContext(ctx, query, id)
 	if err != nil {

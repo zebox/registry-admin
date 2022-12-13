@@ -37,10 +37,10 @@ func (ah *accessHandlers) accessAddCtrl(w http.ResponseWriter, r *http.Request) 
 
 func (ah *accessHandlers) accessInfoCtrl(w http.ResponseWriter, r *http.Request) {
 
-	accessId := chi.URLParam(r, "id")
+	accessID := chi.URLParam(r, "id")
 
 	// userInfo handler allows fetch user data only by user id
-	i, err := strconv.ParseInt(accessId, 10, 64)
+	i, err := strconv.ParseInt(accessID, 10, 64)
 	if err != nil {
 		SendErrorJSON(w, r, ah.l, http.StatusBadRequest, err, "failed to parse access id with api")
 		return
@@ -76,9 +76,9 @@ func (ah *accessHandlers) accessFindCtrl(w http.ResponseWriter, r *http.Request)
 }
 
 func (ah *accessHandlers) accessUpdateCtrl(w http.ResponseWriter, r *http.Request) { // nolint dupl
-	groupId := chi.URLParam(r, "id")
+	groupID := chi.URLParam(r, "id")
 
-	i, err := strconv.ParseInt(groupId, 10, 64)
+	i, err := strconv.ParseInt(groupID, 10, 64)
 	if err != nil {
 		SendErrorJSON(w, r, ah.l, http.StatusBadRequest, err, "failed to parse access id with api")
 		return
@@ -108,9 +108,9 @@ func (ah *accessHandlers) accessUpdateCtrl(w http.ResponseWriter, r *http.Reques
 }
 
 func (ah *accessHandlers) accessDeleteCtrl(w http.ResponseWriter, r *http.Request) {
-	userId := chi.URLParam(r, "id")
+	userID := chi.URLParam(r, "id")
 
-	id, err := strconv.ParseInt(userId, 10, 64)
+	id, err := strconv.ParseInt(userID, 10, 64)
 	if err != nil {
 		SendErrorJSON(w, r, ah.l, http.StatusBadRequest, err, "failed to parse access id with api")
 		return

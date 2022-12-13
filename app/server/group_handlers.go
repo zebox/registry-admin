@@ -38,10 +38,10 @@ func (g *groupHandlers) groupCreateCtrl(w http.ResponseWriter, r *http.Request) 
 
 func (g *groupHandlers) groupInfoCtrl(w http.ResponseWriter, r *http.Request) {
 
-	groupId := chi.URLParam(r, "id")
+	groupID := chi.URLParam(r, "id")
 
 	// userInfo handler allows fetch user data only by user id
-	i, err := strconv.ParseInt(groupId, 10, 64)
+	i, err := strconv.ParseInt(groupID, 10, 64)
 	if err != nil {
 		SendErrorJSON(w, r, g.l, http.StatusBadRequest, err, "failed to parse group id with api")
 		return
@@ -77,9 +77,9 @@ func (g *groupHandlers) groupFindCtrl(w http.ResponseWriter, r *http.Request) {
 }
 
 func (g *groupHandlers) groupUpdateCtrl(w http.ResponseWriter, r *http.Request) { //nolint dupl
-	groupId := chi.URLParam(r, "id")
+	groupID := chi.URLParam(r, "id")
 
-	i, err := strconv.ParseInt(groupId, 10, 64)
+	i, err := strconv.ParseInt(groupID, 10, 64)
 	if err != nil {
 		SendErrorJSON(w, r, g.l, http.StatusBadRequest, err, "failed to parse group id with api")
 		return
@@ -109,9 +109,9 @@ func (g *groupHandlers) groupUpdateCtrl(w http.ResponseWriter, r *http.Request) 
 }
 
 func (g *groupHandlers) groupDeleteCtrl(w http.ResponseWriter, r *http.Request) {
-	userId := chi.URLParam(r, "id")
+	userID := chi.URLParam(r, "id")
 
-	id, err := strconv.ParseInt(userId, 10, 64)
+	id, err := strconv.ParseInt(userID, 10, 64)
 	if err != nil {
 		SendErrorJSON(w, r, g.l, http.StatusBadRequest, err, "failed to parse group id with api")
 		return

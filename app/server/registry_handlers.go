@@ -50,8 +50,8 @@ func (rh *registryHandlers) tokenAuth(w http.ResponseWriter, r *http.Request) {
 
 	user, errUser := rh.dataStore.GetUser(r.Context(), username)
 	if errUser != nil {
-		user := store.User{ID: engine.AnonymousUserID}
-		rh.parseTokenRequestParams(w, r, user)
+		usr := store.User{ID: engine.AnonymousUserID}
+		rh.parseTokenRequestParams(w, r, usr)
 		return
 	}
 
@@ -163,7 +163,7 @@ func (rh *registryHandlers) catalogList(w http.ResponseWriter, r *http.Request) 
 		}
 	}
 
-	filter.GroupByField = !isGroupBy || (groupBy != nil && len(groupBy) > 0 && groupBy[0] != "none")
+	filter.GroupByField = !isGroupBy || (len(groupBy) > 0 && groupBy[0] != "none")
 	repoList, errReposList := rh.dataStore.FindRepositories(r.Context(), filter)
 
 	if errReposList != nil {

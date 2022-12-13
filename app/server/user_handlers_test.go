@@ -60,42 +60,37 @@ func Test_userCreateCtrl(t *testing.T) {
 	assert.NotNil(t, htpasswdMock[user.Login])
 
 	// emit registry update password error
-	{
+	// wrong user data
+	user.Login = ""
+	userData, err = json.Marshal(user)
+	require.NoError(t, err)
 
-		// wrong user data
-		user.Login = ""
-		userData, err = json.Marshal(user)
-		require.NoError(t, err)
+	req, errReq = http.NewRequest("POST", "/api/v1/users", bytes.NewBuffer(userData))
+	require.NoError(t, errReq)
 
-		req, errReq = http.NewRequest("POST", "/api/v1/users", bytes.NewBuffer(userData))
-		require.NoError(t, errReq)
+	testWriter = httptest.NewRecorder()
+	handler.ServeHTTP(testWriter, req)
+	assert.Equal(t, http.StatusInternalServerError, testWriter.Code)
 
-		testWriter = httptest.NewRecorder()
-		handler.ServeHTTP(testWriter, req)
-		assert.Equal(t, http.StatusInternalServerError, testWriter.Code)
+	user.ID = 1
+	user.Login = "test_login"
+	userData, err = json.Marshal(user)
+	require.NoError(t, err)
 
-		user.ID = 1
-		user.Login = "test_login"
-		userData, err = json.Marshal(user)
-		require.NoError(t, err)
-	}
+	req, errReq = http.NewRequest("POST", "/api/v1/users", bytes.NewBuffer(userData))
+	require.NoError(t, errReq)
 
-	{
-		req, errReq = http.NewRequest("POST", "/api/v1/users", bytes.NewBuffer(userData))
-		require.NoError(t, errReq)
+	testWriter = httptest.NewRecorder()
+	handler.ServeHTTP(testWriter, req)
+	assert.Equal(t, http.StatusInternalServerError, testWriter.Code)
 
-		testWriter = httptest.NewRecorder()
-		handler.ServeHTTP(testWriter, req)
-		assert.Equal(t, http.StatusInternalServerError, testWriter.Code)
+	badUserJSON := `{"id":"0"}`
+	req, errReq = http.NewRequest("POST", "/api/v1/users", bytes.NewBuffer([]byte(badUserJSON)))
+	require.NoError(t, errReq)
 
-		badUserJSON := `{"id":"0"}`
-		req, errReq = http.NewRequest("POST", "/api/v1/users", bytes.NewBuffer([]byte(badUserJSON)))
-		require.NoError(t, errReq)
-
-		testWriter = httptest.NewRecorder()
-		handler.ServeHTTP(testWriter, req)
-		assert.Equal(t, http.StatusInternalServerError, testWriter.Code)
-	}
+	testWriter = httptest.NewRecorder()
+	handler.ServeHTTP(testWriter, req)
+	assert.Equal(t, http.StatusInternalServerError, testWriter.Code)
 
 }
 
@@ -473,7 +468,7 @@ func prepareUserMock(t *testing.T) *engine.InterfaceMock {
 						for _, id := range ids.([]interface{}) {
 							if v, ok := id.(float64); ok {
 								if int64(v) == user.ID {
-									result.Total += 1
+									result.Total++
 									result.Data = append(result.Data, user)
 								}
 							}
@@ -484,7 +479,7 @@ func prepareUserMock(t *testing.T) *engine.InterfaceMock {
 				}
 
 				if val, ok := filter.Filters["login"]; ok && val.(string) == user.Login {
-					result.Total += 1
+					result.Total++
 					result.Data = append(result.Data, user)
 				}
 			}

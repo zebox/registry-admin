@@ -147,9 +147,10 @@ func getRange(sRange string) (r [2]int64, err error) {
 const adminDefaultPasswordKey = "admin_default_key"
 
 // SetAdminDefaultPassword allows defining default password for user admin when database with users created first
-func SetAdminDefaultPassword(ctx *context.Context, passwd *string) {
-	*ctx = context.WithValue(*ctx, engineOptionsCtx(adminDefaultPasswordKey), *passwd)
+func SetAdminDefaultPassword(ctx context.Context, passwd *string) context.Context {
+	newCtx := context.WithValue(ctx, engineOptionsCtx(adminDefaultPasswordKey), *passwd)
 	*passwd = "" // clear default password from runtime memory
+	return newCtx
 }
 
 // GetAdminDefaultPassword allows get default password for user admin from context

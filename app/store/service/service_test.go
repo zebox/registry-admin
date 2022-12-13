@@ -133,7 +133,7 @@ func TestDataService_RepositoriesMaintaining(t *testing.T) {
 
 	testDS.lastSyncDate.Store(int64(0))
 	err = testDS.doGarbageCollector(ctx)
-	assert.Equal(t, ErrNoSyncedYet, err)
+	assert.Equal(t, errNoSyncedYet, err)
 }
 
 var (
@@ -246,7 +246,7 @@ func prepareRegistryMock(size int) *registryInterfaceMock {
 
 func prepareStorageMock(repositoryStore map[string]store.RegistryEntry) *engine.InterfaceMock {
 
-	ctxCheckFn := func(ctx context.Context, key string) error {
+	ctxCheckFn := func(ctx context.Context, _ string) error {
 		ctxValue := ctx.Value(ctxKey)
 		if ctxValue != nil {
 			switch val := ctxValue.(type) { // nolint
@@ -276,7 +276,7 @@ func prepareStorageMock(repositoryStore map[string]store.RegistryEntry) *engine.
 			return nil
 		},
 
-		UpdateRepositoryFunc: func(ctx context.Context, conditionClause map[string]interface{}, data map[string]interface{}) error { //nolint:lll
+		UpdateRepositoryFunc: func(ctx context.Context, conditionClause map[string]interface{}, data map[string]interface{}) error {
 
 			// search entry first
 			repoName := conditionClause[store.RegistryRepositoryNameField].(string)

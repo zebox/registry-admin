@@ -47,12 +47,12 @@ func TestSetGetAdminDefaultPassword(t *testing.T) {
 	// testing for Set
 	ctx := context.Background()
 	testPassword := "test_password"
-	SetAdminDefaultPassword(&ctx, &testPassword)
+	passwdCtx := SetAdminDefaultPassword(ctx, &testPassword)
 	assert.Empty(t, testPassword)
-	assert.NotNil(t, ctx.Value(engineOptionsCtx(adminDefaultPasswordKey)))
+	assert.NotNil(t, passwdCtx.Value(engineOptionsCtx(adminDefaultPasswordKey)))
 
 	// testing for Get
-	p := GetAdminDefaultPassword(ctx)
+	p := GetAdminDefaultPassword(passwdCtx)
 	assert.Equal(t, "test_password", p)
 
 	// testing with nil context value

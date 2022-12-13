@@ -14,8 +14,9 @@ import (
 	log "github.com/go-pkgz/lgr"
 )
 
-var ErrorSyncGcInProgress = errors.New("syncing or garbage collector operations in progress")
+var errorSyncGcInProgress = errors.New("syncing or garbage collector operations in progress")
 
+// RepositoryEventsProcessing used for processing notification events from registry service
 func (ds *DataService) RepositoryEventsProcessing(ctx context.Context, envelope notifications.Envelope) (err error) {
 
 	for _, e := range envelope.Events {
@@ -50,7 +51,7 @@ func (ds *DataService) updateRepositoryEntry(ctx context.Context, event notifica
 		// registry. For avoid race between sync and pull event triggers uses check for syncing or garbage collector
 		// operation is in progress
 		if ds.isWorking.Load().(bool) {
-			return ErrorSyncGcInProgress
+			return errorSyncGcInProgress
 		}
 
 		repositoryEntry := result.Data[0].(store.RegistryEntry)
@@ -65,7 +66,7 @@ func (ds *DataService) updateRepositoryEntry(ctx context.Context, event notifica
 
 	eventRawBytes, errJSON := json.Marshal(event)
 	if errJSON != nil {
-		return errors.Wrap(errJSON, "failed to marshalling event raw data")
+		return errors.Wrap(errJSON, "failed to marshaled raw data of event")
 	}
 
 	if result.Total == 0 {

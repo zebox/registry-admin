@@ -17,7 +17,7 @@ import (
 
 const defaultPageSize = "50" // the number of repository items for pagination request when catalog listing
 
-var ErrNoSyncedYet = errors.New("garbage collector skip because sync required start first")
+var errNoSyncedYet = errors.New("garbage collector skip because sync required start first")
 
 // registryInterface implement method for access data of a registry instance
 type registryInterface interface {
@@ -202,8 +202,8 @@ func (ds *DataService) RepositoriesMaintenance(ctx context.Context, timeout int6
 			ds.isWorking.Store(false)
 		}()
 
-		ds.doSyncRepositories(ctx)
-		if err := ds.doGarbageCollector(ctx); err != nil {
+		ds.doSyncRepositories(syncCtx)
+		if err := ds.doGarbageCollector(syncCtx); err != nil {
 			log.Printf("[ERROR] %v", err)
 		}
 	}
@@ -228,7 +228,7 @@ func (ds *DataService) doGarbageCollector(ctx context.Context) error {
 
 	lastSyncDate := ds.lastSyncDate.Load().(int64)
 	if lastSyncDate == 0 {
-		return ErrNoSyncedYet
+		return errNoSyncedYet
 	}
 
 	if err := ds.Storage.RepositoryGarbageCollector(ctx, lastSyncDate); err != nil {

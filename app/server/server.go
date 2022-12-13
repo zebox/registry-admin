@@ -103,6 +103,7 @@ type responseMessage struct {
 	Data    interface{} `json:"data"`
 }
 
+// Run start main server instance and apply it parameters
 func (s *Server) Run(ctx context.Context) error {
 
 	s.ctx = ctx

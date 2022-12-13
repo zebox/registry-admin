@@ -216,18 +216,16 @@ func (e *Embedded) initRepositoriesTable(ctx context.Context) error {
 	}
 
 	sqlText := fmt.Sprintf(`CREATE TABLE %s(
-		%s INTEGER PRIMARY KEY AUTOINCREMENT,
-		%s INTEGER NOT NULL CHECK(repository_name <> ''),
-		%s TEXT NOT NULL CHECK(tag <> ''),
-		%s TEXT NOT NULL CHECK(digest <> ''),
-		%s TEXT NOT NULL CHECK(config_digest <> ''),
-		%s INTEGER,
-		%s INTEGER,
-		%s INTEGER,
-		%s TEXT,
-		UNIQUE(%s,%s))`, store.RegistryIdField, store.RegistryRepositoryNameField, store.RegistryTagField,
-		store.RegistryContentDigestField, store.RegistryConfigDigestField, store.RegistrySizeNameField, store.RegistryPullCounterField,
-		store.RegistryTimestampField, store.RegistryRawField, store.RegistryRepositoryNameField, store.RegistryTagField, repositoriesTable)
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		repository_name INTEGER NOT NULL CHECK(repository_name <> ''),
+		tag TEXT NOT NULL CHECK(tag <> ''),
+		digest TEXT NOT NULL CHECK(digest <> ''),
+		config_digest TEXT NOT NULL CHECK(config_digest <> ''),
+		size INTEGER,
+		pull_counter INTEGER,
+		timestamp INTEGER,
+		raw TEXT,
+		UNIQUE(repository_name,tag))`, repositoriesTable)
 
 	_, err := e.db.Exec(sqlText)
 	if err != nil {

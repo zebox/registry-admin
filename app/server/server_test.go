@@ -44,7 +44,7 @@ const (
 
 type testCtxValue string
 
-var testUserID = int64(rand.Uint32()) //nolint:gosec
+var testUserID = int64(rand.Uint32()) //nolint:gosec // usage in test only
 
 func TestServer_RunNoneSSL(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
@@ -148,7 +148,7 @@ func TestServer_RunStaticSSL(t *testing.T) {
 
 		// allow self-signed certificate
 		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, //nolint:gosec
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, //nolint:gosec // usage in test only
 		},
 	}
 
@@ -219,13 +219,13 @@ func TestServer_ClaimUpdateFn(t *testing.T) {
 	srv := Server{
 		Storage: prepareTestStorage(t),
 	}
-	strUserId := strconv.FormatInt(testUserID, 10)
+	strUserID := strconv.FormatInt(testUserID, 10)
 	var baseClaims token.Claims
-	baseClaims.Id = strUserId
-	baseClaims.User = &token.User{ID: strUserId, Name: "test_user"}
+	baseClaims.Id = strUserID
+	baseClaims.User = &token.User{ID: strUserID, Name: "test_user"}
 
 	extraClaims := srv.ClaimUpdateFn(baseClaims)
-	assert.Equal(t, extraClaims.Id, strUserId)
+	assert.Equal(t, extraClaims.Id, strUserID)
 	assert.Equal(t, extraClaims.User.Role, "user")
 
 	baseClaims.User = nil // reset User claims
@@ -418,8 +418,8 @@ func TestIntegrationUserOperationWithEmbeddedStore(t *testing.T) {
 			require.NoError(t, err)
 			defer func() { assert.NoError(t, resp.Body.Close()) }()
 
-			createdUserData, errJson := json.Marshal(respMsg.Data)
-			require.NoError(t, errJson)
+			createdUserData, errJSON := json.Marshal(respMsg.Data)
+			require.NoError(t, errJSON)
 
 			var createdUser store.User
 			require.NoError(t, json.Unmarshal(createdUserData, &createdUser))
@@ -453,8 +453,8 @@ func TestIntegrationUserOperationWithEmbeddedStore(t *testing.T) {
 			require.NoError(t, err)
 			defer func() { assert.NoError(t, resp.Body.Close()) }()
 
-			createdUserData, errJson := json.Marshal(respMsg.Data)
-			require.NoError(t, errJson)
+			createdUserData, errJSON := json.Marshal(respMsg.Data)
+			require.NoError(t, errJSON)
 
 			var createdUser store.User
 			require.NoError(t, json.Unmarshal(createdUserData, &createdUser))
@@ -599,7 +599,7 @@ func request(t *testing.T, method, url string, handler http.HandlerFunc, body []
 
 	require.NoError(t, errReq)
 	testWriter := httptest.NewRecorder()
-	h := http.HandlerFunc(handler)
+	h := handler
 	h.ServeHTTP(testWriter, req)
 	assert.Equal(t, expectedStatusCode, testWriter.Code)
 	return testWriter
@@ -617,8 +617,8 @@ func prepareTestStorage(t *testing.T) *engine.InterfaceMock {
 			}
 
 			if ctx != nil {
-				var testCtxValue testCtxValue = "user_disabled"
-				ctxValue := ctx.Value(testCtxValue)
+				var tCtxValue testCtxValue = "user_disabled"
+				ctxValue := ctx.Value(tCtxValue)
 				if ctxValue != nil && ctxValue.(bool) {
 					testUser.Disabled = ctxValue.(bool)
 				}
@@ -638,8 +638,8 @@ func prepareTestStorage(t *testing.T) *engine.InterfaceMock {
 					return store.User{}, errors.New("failed to check user credentials")
 				}
 			case int, int64:
-				iUserId := val.(int)
-				if int64(iUserId) != testUserID {
+				iUserID := val.(int)
+				if int64(iUserID) != testUserID {
 					return store.User{}, errors.New("unknown user id")
 				}
 			}
@@ -664,7 +664,7 @@ func prepareTestStorage(t *testing.T) *engine.InterfaceMock {
 	}
 }
 
-func prepareTestServer(ctx context.Context, t *testing.T, storage engine.Interface) *Server {
+func prepareTestServer(ctx context.Context, t *testing.T, testStore engine.Interface) *Server {
 
 	srv := Server{
 		Listen:   "*",
@@ -674,7 +674,7 @@ func prepareTestServer(ctx context.Context, t *testing.T, storage engine.Interfa
 		SSLConfig: SSLConfig{
 			SSLMode: SSLNone,
 		},
-		Storage:         storage,
+		Storage:         testStore,
 		RegistryService: prepareRegistryMock(t),
 		AccessLog:       nopWriteCloser{io.Discard},
 		L:               log.NoOp,
@@ -735,7 +735,7 @@ func prepareTestDB(ctx context.Context, t *testing.T) *embedded.Embedded {
 
 func chooseRandomUnusedPort() (port int) {
 	for i := 0; i < 10; i++ {
-		port = 40000 + int(rand.Int31n(10000)) //nolint:gosec
+		port = 40000 + int(rand.Int31n(10000)) //nolint:gosec // usage in test only
 		if ln, err := net.Listen("tcp", fmt.Sprintf(":%d", port)); err == nil {
 			_ = ln.Close()
 			break
@@ -780,31 +780,30 @@ func initTestKeys(ctx context.Context, t *testing.T) (keys *gojwk.Keys, dir stri
 	// add Subject Alternative Name for requested IP and Domain
 	// it prevents untasted error with client request
 	// https://oidref.com/2.5.29.17
-	ca.IPAddresses = append(ca.IPAddresses, net.ParseIP("127.0.0.1"))
-	ca.IPAddresses = append(ca.IPAddresses, net.ParseIP("::"))
+	ca.IPAddresses = append(ca.IPAddresses, net.ParseIP("127.0.0.1"), net.ParseIP("::"))
 	ca.DNSNames = append(ca.DNSNames, "localhost")
 
 	// check keys for exist in the storage provider path
 	if err = keys.Load(); err != nil {
 
 		// if keys doesn't exist or load fail then create new
-		if err = keys.Generate(); err != nil {
+		if err := keys.Generate(); err != nil {
 			return nil, "", err
 		}
 
 		// create CA certificate for created keys pair
-		if err = keys.CreateCAROOT(ca); err != nil {
+		if err := keys.CreateCAROOT(ca); err != nil {
 			return nil, "", err
 		}
 
 		// if new keys pair created successfully save they to defined storage
-		if err = keys.Save(); err != nil {
+		if err := keys.Save(); err != nil {
 			return nil, "", err
 		}
 
 	}
 
-	if err = keys.CreateCAROOT(ca); err != nil {
+	if err := keys.CreateCAROOT(ca); err != nil {
 		return nil, "", err
 	}
 

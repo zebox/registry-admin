@@ -164,7 +164,7 @@ func TestRegistryHandlers_tokenAuth(t *testing.T) {
 	ctx := context.Background()
 	for _, entry := range tests {
 		t.Logf("test entry: %v", entry.name)
-		requestWithCredentials(t, ctx, entry.login, entry.password, "GET", fmt.Sprintf("/api/v1/registry/auth%s", entry.query), testRegistryHandlers.tokenAuth, nil, entry.expectedStatus)
+		requestWithCredentials(ctx, t, entry.login, entry.password, "GET", fmt.Sprintf("/api/v1/registry/auth%s", entry.query), testRegistryHandlers.tokenAuth, nil, entry.expectedStatus)
 	}
 }
 
@@ -177,11 +177,11 @@ func TestRegistryHandlers_health(t *testing.T) {
 	filledTestEntries(t, &testRegistryHandlers)
 
 	ctx := context.Background()
-	requestWithCredentials(t, ctx, "bar", "bar_password", "GET", "/api/v1/registry/health", testRegistryHandlers.health, nil, http.StatusOK)
+	requestWithCredentials(ctx, t, "bar", "bar_password", "GET", "/api/v1/registry/health", testRegistryHandlers.health, nil, http.StatusOK)
 
 	// test with error
 	ctx = context.WithValue(ctx, ctxKey, false)
-	requestWithCredentials(t, ctx, "bar", "bar_password", "GET", "/api/v1/registry/health", testRegistryHandlers.health, nil, http.StatusInternalServerError)
+	requestWithCredentials(ctx, t, "bar", "bar_password", "GET", "/api/v1/registry/health", testRegistryHandlers.health, nil, http.StatusInternalServerError)
 }
 
 func TestRegistryHandlers_events(t *testing.T) {
@@ -238,7 +238,7 @@ func TestRegistryHandlers_events(t *testing.T) {
 	ctx := context.Background()
 	for _, test := range testsTable {
 		t.Log(test.name)
-		requestWithCredentials(t, ctx, "bar", "bar_password", "GET", "/api/v1/registry/events", testRegistryHandlers.events, test.body, test.expected)
+		requestWithCredentials(ctx, t, "bar", "bar_password", "GET", "/api/v1/registry/events", testRegistryHandlers.events, test.body, test.expected)
 	}
 }
 
@@ -249,11 +249,11 @@ func TestRegistryHandlers_syncRepositories(t *testing.T) {
 	testRegistryHandlers.l = log.Default()
 	testRegistryHandlers.ctx = context.Background()
 
-	requestWithCredentials(t, testRegistryHandlers.ctx, "bar", "bar_password", "GET", "/api/v1/registry/events", testRegistryHandlers.syncRepositories, nil, http.StatusOK)
+	requestWithCredentials(testRegistryHandlers.ctx, t, "bar", "bar_password", "GET", "/api/v1/registry/events", testRegistryHandlers.syncRepositories, nil, http.StatusOK)
 
 	ctx := context.WithValue(testRegistryHandlers.ctx, ctxKey, errors.New("repo sync error"))
 	testRegistryHandlers.ctx = ctx
-	requestWithCredentials(t, ctx, "bar", "bar_password", "GET", "/api/v1/registry/events", testRegistryHandlers.syncRepositories, nil, http.StatusInternalServerError)
+	requestWithCredentials(ctx, t, "bar", "bar_password", "GET", "/api/v1/registry/events", testRegistryHandlers.syncRepositories, nil, http.StatusInternalServerError)
 }
 
 func TestRegistryHandlers_imageConfig(t *testing.T) {
@@ -289,7 +289,7 @@ func TestRegistryHandlers_imageConfig(t *testing.T) {
 	}
 	for _, test := range testTable {
 		t.Log(test.name)
-		requestWithCredentials(t, test.ctx, "bar", "bar_password", "GET", test.url, testRegistryHandlers.imageConfig, nil, test.expectedStatus)
+		requestWithCredentials(test.ctx, t, "bar", "bar_password", "GET", test.url, testRegistryHandlers.imageConfig, nil, test.expectedStatus)
 	}
 }
 
@@ -326,7 +326,7 @@ func TestRegistryHandlers_deleteDigest(t *testing.T) {
 	}
 	for _, test := range testTable {
 		t.Log(test.name)
-		requestWithCredentials(t, test.ctx, "bar", "bar_password", "GET", test.url, testRegistryHandlers.deleteDigest, nil, test.expectedStatus)
+		requestWithCredentials(test.ctx, t, "bar", "bar_password", "GET", test.url, testRegistryHandlers.deleteDigest, nil, test.expectedStatus)
 	}
 }
 
@@ -384,7 +384,7 @@ func TestRegistryHandlers_catalogList(t *testing.T) {
 	}
 	for _, test := range testTable {
 		t.Log(test.name)
-		requestWithCredentials(t, test.ctx, test.user, "bar_password", "GET", test.url, testRegistryHandlers.catalogList, nil, test.expectedStatus)
+		requestWithCredentials(test.ctx, t, test.user, "bar_password", "GET", test.url, testRegistryHandlers.catalogList, nil, test.expectedStatus)
 	}
 }
 
@@ -634,7 +634,7 @@ func prepareAccessStoreMock(t *testing.T) *engine.InterfaceMock {
 			}
 
 			if _, ok := filter.Filters[engine.RepositoriesByUserAccess]; ok {
-				req, errReq := http.NewRequestWithContext(ctx, "GET", "https://test.local", nil)
+				req, errReq := http.NewRequestWithContext(ctx, "GET", "https://test.local", http.NoBody)
 				require.NoError(t, errReq)
 
 				user, errUser := token.GetUserInfo(req)
@@ -664,7 +664,9 @@ func prepareDataServiceMock() dataServiceInterface {
 }
 
 // requestWithCredentials is helper for testing handler request
-func requestWithCredentials(t *testing.T, ctx context.Context, login, password string, method, url string, handler http.HandlerFunc, body []byte, expectedStatusCode int) *httptest.ResponseRecorder {
+//
+//nolint:unparam // func used in tests only
+func requestWithCredentials(ctx context.Context, t *testing.T, login, password, method, url string, handler http.HandlerFunc, body []byte, expectedStatusCode int) *httptest.ResponseRecorder {
 
 	req, errReq := http.NewRequestWithContext(ctx, method, url, bytes.NewBuffer(body))
 	require.NoError(t, errReq)

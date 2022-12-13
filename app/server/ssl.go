@@ -1,6 +1,6 @@
-// Package server
-// this part of code copied from https://github.com/umputun/reproxy/blob/master/app/proxy/ssl.go
 package server
+
+// this part of code borrow from https://github.com/umputun/reproxy/blob/master/app/proxy/ssl.go
 
 import (
 	"crypto/tls"
