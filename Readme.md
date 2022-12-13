@@ -145,7 +145,7 @@ options isn't defined certificates will be created at a user home directory in s
 #### 1.3.  Private Docker Registry settings (with token auth) - Recommended
 Supported registry V2 only. For use docker registry with token authentication you need configure it as a standalone 
 access control manager for resources hosted by other services which wish to authenticate and manage authorizations 
-using a separate access control manager. Fore more information about follow to the official 
+using a separate access control manager. For get more information about it, follow to the official 
 [documentations](https://docs.docker.com/registry/spec/auth/token/). 
 
 ### Registry settings (with basic auth, .htpasswd) - Not recommended
