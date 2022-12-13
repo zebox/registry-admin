@@ -9,7 +9,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"math/big"
 	"math/rand"
 	"net"
@@ -747,7 +746,7 @@ func chooseRandomUnusedPort() (port int) {
 // initTestKeys will create self-signed test keys pair
 func initTestKeys(ctx context.Context, t *testing.T) (keys *gojwk.Keys, dir string, err error) {
 
-	dir, err = ioutil.TempDir(os.TempDir(), "tk")
+	dir, err = os.MkdirTemp(os.TempDir(), "tk")
 	if err != nil {
 		return nil, "", err
 	}

@@ -163,32 +163,32 @@ func Test_userUpdateCtrl(t *testing.T) {
 	{
 		// test for update with error case
 		user.ID = 20001
-		userData, err := json.Marshal(user)
-		require.NoError(t, err)
+		users, errJSON := json.Marshal(user)
+		require.NoError(t, errJSON)
 
-		req, errReq := http.NewRequest("PUT", "/api/v1/users/10002", bytes.NewBuffer(userData))
+		req, errReq = http.NewRequest("PUT", "/api/v1/users/10002", bytes.NewBuffer(users))
 		require.NoError(t, errReq)
-		rctx := chi.NewRouteContext()
-		req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
-		rctx.URLParams.Add("id", "10002")
+		chiCtx := chi.NewRouteContext()
+		req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, chiCtx))
+		chiCtx.URLParams.Add("id", "10002")
 
 		tWriter := httptest.NewRecorder()
-		handler := http.HandlerFunc(testUserHandlers.userUpdateCtrl)
+		handler = testUserHandlers.userUpdateCtrl
 		handler.ServeHTTP(tWriter, req)
 		assert.Equal(t, http.StatusInternalServerError, tWriter.Code)
 	}
 
 	{
 		// test for json unmarshalling body error
-		req, errReq := http.NewRequest("PUT", "/api/v1/users/10001", http.NoBody)
-		require.NoError(t, errReq)
-		rctx := chi.NewRouteContext()
-		req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
-		rctx.URLParams.Add("id", "10001")
+		reqUsers, errReqUsers := http.NewRequest("PUT", "/api/v1/users/10001", http.NoBody)
+		require.NoError(t, errReqUsers)
+		chiCtx := chi.NewRouteContext()
+		reqUsers = reqUsers.WithContext(context.WithValue(reqUsers.Context(), chi.RouteCtxKey, chiCtx))
+		chiCtx.URLParams.Add("id", "10001")
 
 		tWriter := httptest.NewRecorder()
-		handler := http.HandlerFunc(testUserHandlers.userUpdateCtrl)
-		handler.ServeHTTP(tWriter, req)
+		handler = testUserHandlers.userUpdateCtrl
+		handler.ServeHTTP(tWriter, reqUsers)
 		assert.Equal(t, http.StatusInternalServerError, tWriter.Code)
 	}
 

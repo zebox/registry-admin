@@ -50,8 +50,8 @@ func (rh *registryHandlers) tokenAuth(w http.ResponseWriter, r *http.Request) {
 
 	user, errUser := rh.dataStore.GetUser(r.Context(), username)
 	if errUser != nil {
-		usr := store.User{ID: engine.AnonymousUserID}
-		rh.parseTokenRequestParams(w, r, usr)
+		anonUser := store.User{ID: engine.AnonymousUserID}
+		rh.parseTokenRequestParams(w, r, anonUser)
 		return
 	}
 

@@ -104,7 +104,7 @@ func FilterFromURLExtractor(requestedURL *url.URL) (filters QueryFilter, err err
 	if isRange || isSort {
 		rng, errRange := getRange(_range[0])
 		if errRange != nil {
-			return filters, err
+			return filters, errRange
 		}
 		filters.Range = rng
 		filters.Sort = getQuotedStrings(sort[0])[:2]
