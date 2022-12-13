@@ -50,7 +50,13 @@ func TestIntegrationMain(t *testing.T) {
 	done := make(chan struct{})
 	go func() {
 		<-done
-		e := syscall.Kill(syscall.Getpid(), syscall.SIGTERM)
+
+		// the code bellow doesn't run on Windows, because Unix signal not support in Windows
+		p, err := os.FindProcess(os.Getpid())
+		if err != nil {
+			require.NoError(t, err)
+		}
+		e := p.Signal(syscall.SIGTERM)
 		require.NoError(t, e)
 	}()
 
@@ -122,7 +128,13 @@ func TestMainWithSSLAndAuth(t *testing.T) {
 	done := make(chan struct{})
 	go func() {
 		<-done
-		e := syscall.Kill(syscall.Getpid(), syscall.SIGTERM)
+
+		// the code bellow doesn't run on Windows, because Unix signal not support in Windows
+		p, err := os.FindProcess(os.Getpid())
+		if err != nil {
+			require.NoError(t, err)
+		}
+		e := p.Signal(syscall.SIGTERM)
 		require.NoError(t, e)
 	}()
 

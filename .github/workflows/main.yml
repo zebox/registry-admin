@@ -2,10 +2,9 @@ name: build
 
 on:
   push:
-    branches: [ master ]
+    branches:
+    tags:
   pull_request:
-    # The branches below must be a subset of the branches above
-    branches: [ master ]
 
 jobs:
   build:
@@ -42,5 +41,35 @@ jobs:
         working-directory: app
         run: $GITHUB_WORKSPACE/golangci-lint run
 
+      - name: build and deploy master image dockerhub
+        if: ${{ github.ref == 'refs/heads/master' }}
+        env:
+            DOCKER_HUB_TOKEN: ${{ secrets.DOCKER_HUB_TOKEN }}
+            USERNAME: ${{ github.actor }}
+            GITHUB_SHA: ${{ github.sha}}
+            GITHUB_REF: ${{ github.ref}}
+        run: |
+            ref="$(echo ${GITHUB_REF} | cut -d'/' -f3)"
+            echo GITHUB_REF - $ref
+            echo ${DOCKER_HUB_TOKEN} | docker login -u ${USERNAME} --password-stdin
+            docker buildx build --push \
+                --build-arg CI=github --build-arg GITHUB_SHA=${GITHUB_SHA} --build-arg GIT_BRANCH=${ref} \
+                --platform linux/amd64,linux/arm/v7,linux/arm64 \
+                -t ${USERNAME}/reproxy:${ref} .
 
-
+      - name: deploy tagged (latest) to dockerhub
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
+        env:
+              DOCKER_HUB_TOKEN: ${{ secrets.DOCKER_HUB_TOKEN }}
+              USERNAME: ${{ github.actor }}
+              GITHUB_SHA: ${{ github.sha}}
+              GITHUB_REF: ${{ github.ref}}
+        run: |
+              ref="$(echo ${GITHUB_REF} | cut -d'/' -f3)"
+              echo GITHUB_REF - $ref
+              echo ${DOCKER_HUB_TOKEN} | docker login -u ${USERNAME} --password-stdin
+              docker buildx build --push \
+                  --build-arg CI=github --build-arg GITHUB_SHA=${GITHUB_SHA} --build-arg GIT_BRANCH=${ref} \
+                  --platform linux/amd64,linux/arm/v7,linux/arm64 \
+                  -t ${USERNAME}/registry-admin:${ref} -t ${USERNAME}/registry-admin:latest .
+    

@@ -1,0 +1,20 @@
+hostname: 127.0.0.1
+
+registry:
+  host: https://private-registry
+  ip: 192.168.12.69
+  port: 5000
+  auth_type: token
+  issuer: registry_token_issuer
+  service: container_registry
+  certs:
+    path: bin/certs
+    key: bin/certs/cert.key
+    public_key: bin/certs/cert.pub
+    ca_root: bin/certs/cert.crt
+
+store:
+  type: embed
+  admin_password: "super-secret"
+  embed:
+    path: bin/store.db
