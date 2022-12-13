@@ -28,12 +28,12 @@ const (
 	testPublicKeyFileName  = "test_public.key"
 )
 
-func Test_Main(t *testing.T) {
+func TestIntegrationMain(t *testing.T) {
 
-	tmpHtpasswd, err := ioutil.TempFile(os.TempDir(), "tmp")
+	tmpHtpasswd, err := os.CreateTemp(os.TempDir(), "tmp")
 	require.NoError(t, err)
 
-	port := 40000 + int(rand.Int31n(10000)) //nolint:gosec
+	port := 40000 + int(rand.Int31n(10000)) //nolint:gosec // used in test only
 	os.Args = []string{"test",
 		"--listen=*", "--port=" + strconv.Itoa(port),
 		"--auth.token-secret=super-secret", "--hostname=localhost", "--registry.host=http://test.registry-host.local",
@@ -91,7 +91,7 @@ func Test_Main(t *testing.T) {
 	}
 }
 
-func Test_MainWithSSLAndAuth(t *testing.T) {
+func TestMainWithSSLAndAuth(t *testing.T) {
 
 	tmpHtpasswd, errTmp := ioutil.TempFile(os.TempDir(), "tmp")
 	require.NoError(t, errTmp)
@@ -104,8 +104,8 @@ func Test_MainWithSSLAndAuth(t *testing.T) {
 	keyFile := dir + "/" + testPrivateKeyFileName
 	certFile := dir + "/CA_" + testPublicKeyFileName + ".crt"
 
-	port := 40000 + int(rand.Int31n(10000))    //nolint:gosec
-	sslPort := 40000 + int(rand.Int31n(10000)) //nolint:gosec
+	port := 40000 + int(rand.Int31n(10000))    //nolint:gosec // used in test only
+	sslPort := 40000 + int(rand.Int31n(10000)) //nolint:gosec // used in test only
 	os.Args = []string{"test",
 		"--listen=*", "--port=" + strconv.Itoa(port),
 		"--auth.token-secret=super-secret", "--hostname=localhost", "--registry.host=http://test.registry-host.local",
@@ -226,32 +226,31 @@ func initTestCertKeys(ctx context.Context, t *testing.T) (keys *gojwk.Keys, dir 
 	// add Subject Alternative Name for requested IP and Domain
 	// it prevents untasted error with client request
 	// https://oidref.com/2.5.29.17
-	ca.IPAddresses = append(ca.IPAddresses, net.ParseIP("127.0.0.1"))
-	ca.IPAddresses = append(ca.IPAddresses, net.ParseIP("::"))
+	ca.IPAddresses = append(ca.IPAddresses, net.ParseIP("127.0.0.1"), net.ParseIP("::"))
 	ca.DNSNames = append(ca.DNSNames, "localhost")
 
 	// check keys for exist in the storage provider path
 	if err = keys.Load(); err != nil {
 
 		// if keys doesn't exist or load fail then create new
-		if err = keys.Generate(); err != nil {
-			return nil, "", err
+		if errGenerate := keys.Generate(); errGenerate != nil {
+			return nil, "", errGenerate
 		}
 
 		// create CA certificate for created keys pair
-		if err = keys.CreateCAROOT(ca); err != nil {
-			return nil, "", err
+		if errCreate := keys.CreateCAROOT(ca); errCreate != nil {
+			return nil, "", errCreate
 		}
 
 		// if new keys pair created successfully save they to defined storage
-		if err = keys.Save(); err != nil {
-			return nil, "", err
+		if errSave := keys.Save(); errSave != nil {
+			return nil, "", errSave
 		}
 
 	}
 
-	if err = keys.CreateCAROOT(ca); err != nil {
-		return nil, "", err
+	if errCreate := keys.CreateCAROOT(ca); errCreate != nil {
+		return nil, "", errCreate
 	}
 
 	go func() {
