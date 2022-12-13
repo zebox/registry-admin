@@ -38,7 +38,7 @@ func TestDataService_SyncExistedRepositories(t *testing.T) {
 	defer cancel()
 
 	generator := rand.New(rand.NewSource(time.Now().UnixNano())) // #nosec
-	n := generator.Intn(55-10) + 10
+	n := generator.Intn(30-10) + 10
 	t.Logf("test data count is: %d | required repositories count: %d", n, n*n)
 	testSize := n
 

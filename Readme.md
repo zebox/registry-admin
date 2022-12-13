@@ -90,9 +90,9 @@ Latest stable version has :vX.Y.Z docker tag (with :latest alias) and the curren
 
 ### Configuration
 
-Each option can be provided in three forms: command line, environment key:value pair or config file (`json` or `yaml`).
+Each option can be provided in three forms: command line, environment key:value pair or config file (`json` or `yaml` formats).
 Command line options have a long form only, like --hostname=localhost. The environment key (name) listed 
-for each option as a suffix, i.e. [$LISTEN].
+for each option as a suffix, i.e. [$HOSTNAME].
 
 #### 1. RegistryAdmin
 At first, you need setup required parameters in compose file or using command line flags. Various configuration example 
@@ -122,7 +122,7 @@ docker container only ports `80` and `443` exposed to outside.
 - `issuer` - issuer name which checks inside registry, issuer name must be same at private docker registry and RegistryAdmin.
 - `service` - service name which defined in registry settings, service name must be same at private docker registry and RegistryAdmin.
 
-:exclamation: Keep a mind for `token` auth type required `certs` options must be defined.`
+:exclamation: Keep a mind for `token` auth type required `certs` options must be defined.
 
 - `registry.certs.path` - root directory where will be generated and stored certificates for token signing
 - `registry.certs.key` - path to private key for token signing
@@ -146,7 +146,7 @@ options isn't defined certificates will be created at a user home directory in s
 Supported registry V2 only. For use docker registry with token authentication you need configure it as a standalone 
 access control manager for resources hosted by other services which wish to authenticate and manage authorizations 
 using a separate access control manager. Fore more information about follow to the official 
-(documentations)[https://docs.docker.com/registry/spec/auth/token/]. 
+[documentations](https://docs.docker.com/registry/spec/auth/token/). 
 
 ### Registry settings (with basic auth, .htpasswd) - Not recommended
 `basic` option using `.htpasswd` file and doesn't support restrict access to specific repositories and required restart 
