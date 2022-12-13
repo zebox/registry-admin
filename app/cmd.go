@@ -187,10 +187,13 @@ func createRegistryConnection(opts RegistryGroup) (*registry.Registry, error) {
 	// select registry auth type
 	switch opts.AuthType {
 	case "basic":
-		registrySettings.AuthType = registry.Basic
+
 		if opts.Htpasswd == "" {
 			return nil, errors.New("htpasswd file path required for basic auth type")
 		}
+		registrySettings.AuthType = registry.Basic
+		registrySettings.HtpasswdPath = opts.Htpasswd
+
 	case "token":
 		registrySettings.Service = opts.Service
 		registrySettings.Issuer = opts.Issuer

@@ -46,7 +46,7 @@ func TestDataService_SyncExistedRepositories(t *testing.T) {
 		Registry: prepareRegistryMock(testSize),
 		Storage:  prepareStorageMock(repositoryStore),
 	}
-	testDS.RepositoriesMaintenance(ctx, 5)
+	testDS.RepositoriesMaintenance(ctx, 3)
 
 	require.NotNil(t, testDS)
 	t.Log("start main syncing")

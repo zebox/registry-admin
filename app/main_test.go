@@ -11,7 +11,6 @@ import (
 	"github.com/zebox/gojwk"
 	"github.com/zebox/gojwk/storage"
 	"io"
-	"io/ioutil"
 	"math/big"
 	"math/rand"
 	"net"
@@ -93,7 +92,7 @@ func TestIntegrationMain(t *testing.T) {
 
 func TestMainWithSSLAndAuth(t *testing.T) {
 
-	tmpHtpasswd, errTmp := ioutil.TempFile(os.TempDir(), "tmp")
+	tmpHtpasswd, errTmp := os.CreateTemp(os.TempDir(), "tmp")
 	require.NoError(t, errTmp)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -150,7 +149,7 @@ func TestMainWithSSLAndAuth(t *testing.T) {
 
 		// allow self-signed certificate
 		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, //nolint:gosec
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, //nolint:gosec // using in test only
 		},
 	}
 
@@ -195,7 +194,7 @@ func TestMainWithSSLAndAuth(t *testing.T) {
 // initTestCertKeys will create self-signed test keys pair
 func initTestCertKeys(ctx context.Context, t *testing.T) (keys *gojwk.Keys, dir string, err error) {
 
-	dir, err = ioutil.TempDir(os.TempDir(), "tk")
+	dir, err = os.MkdirTemp(os.TempDir(), "tk")
 	if err != nil {
 		return nil, "", err
 	}
@@ -267,7 +266,7 @@ func waitForHTTPServerStart(port int) {
 
 		// allow self-signed certificate
 		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, //nolint:gosec
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, //nolint:gosec // using in test only
 		},
 	}
 	for i := 0; i < 100; i++ {
