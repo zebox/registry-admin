@@ -39,7 +39,7 @@ const russianMessages: TranslationMessages = {
             move_up: 'Переместить вверх',
             move_down: 'Переместить вниз',
             open: 'Открыть',
-            toggle_theme:"Переключить тему"
+            toggle_theme: "Переключить тему"
         },
         boolean: {
             true: 'Да',
@@ -82,6 +82,7 @@ const russianMessages: TranslationMessages = {
         message: {
             about: "Справка",
             are_you_sure: "Вы уверены?",
+            clear_array_input: 'Вы уверены, что хотите очистить вест список?',
             bulk_delete_content:
                 "Вы уверены, что хотите удалить %{name}? |||| Вы уверены, что хотите удалить объекты, кол-вом %{smart_count} ? |||| Вы уверены, что хотите удалить объекты, кол-вом %{smart_count} ?",
             bulk_delete_title: "Удалить %{name} |||| Удалить %{smart_count} %{name} |||| Удалить %{smart_count} %{name}",
