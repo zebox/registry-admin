@@ -4,11 +4,29 @@ on:
   push:
     branches:
     tags:
+    paths:
+      - ".github/workflows/ci-build.yml"
+      - "app/**"
+      - "frontend/**"
+      - ".dockerignore"
+      - "Dockerfile"
+      - "!**.md"
+
   pull_request:
+    paths:
+      - ".github/workflows/ci-build.yml"
+      - "app/**"
+      - "frontend/**"
+      - ".dockerignore"
+      - "Dockerfile"
+      - "!**.md"
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [ 16.15.1 ]
     steps:
       - name: disable and stop mono-xsp4.service (wtf?)
         run: |
@@ -24,6 +42,7 @@ jobs:
       - name: checkout
         uses: actions/checkout@v2
 
+      # test stage
       - name: build and test
         working-directory: app
         run: |
@@ -41,6 +60,39 @@ jobs:
         working-directory: app
         run: $GITHUB_WORKSPACE/golangci-lint run
 
+
+      # build frontend stage
+      - name: Install node
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Install Yarn
+        uses: borales/actions-yarn@v4
+        id: yarn-install
+
+      - name: Get yarn store directory
+        id: yarn-cache
+        run: |
+          echo "::set-output name=yarn_cache_dir::$(yarn store path)"
+
+      - name: Get yarn cache directory path
+      - uses: actions/cache@v3
+        with:
+          path: ${{ steps.yarn-cache.outputs.yarn_cache_dir }}
+          key: ${{ runner.os }}-yarn-store-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-store-
+
+      - name: Install dependencies
+        run: yarn install
+        working-directory: ./frontend
+
+      - name: Install dependencies
+        run: yarn build
+        working-directory: ./frontend
+
+      # build backend stage
       - name: set up QEMU
         uses: docker/setup-qemu-action@v1
 
@@ -51,17 +103,17 @@ jobs:
       - name: available platforms
         run: echo ${{ steps.buildx.outputs.platforms }}
 
-      - name: build and deploy master image dockerhub
+      - name: build and deploy master image to dockerhub
         if: ${{ github.ref == 'refs/heads/master' }}
         env:
-            DOCKER_HUB_TOKEN: ${{ secrets.DOCKER_HUB_TOKEN }}
-            USERNAME: ${{ github.actor }}
-            GITHUB_SHA: ${{ github.sha}}
-            GITHUB_REF: ${{ github.ref}}
+          DOCKER_HUB_TOKEN: ${{ secrets.DOCKER_HUB_TOKEN }}
+          USERNAME: ${{ github.actor }}
+          GITHUB_SHA: ${{ github.sha}}
+          GITHUB_REF: ${{ github.ref}}
         run: |
-            ref="$(echo ${GITHUB_REF} | cut -d'/' -f3)"
-            echo GITHUB_REF - $ref
-            echo ${DOCKER_HUB_TOKEN} | docker login -u ${USERNAME} --password-stdin
+          ref="$(echo ${GITHUB_REF} | cut -d'/' -f3)"
+          echo GITHUB_REF - $ref
+          echo ${DOCKER_HUB_TOKEN} | docker login -u ${USERNAME} --password-stdin
             docker buildx build --push \
                 --build-arg CI=github --build-arg GITHUB_SHA=${GITHUB_SHA} --build-arg GIT_BRANCH=${ref} \
                 --platform linux/amd64,linux/arm/v7,linux/arm64 \

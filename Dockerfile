@@ -4,7 +4,12 @@ FROM node:16-alpine as frontend
 ADD . /build
 WORKDIR /build/frontend
 
-RUN yarn install && yarn build
+RUN \
+    if [ -z "$CI" ] ; then \
+    yarn install && yarn build; \
+    else \
+    echo "front end build in CI" && ls -lh; \
+    fi
 
 # build the backend registry-admin
 FROM golang:1.19-alpine as backend
