@@ -73,7 +73,7 @@ jobs:
           echo "::set-output name=yarn_cache_dir::$(yarn store path)"
 
       - name: Get yarn cache directory path
-      - uses: actions/cache@v3
+        uses: actions/cache@v3
         with:
           path: ${{ steps.yarn-cache.outputs.yarn_cache_dir }}
           key: ${{ runner.os }}-yarn-store-${{ hashFiles('**/yarn.lock') }}
