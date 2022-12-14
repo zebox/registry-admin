@@ -64,10 +64,10 @@ jobs:
       # build frontend stage
       - name: Install node
         uses: actions/setup-node@v3
-        working-directory: ./frontend
         with:
           node-version: ${{ matrix.node }}
           cache: 'yarn'
+          cache-dependency-path: "./frontend/yarn.lock"
 
       - name: Install project dependencies
         working-directory: ./frontend
