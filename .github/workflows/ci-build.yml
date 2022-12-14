@@ -28,7 +28,7 @@ jobs:
       matrix:
         node: [ 16.15.1 ]
     steps:
-      - name: disable and stop mono-xsp4.service (wtf?)
+      - name: disable and stop mono-xsp4.service
         run: |
           sudo systemctl stop mono-xsp4.service || true
           sudo systemctl disable mono-xsp4.service || true
@@ -66,35 +66,18 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node }}
+          cache: 'yarn'
 
-      - name: Install Yarn
-        uses: borales/actions-yarn@v4
-        with:
-          cmd: --version
-
-
-      - name: Get yarn store directory
-        id: yarn-cache
-        run: |
-          echo "::set-output name=yarn_cache_dir::$(yarn store path)"
-
-      - name: Get yarn cache directory path
-        uses: actions/cache@v3
-        with:
-          path: ${{ steps.yarn-cache.outputs.yarn_cache_dir }}
-          key: ${{ runner.os }}-yarn-store-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-store-
-
-      - name: Install dependencies
-        run: |
-          yarn install
+      - name: Install project dependencies
         working-directory: ./frontend
+        run: |
+          yarn --prefer-offline
 
       - name: Build frontend
+        working-directory: ./frontend
         run: |
           yarn build
-        working-directory: ./frontend
+       
 
       # build backend stage
       - name: set up QEMU

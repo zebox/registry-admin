@@ -4,12 +4,10 @@ FROM node:16-alpine as frontend
 ADD . /build
 WORKDIR /build/frontend
 
+RUN ls -la
 RUN \
-    if [ -z "$CI" ] ; then \
-    yarn install && yarn build; \
-    else \
-    echo "front end build in CI" && ls -lh; \
-    fi
+    if [ -z "$CI" ] ; then yarn && yarn build; \
+    else echo "frontend build in CI" && ls -lh; fi
 
 # build the backend registry-admin
 FROM golang:1.19-alpine as backend
@@ -33,7 +31,7 @@ RUN \
     echo "runs outside of CI" && version=$(git rev-parse --abbrev-ref HEAD)-$(git log -1 --format=%h)-$(date +%Y%m%dT%H:%M:%S); \
     else version=${GIT_BRANCH}-${GITHUB_SHA:0:7}-$(date +%Y%m%dT%H:%M:%S); fi && \
     echo "version=$version" && \
-    cd app && go mod vendor &&  go build -o /build/registry-admin -ldflags "-X main.version=${version} -s -w"
+    cd app && go build -o /build/registry-admin -ldflags "-X main.version=${version} -s -w"
 
 
 FROM umputun/baseimage:app-v1.9.2
