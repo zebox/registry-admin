@@ -64,6 +64,7 @@ jobs:
       # build frontend stage
       - name: Install node
         uses: actions/setup-node@v3
+        working-directory: ./frontend
         with:
           node-version: ${{ matrix.node }}
           cache: 'yarn'
@@ -81,11 +82,11 @@ jobs:
 
       # build backend stage
       - name: set up QEMU
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v2
 
       - name: set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v2
 
       - name: available platforms
         run: echo ${{ steps.buildx.outputs.platforms }}
@@ -103,7 +104,7 @@ jobs:
           echo ${DOCKER_HUB_TOKEN} | docker login -u ${USERNAME} --password-stdin
             docker buildx build --push \
                 --build-arg CI=github --build-arg GITHUB_SHA=${GITHUB_SHA} --build-arg GIT_BRANCH=${ref} \
-                --platform linux/amd64,linux/arm/v7,linux/arm64 \
+                --platform linux/amd64 \
                 -t ${USERNAME}/reproxy:${ref} .
 
       - name: deploy tagged (latest) to dockerhub
