@@ -69,6 +69,9 @@ jobs:
 
       - name: Install Yarn
         uses: borales/actions-yarn@v4
+        with:
+          cmd: --version
+
 
       - name: Get yarn store directory
         id: yarn-cache
