@@ -4,16 +4,8 @@ on:
   push:
     branches:
     tags:
-    paths:
-      - "app/**"
-      - "frontend/**"
-      - "!**.md"
 
   pull_request:
-    paths:
-      - "app/**"
-      - "frontend/**"
-      - "!**.md"
 
 jobs:
   build:
