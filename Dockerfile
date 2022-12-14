@@ -1,13 +1,16 @@
 # build the web UI
 FROM node:16-alpine as frontend
 
+ARG CI
+
 ADD . /build
 WORKDIR /build/frontend
 
 RUN ls -la
 RUN \
-    if [ -z "$CI" ] ; then yarn && yarn build; \
-    else echo "frontend build in CI" && ls -lh; fi
+    if [ -z "$CI" ] ; then \
+    echo "build frontend outside of CI" && yarn && yarn build; \
+    else echo "build frontend in CI" && ls -la build; fi
 
 # build the backend registry-admin
 FROM golang:1.19-alpine as backend
