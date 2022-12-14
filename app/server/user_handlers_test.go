@@ -30,7 +30,7 @@ func Test_userCreateCtrl(t *testing.T) {
 	testUserHandlers.l = log.Default()
 	testUserHandlers.dataStore = prepareUserMock(t)
 	testUserHandlers.registryService = prepareRegistryMock(t)
-	testUserHandlers.userAdapter = newUsersRegistryAdapter(context.Background(), engine.QueryFilter{}, testUserHandlers.dataStore.FindUsers)
+	testUserHandlers.userAdapter = newUsersRegistryAdapter(context.Background(), engine.QueryFilter{})
 
 	user := store.User{
 		Login:    "test_login",
@@ -132,7 +132,7 @@ func Test_userUpdateCtrl(t *testing.T) {
 	testUserHandlers.dataStore = prepareUserMock(t)
 	testUserHandlers.registryService = prepareRegistryMock(t)
 	testUserHandlers.l = log.Default()
-	testUserHandlers.userAdapter = newUsersRegistryAdapter(context.Background(), engine.QueryFilter{}, testUserHandlers.dataStore.FindUsers)
+	testUserHandlers.userAdapter = newUsersRegistryAdapter(context.Background(), engine.QueryFilter{})
 
 	var user = store.User{
 		ID:          10001,
@@ -276,7 +276,7 @@ func Test_userDeleteCtr(t *testing.T) {
 	testUserHandlers.dataStore = prepareUserMock(t)
 	testUserHandlers.registryService = prepareRegistryMock(t)
 	testUserHandlers.l = log.Default()
-	testUserHandlers.userAdapter = newUsersRegistryAdapter(context.Background(), engine.QueryFilter{}, testUserHandlers.dataStore.FindUsers)
+	testUserHandlers.userAdapter = newUsersRegistryAdapter(context.Background(), engine.QueryFilter{})
 
 	req, errReq := http.NewRequest("GET", `/api/v1/users?filter={"ids":[10001]}`, http.NoBody)
 	require.NoError(t, errReq)

@@ -554,7 +554,11 @@ func prepareRegistryMock(_ *testing.T) *registryInterfaceMock {
 				return errors.New("users list function should be defined")
 			}
 
-			users, err := usersFn.Users()
+			testParseHtpasswordFn := func() (map[string][]byte, error) {
+				return map[string][]byte{"test": []byte("some-password")}, nil
+			}
+
+			users, err := usersFn.Users(testParseHtpasswordFn)
 			if err != nil {
 				return errors.New("users not found")
 			}

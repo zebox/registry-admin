@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/zebox/registry-admin/app/registry"
 	"net/http"
 	"strconv"
 
@@ -27,26 +26,28 @@ type userHandlers struct {
 type usersRegistryAdapter struct {
 	ctx     context.Context
 	filters engine.QueryFilter
-	usersFn registry.UsersFn
 }
 
-func newUsersRegistryAdapter(ctx context.Context, filters engine.QueryFilter, usersFunc registry.UsersFn) *usersRegistryAdapter {
+func newUsersRegistryAdapter(ctx context.Context, filters engine.QueryFilter) *usersRegistryAdapter {
 	return &usersRegistryAdapter{
 		ctx:     ctx,
 		filters: filters,
-		usersFn: usersFunc,
 	}
 }
 
-func (ura *usersRegistryAdapter) Users() ([]store.User, error) {
-	result, err := ura.usersFn(ura.ctx, ura.filters)
+func (ura *usersRegistryAdapter) Users(getHtUsersFn func() (map[string][]byte, error)) ([]store.User, error) {
+	result, err := getHtUsersFn()
 	if err != nil {
 		return nil, err
 	}
 
 	var users = make([]store.User, 0)
-	for _, u := range result.Data {
-		users = append(users, u.(store.User))
+	for user, passwd := range result {
+		user := store.User{
+			Name:     user,
+			Password: string(passwd),
+		}
+		users = append(users, user)
 	}
 
 	if len(users) > 0 {
@@ -158,7 +159,7 @@ func (u *userHandlers) userUpdateCtrl(w http.ResponseWriter, r *http.Request) { 
 		Data:    user,
 	})
 
-	if err = u.registryService.UpdateHtpasswd(newUsersRegistryAdapter(r.Context(), engine.QueryFilter{}, u.dataStore.FindUsers)); err != nil {
+	if err = u.registryService.UpdateHtpasswd(u.userAdapter); err != nil {
 		u.l.Logf("failed to update htpasswd: %v", err)
 	}
 }

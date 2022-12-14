@@ -266,7 +266,7 @@ func (r *Registry) UpdateHtpasswd(usersFn FetchUsers) error {
 	if usersFn == nil {
 		return errors.New("can't fetch users list because userFn should be defined")
 	}
-	users, err := usersFn.Users()
+	users, err := usersFn.Users(r.htpasswd.parseHTPasswd)
 	if err != nil {
 		return fmt.Errorf("can't fetch users list: %v", err)
 	}
