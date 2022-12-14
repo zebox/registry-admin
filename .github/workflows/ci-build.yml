@@ -67,7 +67,7 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
           cache: 'yarn'
-          cache-dependency-path: "./frontend/yarn.lock"
+          cache-dependency-path: "frontend/yarn.lock"
 
       - name: Install project dependencies
         working-directory: ./frontend
