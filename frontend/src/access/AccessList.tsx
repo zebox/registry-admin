@@ -10,7 +10,6 @@ import {
     useTranslate,
     usePermissions,
     useRecordContext,
-    useListContext,
     FilterLiveSearch,
     FilterList,
     FilterListItem,
