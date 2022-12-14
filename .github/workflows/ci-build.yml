@@ -67,6 +67,9 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
 
+      - name: Install dependencies
+        uses: borales/actions-yarn@v4
+
       - name: Get yarn store directory
         id: yarn-cache
         run: |
@@ -81,7 +84,6 @@ jobs:
             ${{ runner.os }}-yarn-store-
 
       - name: Install dependencies
-        uses: borales/actions-yarn@v4
         run: |
           yarn install
         working-directory: ./frontend
