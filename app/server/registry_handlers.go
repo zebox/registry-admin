@@ -31,12 +31,6 @@ type registryHandlers struct {
 	dataService     dataServiceInterface
 }
 
-// registryErrors when registry response is failure, covered in detail in their relevant sections, are reported as part of 4xx responses, in a json response body.
-// One or more errors will be returned in this format
-type registryErrors struct {
-	Errors []registry.APIError `json:"errors"`
-}
-
 func (rh *registryHandlers) tokenAuth(w http.ResponseWriter, r *http.Request) {
 
 	username, password, ok := r.BasicAuth()
@@ -57,7 +51,11 @@ func (rh *registryHandlers) tokenAuth(w http.ResponseWriter, r *http.Request) {
 
 	if !store.ComparePassword(user.Password, password) || user.Disabled {
 		rh.l.Logf("wrong user credentials or account disabled: %s", user.Login)
-		w.WriteHeader(http.StatusForbidden)
+		renderJSONWithStatus(
+			w,
+			registryResponseError(registry.APIError{Code: "DENIED", Message: "access denied"}),
+			http.StatusForbidden,
+		)
 		return
 	}
 
@@ -179,6 +177,13 @@ func (rh *registryHandlers) parseTokenRequestParams(w http.ResponseWriter, r *ht
 	queryParams, err := url.ParseQuery(r.URL.RawQuery)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
+		renderJSONWithStatus(
+			w,
+			registryResponseError(registry.APIError{
+				Code:    "UNSUPPORTED",
+				Message: " failed to parse request params",
+			}),
+			http.StatusBadRequest)
 		return
 	}
 
@@ -189,7 +194,14 @@ func (rh *registryHandlers) parseTokenRequestParams(w http.ResponseWriter, r *ht
 		// skips account scope check for anonymous users only
 		if len(scopeParts) != 3 || (user.ID != engine.AnonymousUserID && queryParams.Get("account") != user.Login) {
 			rh.l.Logf("[ERROR] wrong scope or user and account doesn't match: %s :user %s", r.RequestURI, user.Login)
-			w.WriteHeader(http.StatusBadRequest)
+
+			renderJSONWithStatus(
+				w,
+				registryResponseError(registry.APIError{
+					Code:    "UNSUPPORTED",
+					Message: fmt.Sprintf("wrong scope or user and account doesn't match: %s :user %s", r.RequestURI, user.Login),
+				}),
+				http.StatusBadRequest)
 			return
 		}
 
@@ -206,27 +218,33 @@ func (rh *registryHandlers) parseTokenRequestParams(w http.ResponseWriter, r *ht
 			if errExpireConvert != nil {
 				errValue := fmt.Errorf("expire value must be a number: %v", errExpireConvert)
 				rh.l.Logf("[ERROR] %v", errValue)
-				renderJSONWithStatus(w, responseMessage{Message: errValue.Error()}, http.StatusBadRequest)
+				renderJSONWithStatus(
+					w,
+					registryResponseError(registry.APIError{Code: "UNSUPPORTED", Message: errValue.Error()}),
+					http.StatusBadRequest)
 				return
 			}
 			tokenRequest.ExpireTime = expireValue
 		}
 
-		// define instance for error response
-		regErrs := registryErrors{Errors: []registry.APIError{}}
-
 		if allow, errCheck := rh.checkUserAccess(r.Context(), user, tokenRequest); !allow || errCheck != nil {
 			errMsg := fmt.Errorf("[ERROR] access to registry resource not allowed for user %s: %v", user.Login, errCheck)
-			regErrs.Errors = append(regErrs.Errors, registry.APIError{Code: "", Message: errMsg.Error()})
+
 			rh.l.Logf("%v", errMsg)
-			renderJSONWithStatus(w, regErrs, http.StatusForbidden)
+			renderJSONWithStatus(
+				w,
+				registryResponseError(registry.APIError{Code: "", Message: errMsg.Error()}),
+				http.StatusForbidden)
 			return
 		}
 
 		tokenString, errToken := rh.registryService.Token(tokenRequest)
 		if errToken != nil {
 			rh.l.Logf("[ERROR] failed to issue token for request: %s", r.RequestURI)
-			w.WriteHeader(http.StatusInternalServerError)
+			renderJSONWithStatus(
+				w,
+				registryResponseError(registry.APIError{Code: "UNSUPPORTED", Message: "access denied"}),
+				http.StatusInternalServerError)
 			return
 		}
 
@@ -238,11 +256,16 @@ func (rh *registryHandlers) parseTokenRequestParams(w http.ResponseWriter, r *ht
 	}
 
 	// processing docker login requests
-	if queryParams.Get("account") != "" && queryParams.Get("client_id") != "" {
+	if queryParams.Get("account") != "" && queryParams.Get("client_id") != "" && user.ID != engine.AnonymousUserID {
 		userToken, errLogin := rh.registryService.Login(user)
 		if errLogin != nil || queryParams.Get("account") != user.Login {
 			rh.l.Logf("[ERROR] failed to processing docker login request: %v", errLogin)
 			w.WriteHeader(http.StatusInternalServerError)
+			renderJSONWithStatus(
+				w,
+				registryResponseError(registry.APIError{Code: "UNAUTHORIZED", Message: "access denied", Detail: "access not allowed for user"}),
+				http.StatusInternalServerError,
+			)
 			return
 		}
 
@@ -253,7 +276,12 @@ func (rh *registryHandlers) parseTokenRequestParams(w http.ResponseWriter, r *ht
 		return
 	}
 
-	w.WriteHeader(http.StatusNoContent)
+	renderJSONWithStatus(
+		w,
+		registryResponseError(registry.APIError{Code: "UNAUTHORIZED", Message: "access denied", Detail: "bad request for resource access"}),
+		http.StatusForbidden,
+	)
+
 }
 
 func (rh *registryHandlers) checkUserAccess(ctx context.Context, user store.User, tokenRequest registry.TokenRequest) (bool, error) {
@@ -292,4 +320,15 @@ func (rh *registryHandlers) checkUserAccess(ctx context.Context, user store.User
 
 	// if at least one item exist it's mean that access for user exist
 	return access.Total > 0, nil
+}
+
+// registryErrors when registry response is failure, covered in detail in their relevant sections, are reported as part of 4xx responses, in a json response body.
+// One or more errors will be returned in this format
+type registryErrors struct {
+	Errors []registry.APIError `json:"errors"`
+}
+
+func registryResponseError(err ...registry.APIError) (errs registryErrors) {
+	errs.Errors = append(errs.Errors, err...)
+	return errs
 }

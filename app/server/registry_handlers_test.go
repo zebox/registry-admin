@@ -43,6 +43,13 @@ func TestRegistryHandlers_tokenAuth(t *testing.T) {
 		expectedStatus  int
 	}{
 		{
+			name:           "test with bad query params",
+			login:          "",
+			password:       "",
+			query:          "?account;container_registry",
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
 			name:           "test with access for valid user to public repositories (shared for all users)",
 			login:          "",
 			password:       "",
@@ -53,7 +60,7 @@ func TestRegistryHandlers_tokenAuth(t *testing.T) {
 			name:           "test with empty password without query params",
 			login:          "test",
 			password:       "",
-			expectedStatus: http.StatusNoContent,
+			expectedStatus: http.StatusForbidden,
 		},
 		{
 
@@ -67,7 +74,7 @@ func TestRegistryHandlers_tokenAuth(t *testing.T) {
 			name:           "test with unknown user",
 			login:          "no_foo",
 			password:       "foo_password",
-			expectedStatus: http.StatusNoContent,
+			expectedStatus: http.StatusForbidden,
 		},
 		{
 			name:           "test with bad user password",
@@ -83,10 +90,10 @@ func TestRegistryHandlers_tokenAuth(t *testing.T) {
 			expectedStatus: http.StatusForbidden,
 		},
 		{
-			name:           "test with no content",
+			name:           "test without params",
 			login:          "bar",
 			password:       "bar_password",
-			expectedStatus: http.StatusNoContent,
+			expectedStatus: http.StatusForbidden,
 		},
 		{
 			name:           "test with login params",

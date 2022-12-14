@@ -406,7 +406,7 @@ func (r *Registry) Manifest(ctx context.Context, repoName, tag string) (Manifest
 
 	resp, err := r.newHTTPRequest(ctx, baseURL, "GET", nil)
 	if err != nil {
-		return manifest, makeAPIError("failed to make request for docker registry manifest", err.Error())
+		return manifest, createAPIError("failed to make request for docker registry manifest", err.Error())
 	}
 
 	if resp != nil {
@@ -419,18 +419,18 @@ func (r *Registry) Manifest(ctx context.Context, repoName, tag string) (Manifest
 		if resp != nil {
 			err = json.NewDecoder(resp.Body).Decode(&apiError)
 			if err != nil {
-				return manifest, makeAPIError("failed to parse request body with manifest fetch error", err.Error())
+				return manifest, createAPIError("failed to parse request body with manifest fetch error", err.Error())
 			}
 		}
 		if resp.StatusCode == http.StatusNotFound {
-			return manifest, makeAPIError("resource not found", "")
+			return manifest, createAPIError("resource not found", "")
 		}
 		return manifest, apiError
 	}
 
 	err = json.NewDecoder(resp.Body).Decode(&manifest)
 	if err != nil {
-		return manifest, makeAPIError("failed to parse request body with manifest data", err.Error())
+		return manifest, createAPIError("failed to parse request body with manifest data", err.Error())
 	}
 
 	manifest.calculateCompressedImageSize()
@@ -447,7 +447,7 @@ func (r *Registry) DeleteTag(ctx context.Context, repoName, digest string) error
 
 	resp, err := r.newHTTPRequest(ctx, baseURL, "DELETE", nil)
 	if err != nil {
-		return makeAPIError("failed to make request for delete docker registry manifest", err.Error())
+		return createAPIError("failed to make request for delete docker registry manifest", err.Error())
 	}
 
 	if resp != nil {
@@ -460,11 +460,11 @@ func (r *Registry) DeleteTag(ctx context.Context, repoName, digest string) error
 		if resp != nil {
 			err = json.NewDecoder(resp.Body).Decode(&apiError)
 			if err != nil {
-				return makeAPIError("failed to parse request body when manifest delete", err.Error())
+				return createAPIError("failed to parse request body when manifest delete", err.Error())
 			}
 		}
 		if resp.StatusCode == http.StatusNotFound {
-			return makeAPIError("resource not found", repoName)
+			return createAPIError("resource not found", repoName)
 		}
 		return apiError
 	}
@@ -649,9 +649,9 @@ func (ae APIError) Error() string {
 	return fmt.Sprintf("%s: %s: %v", ae.Code, ae.Message, ae.Detail)
 }
 
-func makeAPIError(msg, detail string) *APIError {
+func createAPIError(msg, detail string) *APIError {
 	return &APIError{
-		Code:    "-1",
+		Code:    "UNAVAILABLE",
 		Message: msg,
 		Detail:  map[string]string{"error": detail},
 	}
