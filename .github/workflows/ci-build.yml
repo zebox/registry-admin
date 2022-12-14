@@ -67,7 +67,7 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
 
-      - name: Install dependencies
+      - name: Install Yarn
         uses: borales/actions-yarn@v4
 
       - name: Get yarn store directory
