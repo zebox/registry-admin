@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/zebox/registry-admin/app/registry"
 	"net/http"
 	"strconv"
 
@@ -35,7 +36,7 @@ func newUsersRegistryAdapter(ctx context.Context, filters engine.QueryFilter) *u
 	}
 }
 
-func (ura *usersRegistryAdapter) Users(getHtUsersFn func() (map[string][]byte, error)) ([]store.User, error) {
+func (ura *usersRegistryAdapter) Users(getHtUsersFn registry.UsersFn) ([]store.User, error) {
 	result, err := getHtUsersFn()
 	if err != nil {
 		return nil, err
@@ -43,11 +44,11 @@ func (ura *usersRegistryAdapter) Users(getHtUsersFn func() (map[string][]byte, e
 
 	var users = make([]store.User, 0)
 	for user, passwd := range result {
-		user := store.User{
+		u := store.User{
 			Name:     user,
 			Password: string(passwd),
 		}
-		users = append(users, user)
+		users = append(users, u)
 	}
 
 	if len(users) > 0 {

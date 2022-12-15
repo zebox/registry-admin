@@ -9,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/zebox/registry-admin/app/store"
-	"github.com/zebox/registry-admin/app/store/engine"
 	"io"
 	"net/http"
 	"net/url"
@@ -37,7 +36,7 @@ const (
 type authType int8
 
 // UsersFn uses in adapter for bind FindUsers func in store engine with registry instance
-type UsersFn func(ctx context.Context, filter engine.QueryFilter) (users engine.ListResponse, err error)
+type UsersFn func() (map[string][]byte, error)
 
 const (
 	// Basic allow access using auth basic credentials

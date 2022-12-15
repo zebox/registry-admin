@@ -23,7 +23,7 @@ type htpasswd struct {
 
 // FetchUsers interface allows get users list from store engine in registry instance
 type FetchUsers interface {
-	Users(func() (map[string][]byte, error)) ([]store.User, error)
+	Users(fn UsersFn) ([]store.User, error)
 }
 
 // update will call every time when access list will change
