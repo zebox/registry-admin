@@ -443,7 +443,7 @@ func prepareUserMock(t *testing.T) *engine.InterfaceMock {
 			return store.User{}, errors.New("user not found")
 		},
 
-		FindUsersFunc: func(ctx context.Context, filter engine.QueryFilter) (engine.ListResponse, error) {
+		FindUsersFunc: func(ctx context.Context, filter engine.QueryFilter, withPassword bool) (engine.ListResponse, error) {
 
 			result := engine.ListResponse{}
 

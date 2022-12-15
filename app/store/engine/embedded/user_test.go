@@ -177,13 +177,14 @@ func TestEmbedded_FindUsers(t *testing.T) {
 		Sort:    []string{"id", "asc"},
 	}
 
-	result, err := db.FindUsers(ctx, filter)
+	result, err := db.FindUsers(ctx, filter, true)
 	assert.NoError(t, err)
 	assert.Equal(t, int64(2), result.Total)
 	assert.Equal(t, 2, len(result.Data))
 
 	for _, user := range result.Data {
 		u := user.(store.User)
+		assert.NotEmpty(t, u.Password)
 		if u.Name != "baz" && u.Name != "bar" {
 			assert.NoError(t, errors.New("name is expected"))
 		}
@@ -191,7 +192,7 @@ func TestEmbedded_FindUsers(t *testing.T) {
 
 	// with empty search string and  strong field condition
 	filter.Filters = map[string]interface{}{"q": "", "disabled": 1, "login": "foo"}
-	result, err = db.FindUsers(ctx, filter)
+	result, err = db.FindUsers(ctx, filter, false)
 	assert.NoError(t, err)
 	assert.Equal(t, result.Total, int64(1))
 	require.Equal(t, len(result.Data), 1)
@@ -203,7 +204,7 @@ func TestEmbedded_FindUsers(t *testing.T) {
 	filter.Filters = map[string]interface{}{"q": ""}
 	filter.Range = [2]int64{0, 0} // reset range
 
-	result, err = db.FindUsers(ctx, filter)
+	result, err = db.FindUsers(ctx, filter, false)
 	assert.NoError(t, err)
 
 	// total is 5 (five) because default user added when DB init
@@ -214,7 +215,7 @@ func TestEmbedded_FindUsers(t *testing.T) {
 	filter.Filters = map[string]interface{}{"q": "", "role LIKE": "%%%%"}
 	filter.Range = [2]int64{0, 0} // reset range
 
-	result, err = db.FindUsers(ctx, filter)
+	result, err = db.FindUsers(ctx, filter, false)
 	assert.NoError(t, err)
 	assert.Equal(t, 0, len(result.Data))
 
@@ -222,7 +223,7 @@ func TestEmbedded_FindUsers(t *testing.T) {
 	filter.Filters = map[string]interface{}{"q": "", "role LIKE '%%') --": "user"}
 	filter.Range = [2]int64{0, 0} // reset range
 
-	result, err = db.FindUsers(ctx, filter)
+	result, err = db.FindUsers(ctx, filter, false)
 	assert.NoError(t, err)
 	assert.Equal(t, 1, len(result.Data))
 
@@ -231,7 +232,7 @@ func TestEmbedded_FindUsers(t *testing.T) {
 	err = badConn.Connect(ctx)
 	require.NoError(t, err)
 	require.NoError(t, badConn.Close(ctx))
-	_, err = badConn.FindUsers(ctx, filter)
+	_, err = badConn.FindUsers(ctx, filter, false)
 	assert.Error(t, err)
 
 	assert.NoError(t, db.db.Close())

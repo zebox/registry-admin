@@ -39,7 +39,7 @@ func newUsersRegistryAdapter(ctx context.Context, filters engine.QueryFilter, us
 }
 
 func (ura *usersRegistryAdapter) Users() ([]store.User, error) {
-	result, err := ura.usersFn(ura.ctx, ura.filters)
+	result, err := ura.usersFn(ura.ctx, ura.filters, true)
 	if err != nil {
 		return nil, err
 	}
@@ -117,7 +117,7 @@ func (u *userHandlers) userFindCtrl(w http.ResponseWriter, r *http.Request) {
 		SendErrorJSON(w, r, u.l, http.StatusInternalServerError, err, "failed to parse URL parameters for make query filter")
 		return
 	}
-	result, err := u.dataStore.FindUsers(r.Context(), filter)
+	result, err := u.dataStore.FindUsers(r.Context(), filter, true)
 	if err != nil {
 		SendErrorJSON(w, r, u.l, http.StatusInternalServerError, err, "failed to find users")
 		return
@@ -177,8 +177,8 @@ func (u *userHandlers) userDeleteCtrl(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = u.dataStore.DeleteAccess(r.Context(), "owner_id", id); err != nil {
-		SendErrorJSON(w, r, u.l, http.StatusInternalServerError, err, fmt.Sprintf("failed to delete accesses for deleted user with id - '%d'", id))
+	if err = u.dataStore.DeleteAccess(r.Context(), "owner_id", id); err != nil && err != engine.ErrNotFound {
+		SendErrorJSON(w, r, u.l, http.StatusInternalServerError, err, fmt.Sprintf("failed to delete accesses for deleted user with id - %q", id))
 		return
 	}
 

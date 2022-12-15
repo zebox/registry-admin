@@ -648,7 +648,7 @@ func prepareTestStorage(t *testing.T) *engine.InterfaceMock {
 			return nil
 		},
 
-		FindUsersFunc: func(ctx context.Context, filter engine.QueryFilter) (engine.ListResponse, error) {
+		FindUsersFunc: func(ctx context.Context, filter engine.QueryFilter, withPassword bool) (engine.ListResponse, error) {
 			testUser := store.User{
 				ID:   testUserID,
 				Name: "test_user",

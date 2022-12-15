@@ -37,7 +37,7 @@ const (
 type authType int8
 
 // UsersFn uses in adapter for bind FindUsers func in store engine with registry instance
-type UsersFn func(ctx context.Context, filter engine.QueryFilter) (users engine.ListResponse, err error)
+type UsersFn func(ctx context.Context, filter engine.QueryFilter, withPassword bool) (users engine.ListResponse, err error)
 
 const (
 	// Basic allow access using auth basic credentials

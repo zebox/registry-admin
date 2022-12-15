@@ -27,21 +27,25 @@ type FetchUsers interface {
 // update will call every time when access list will change
 func (ht *htpasswd) update(users []store.User) error {
 	ht.lock.Lock()
+	defer ht.lock.Unlock()
+
 	// check file for exist
 	err := createHtpasswdFileIfNoExist(ht.path)
 	if err != nil {
 		return err
 	}
 
+	if errTruncate := os.Truncate(ht.path, 0); err != nil {
+		return fmt.Errorf("failed to truncate file %s: %v", ht.path, errTruncate)
+	}
+
 	f, err := os.OpenFile(ht.path, os.O_WRONLY|os.O_CREATE, 0o0600)
 	if err != nil {
-		ht.lock.Unlock()
 		return err
 	}
 
 	defer func() {
 		_ = f.Close()
-		ht.lock.Unlock()
 	}()
 
 	for _, user := range users {

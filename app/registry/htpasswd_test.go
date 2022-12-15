@@ -101,7 +101,7 @@ func htpasswdReader(t *testing.T, path string) map[string][]byte {
 }
 
 func testFindUserFunc(users []store.User) UsersFn {
-	return func(ctx context.Context, filter engine.QueryFilter) (engine.ListResponse, error) {
+	return func(ctx context.Context, filter engine.QueryFilter, withPassword bool) (engine.ListResponse, error) {
 		result := engine.ListResponse{}
 		if users == nil {
 			return result, errors.New("user list is empty")
@@ -111,6 +111,7 @@ func testFindUserFunc(users []store.User) UsersFn {
 		for _, u := range users {
 			result.Data = append(result.Data, u)
 		}
+
 		return result, nil
 	}
 }
@@ -134,7 +135,7 @@ func (ra *testUsersRegistryAdapter) Users() ([]store.User, error) {
 	if ra.usersFn == nil {
 		return nil, errors.New("userFn func undefined")
 	}
-	result, err := ra.usersFn(ra.ctx, engine.QueryFilter{})
+	result, err := ra.usersFn(ra.ctx, engine.QueryFilter{}, true)
 	if err != nil {
 		return nil, err
 	}

@@ -84,7 +84,7 @@ func (e *Embedded) GetUser(ctx context.Context, id interface{}) (user store.User
 
 		// cast ID value when ID as string type
 		if _, errParse := strconv.ParseInt(val, 10, 64); errParse == nil {
-			queryString = fmt.Sprintf("select id,login,name,password,role,user_group,disabled,description from %s where id = ?", usersTable)
+			queryString = fmt.Sprintf("SELECT id,login,name,password,role,user_group,disabled,description FROM  %s WHERE id = ?", usersTable)
 		}
 	case int, int64:
 		queryString = fmt.Sprintf("select id,login,name,password,role,user_group,disabled,description from %s where id = ?", usersTable)
@@ -119,7 +119,7 @@ func (e *Embedded) GetUser(ctx context.Context, id interface{}) (user store.User
 }
 
 // FindUsers fetch list of user by filter values
-func (e *Embedded) FindUsers(ctx context.Context, filter engine.QueryFilter) (users engine.ListResponse, err error) {
+func (e *Embedded) FindUsers(ctx context.Context, filter engine.QueryFilter, withPassword bool) (users engine.ListResponse, err error) {
 	f := filtersBuilder(filter, "login", "name")
 	queryString := fmt.Sprintf("SELECT id,login,name,password,role,user_group,disabled,description FROM %s %s", usersTable, f.allClauses) //nolint:gosec // query sanitizing calling before
 
@@ -150,7 +150,12 @@ func (e *Embedded) FindUsers(ctx context.Context, filter engine.QueryFilter) (us
 		if err = rows.Scan(&user.ID, &user.Login, &user.Name, &user.Password, &user.Role, &user.Group, &user.Disabled, &user.Description); err != nil {
 			return users, errors.Wrap(err, "failed scan user data")
 		}
-		user.Password = "" // clear password value when user fetch
+
+		// clear password value when user fetch
+		if !withPassword {
+			user.Password = ""
+		}
+
 		users.Data = append(users.Data, user)
 	}
 
