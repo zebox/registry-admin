@@ -16,7 +16,7 @@ import (
 )
 
 func TestRegistry_UpdateHtpasswd(t *testing.T) {
-	var testUsers = make([]store.User, 0)
+	var testUsers []store.User
 
 	// filling test users store
 	for i := 0; i < 10; i++ {
@@ -28,13 +28,10 @@ func TestRegistry_UpdateHtpasswd(t *testing.T) {
 		testUsers = append(testUsers, user)
 	}
 
-	tra := newTestUsersRegistryAdapter(context.Background(), engine.QueryFilter{})
+	tra := newTestUsersRegistryAdapter(context.Background(), engine.QueryFilter{}, testFindUserFunc(testUsers))
 	testPath := os.TempDir() + "/test/.htpasswd"
 
 	r := Registry{htpasswd: &htpasswd{path: testPath}}
-	err := r.htpasswd.update(testUsers)
-	require.NoError(t, err)
-
 	require.NoError(t, r.UpdateHtpasswd(tra))
 
 	defer func() {
@@ -50,6 +47,10 @@ func TestRegistry_UpdateHtpasswd(t *testing.T) {
 		assert.NoError(t, err)
 	}
 	assert.NoError(t, r.UpdateHtpasswd(tra))
+
+	// test for error with empty users
+	tra.usersFn = testFindUserFunc(nil)
+	assert.Error(t, r.UpdateHtpasswd(tra))
 
 	r.htpasswd.path = ""
 	assert.Error(t, r.UpdateHtpasswd(tra))
@@ -99,40 +100,49 @@ func htpasswdReader(t *testing.T, path string) map[string][]byte {
 	return entries
 }
 
+func testFindUserFunc(users []store.User) UsersFn {
+	return func(ctx context.Context, filter engine.QueryFilter, withPassword bool) (engine.ListResponse, error) {
+		result := engine.ListResponse{}
+		if users == nil {
+			return result, errors.New("user list is empty")
+		}
+		result.Total = int64(len(users))
+
+		for _, u := range users {
+			result.Data = append(result.Data, u)
+		}
+
+		return result, nil
+	}
+}
+
 // uses for bind FindUsers func in store engine with registry instance for update password in htpasswd
 type testUsersRegistryAdapter struct {
 	ctx     context.Context
 	filters engine.QueryFilter
+	usersFn UsersFn
 }
 
-func newTestUsersRegistryAdapter(ctx context.Context, filters engine.QueryFilter) *testUsersRegistryAdapter {
+func newTestUsersRegistryAdapter(ctx context.Context, filters engine.QueryFilter, usersFunc UsersFn) *testUsersRegistryAdapter {
 	return &testUsersRegistryAdapter{
 		ctx:     ctx,
 		filters: filters,
+		usersFn: usersFunc,
 	}
 }
 
-func (ra *testUsersRegistryAdapter) Users(getHtUsersFn UsersFn) ([]store.User, error) {
-	if getHtUsersFn == nil {
+func (ra *testUsersRegistryAdapter) Users() ([]store.User, error) {
+	if ra.usersFn == nil {
 		return nil, errors.New("userFn func undefined")
 	}
-	result, err := getHtUsersFn()
+	result, err := ra.usersFn(ra.ctx, engine.QueryFilter{}, true)
 	if err != nil {
 		return nil, err
 	}
 
 	var users = make([]store.User, 0)
-	for user, passwd := range result {
-		u := store.User{
-			Name:     user,
-			Password: string(passwd),
-		}
-		users = append(users, u)
+	for _, u := range result.Data {
+		users = append(users, u.(store.User))
 	}
-
-	if len(users) > 0 {
-		return users, nil
-	}
-
-	return nil, errors.New("users list is empty")
+	return users, nil
 }

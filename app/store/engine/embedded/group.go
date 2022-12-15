@@ -134,7 +134,7 @@ func (e *Embedded) UpdateGroup(ctx context.Context, group store.Group) (err erro
 	return err
 }
 
-// DeleteGroup delete user record by ID
+// DeleteGroup delete users group record by ID
 func (e *Embedded) DeleteGroup(ctx context.Context, id int64) (err error) {
 	res, err := e.db.ExecContext(ctx, "DELETE FROM groups WHERE id = ?", id)
 	if err != nil {

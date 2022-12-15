@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/zebox/registry-admin/app/store"
+	"github.com/zebox/registry-admin/app/store/engine"
 	"io"
 	"net/http"
 	"net/url"
@@ -36,7 +37,7 @@ const (
 type authType int8
 
 // UsersFn uses in adapter for bind FindUsers func in store engine with registry instance
-type UsersFn func() (map[string][]byte, error)
+type UsersFn func(ctx context.Context, filter engine.QueryFilter, withPassword bool) (users engine.ListResponse, err error)
 
 const (
 	// Basic allow access using auth basic credentials
@@ -265,7 +266,7 @@ func (r *Registry) UpdateHtpasswd(usersFn FetchUsers) error {
 	if usersFn == nil {
 		return errors.New("can't fetch users list because userFn should be defined")
 	}
-	users, err := usersFn.Users(r.htpasswd.parseHTPasswd)
+	users, err := usersFn.Users()
 	if err != nil {
 		return fmt.Errorf("can't fetch users list: %v", err)
 	}

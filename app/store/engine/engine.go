@@ -33,37 +33,75 @@ type ListResponse struct {
 
 // Interface defines methods provided by low-level storage engine
 type Interface interface {
-	// Users manipulations
+
+	// CreateUser create a new user login record in application storage
 	CreateUser(ctx context.Context, user *store.User) (err error)
+
+	// GetUser get data by user ID, where id can be any type
 	GetUser(ctx context.Context, id interface{}) (user store.User, err error)
-	FindUsers(ctx context.Context, filter QueryFilter) (users ListResponse, err error)
+
+	// FindUsers fetch list of user by filter values.
+	// @withPassword defines include or not hash value of password to result
+	FindUsers(ctx context.Context, filter QueryFilter, withPassword bool) (users ListResponse, err error)
+
+	// UpdateUser update user records data in application storage
 	UpdateUser(ctx context.Context, user store.User) (err error)
+
+	// DeleteUser delete user record by ID
 	DeleteUser(ctx context.Context, id int64) (err error)
 
-	// Groups manipulations
+	// CreateGroup create a new users group record in application storage
 	CreateGroup(ctx context.Context, group *store.Group) (err error)
+
+	// GetGroup get data of users group by ID
 	GetGroup(ctx context.Context, id int64) (group store.Group, err error)
+
+	// FindGroups fetch list of existed users group
 	FindGroups(ctx context.Context, filter QueryFilter) (groups ListResponse, err error)
+
+	// UpdateGroup update data of users group
 	UpdateGroup(ctx context.Context, group store.Group) (err error)
+
+	// DeleteGroup delete users group record by ID
 	DeleteGroup(ctx context.Context, id int64) (err error)
 
-	// Accesses manipulations
+	// CreateAccess create a new access record for a specific user and repository
 	CreateAccess(ctx context.Context, access *store.Access) (err error)
+
+	// GetAccess get data of access entry by ID
 	GetAccess(ctx context.Context, id int64) (access store.Access, err error)
+
+	// FindAccesses get list of users access
 	FindAccesses(ctx context.Context, filter QueryFilter) (accesses ListResponse, err error)
+
+	// UpdateAccess will update a user access record
 	UpdateAccess(ctx context.Context, access store.Access) (err error)
+
+	// DeleteAccess delete access record by ID
 	DeleteAccess(ctx context.Context, key string, id interface{}) (err error)
+
+	// AccessGarbageCollector check outdated repositories in repositories table and delete ones from access list
 	AccessGarbageCollector(ctx context.Context) error
 
-	// Repositories methods
+	// CreateRepository create a new repository record
 	CreateRepository(ctx context.Context, entry *store.RegistryEntry) (err error)
+
+	// GetRepository get repository data by ID
 	GetRepository(ctx context.Context, entryID int64) (entry store.RegistryEntry, err error)
+
+	// FindRepositories get list of repositories
 	FindRepositories(ctx context.Context, filter QueryFilter) (entries ListResponse, err error)
+
+	// UpdateRepository update repository entry data
 	UpdateRepository(ctx context.Context, conditionClause, data map[string]interface{}) (err error)
+
+	// DeleteRepository delete repository entry by ID
 	DeleteRepository(ctx context.Context, key string, id interface{}) (err error)
+
+	// RepositoryGarbageCollector deletes outdated repositories entries
 	RepositoryGarbageCollector(ctx context.Context, syncDate int64) (err error)
 
-	// Misc storage function
+	// Close connection to storage instance
 	Close(ctx context.Context) error
 }
 

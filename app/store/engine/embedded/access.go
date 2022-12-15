@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-// CreateAccess create a new user record
+// CreateAccess create a new user access record
 func (e *Embedded) CreateAccess(ctx context.Context, access *store.Access) (err error) {
 
 	var emptyParams []string
@@ -67,7 +67,7 @@ func (e *Embedded) CreateAccess(ctx context.Context, access *store.Access) (err 
 	return err
 }
 
-// GetAccess get data by group ID
+// GetAccess get data of access entry by ID
 func (e *Embedded) GetAccess(ctx context.Context, id int64) (access store.Access, err error) {
 
 	queryFilter := fmt.Sprintf("select * from %s where id = ?", accessTable)
@@ -97,7 +97,7 @@ func (e *Embedded) GetAccess(ctx context.Context, id int64) (access store.Access
 	return access, nil
 }
 
-// FindAccesses get list of existed groups
+// FindAccesses get list of existed users access
 func (e *Embedded) FindAccesses(ctx context.Context, filter engine.QueryFilter) (accesses engine.ListResponse, err error) {
 	f := filtersBuilder(filter, "name", "resource_name")
 	queryString := fmt.Sprintf("SELECT * FROM %s %s", accessTable, f.allClauses) //nolint:gosec // query sanitizing calling before

@@ -27,28 +27,26 @@ type userHandlers struct {
 type usersRegistryAdapter struct {
 	ctx     context.Context
 	filters engine.QueryFilter
+	usersFn registry.UsersFn
 }
 
-func newUsersRegistryAdapter(ctx context.Context, filters engine.QueryFilter) *usersRegistryAdapter {
+func newUsersRegistryAdapter(ctx context.Context, filters engine.QueryFilter, usersFunc registry.UsersFn) *usersRegistryAdapter {
 	return &usersRegistryAdapter{
 		ctx:     ctx,
 		filters: filters,
+		usersFn: usersFunc,
 	}
 }
 
-func (ura *usersRegistryAdapter) Users(getHtUsersFn registry.UsersFn) ([]store.User, error) {
-	result, err := getHtUsersFn()
+func (ura *usersRegistryAdapter) Users() ([]store.User, error) {
+	result, err := ura.usersFn(ura.ctx, ura.filters, true)
 	if err != nil {
 		return nil, err
 	}
 
 	var users = make([]store.User, 0)
-	for user, passwd := range result {
-		u := store.User{
-			Name:     user,
-			Password: string(passwd),
-		}
-		users = append(users, u)
+	for _, u := range result.Data {
+		users = append(users, u.(store.User))
 	}
 
 	if len(users) > 0 {
@@ -119,7 +117,7 @@ func (u *userHandlers) userFindCtrl(w http.ResponseWriter, r *http.Request) {
 		SendErrorJSON(w, r, u.l, http.StatusInternalServerError, err, "failed to parse URL parameters for make query filter")
 		return
 	}
-	result, err := u.dataStore.FindUsers(r.Context(), filter)
+	result, err := u.dataStore.FindUsers(r.Context(), filter, true)
 	if err != nil {
 		SendErrorJSON(w, r, u.l, http.StatusInternalServerError, err, "failed to find users")
 		return
@@ -160,7 +158,7 @@ func (u *userHandlers) userUpdateCtrl(w http.ResponseWriter, r *http.Request) { 
 		Data:    user,
 	})
 
-	if err = u.registryService.UpdateHtpasswd(u.userAdapter); err != nil {
+	if err = u.registryService.UpdateHtpasswd(newUsersRegistryAdapter(r.Context(), engine.QueryFilter{}, u.dataStore.FindUsers)); err != nil {
 		u.l.Logf("failed to update htpasswd: %v", err)
 	}
 }
@@ -179,8 +177,8 @@ func (u *userHandlers) userDeleteCtrl(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = u.dataStore.DeleteAccess(r.Context(), "owner_id", id); err != nil {
-		SendErrorJSON(w, r, u.l, http.StatusInternalServerError, err, fmt.Sprintf("failed to delete accesses for deleted user with id - '%d'", id))
+	if err = u.dataStore.DeleteAccess(r.Context(), "owner_id", id); err != nil && err != engine.ErrNotFound {
+		SendErrorJSON(w, r, u.l, http.StatusInternalServerError, err, fmt.Sprintf("failed to delete accesses for deleted user with id - %q", id))
 		return
 	}
 

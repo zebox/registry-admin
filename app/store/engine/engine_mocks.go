@@ -15,85 +15,85 @@ var _ Interface = &InterfaceMock{}
 
 // InterfaceMock is a mock implementation of Interface.
 //
-// 	func TestSomethingThatUsesInterface(t *testing.T) {
+//	func TestSomethingThatUsesInterface(t *testing.T) {
 //
-// 		// make and configure a mocked Interface
-// 		mockedInterface := &InterfaceMock{
-// 			AccessGarbageCollectorFunc: func(ctx context.Context) error {
-// 				panic("mock out the AccessGarbageCollector method")
-// 			},
-// 			CloseFunc: func(ctx context.Context) error {
-// 				panic("mock out the Close method")
-// 			},
-// 			CreateAccessFunc: func(ctx context.Context, access *store.Access) error {
-// 				panic("mock out the CreateAccess method")
-// 			},
-// 			CreateGroupFunc: func(ctx context.Context, group *store.Group) error {
-// 				panic("mock out the CreateGroup method")
-// 			},
-// 			CreateRepositoryFunc: func(ctx context.Context, entry *store.RegistryEntry) error {
-// 				panic("mock out the CreateRepository method")
-// 			},
-// 			CreateUserFunc: func(ctx context.Context, user *store.User) error {
-// 				panic("mock out the CreateUser method")
-// 			},
-// 			DeleteAccessFunc: func(ctx context.Context, key string, id interface{}) error {
-// 				panic("mock out the DeleteAccess method")
-// 			},
-// 			DeleteGroupFunc: func(ctx context.Context, id int64) error {
-// 				panic("mock out the DeleteGroup method")
-// 			},
-// 			DeleteRepositoryFunc: func(ctx context.Context, key string, id interface{}) error {
-// 				panic("mock out the DeleteRepository method")
-// 			},
-// 			DeleteUserFunc: func(ctx context.Context, id int64) error {
-// 				panic("mock out the DeleteUser method")
-// 			},
-// 			FindAccessesFunc: func(ctx context.Context, filter QueryFilter) (ListResponse, error) {
-// 				panic("mock out the FindAccesses method")
-// 			},
-// 			FindGroupsFunc: func(ctx context.Context, filter QueryFilter) (ListResponse, error) {
-// 				panic("mock out the FindGroups method")
-// 			},
-// 			FindRepositoriesFunc: func(ctx context.Context, filter QueryFilter) (ListResponse, error) {
-// 				panic("mock out the FindRepositories method")
-// 			},
-// 			FindUsersFunc: func(ctx context.Context, filter QueryFilter) (ListResponse, error) {
-// 				panic("mock out the FindUsers method")
-// 			},
-// 			GetAccessFunc: func(ctx context.Context, id int64) (store.Access, error) {
-// 				panic("mock out the GetAccess method")
-// 			},
-// 			GetGroupFunc: func(ctx context.Context, id int64) (store.Group, error) {
-// 				panic("mock out the GetGroup method")
-// 			},
-// 			GetRepositoryFunc: func(ctx context.Context, entryID int64) (store.RegistryEntry, error) {
-// 				panic("mock out the GetRepository method")
-// 			},
-// 			GetUserFunc: func(ctx context.Context, id interface{}) (store.User, error) {
-// 				panic("mock out the GetUser method")
-// 			},
-// 			RepositoryGarbageCollectorFunc: func(ctx context.Context, syncDate int64) error {
-// 				panic("mock out the RepositoryGarbageCollector method")
-// 			},
-// 			UpdateAccessFunc: func(ctx context.Context, access store.Access) error {
-// 				panic("mock out the UpdateAccess method")
-// 			},
-// 			UpdateGroupFunc: func(ctx context.Context, group store.Group) error {
-// 				panic("mock out the UpdateGroup method")
-// 			},
-// 			UpdateRepositoryFunc: func(ctx context.Context, conditionClause map[string]interface{}, data map[string]interface{}) error {
-// 				panic("mock out the UpdateRepository method")
-// 			},
-// 			UpdateUserFunc: func(ctx context.Context, user store.User) error {
-// 				panic("mock out the UpdateUser method")
-// 			},
-// 		}
+//		// make and configure a mocked Interface
+//		mockedInterface := &InterfaceMock{
+//			AccessGarbageCollectorFunc: func(ctx context.Context) error {
+//				panic("mock out the AccessGarbageCollector method")
+//			},
+//			CloseFunc: func(ctx context.Context) error {
+//				panic("mock out the Close method")
+//			},
+//			CreateAccessFunc: func(ctx context.Context, access *store.Access) error {
+//				panic("mock out the CreateAccess method")
+//			},
+//			CreateGroupFunc: func(ctx context.Context, group *store.Group) error {
+//				panic("mock out the CreateGroup method")
+//			},
+//			CreateRepositoryFunc: func(ctx context.Context, entry *store.RegistryEntry) error {
+//				panic("mock out the CreateRepository method")
+//			},
+//			CreateUserFunc: func(ctx context.Context, user *store.User) error {
+//				panic("mock out the CreateUser method")
+//			},
+//			DeleteAccessFunc: func(ctx context.Context, key string, id interface{}) error {
+//				panic("mock out the DeleteAccess method")
+//			},
+//			DeleteGroupFunc: func(ctx context.Context, id int64) error {
+//				panic("mock out the DeleteGroup method")
+//			},
+//			DeleteRepositoryFunc: func(ctx context.Context, key string, id interface{}) error {
+//				panic("mock out the DeleteRepository method")
+//			},
+//			DeleteUserFunc: func(ctx context.Context, id int64) error {
+//				panic("mock out the DeleteUser method")
+//			},
+//			FindAccessesFunc: func(ctx context.Context, filter QueryFilter) (ListResponse, error) {
+//				panic("mock out the FindAccesses method")
+//			},
+//			FindGroupsFunc: func(ctx context.Context, filter QueryFilter) (ListResponse, error) {
+//				panic("mock out the FindGroups method")
+//			},
+//			FindRepositoriesFunc: func(ctx context.Context, filter QueryFilter) (ListResponse, error) {
+//				panic("mock out the FindRepositories method")
+//			},
+//			FindUsersFunc: func(ctx context.Context, filter QueryFilter, withPassword bool) (ListResponse, error) {
+//				panic("mock out the FindUsers method")
+//			},
+//			GetAccessFunc: func(ctx context.Context, id int64) (store.Access, error) {
+//				panic("mock out the GetAccess method")
+//			},
+//			GetGroupFunc: func(ctx context.Context, id int64) (store.Group, error) {
+//				panic("mock out the GetGroup method")
+//			},
+//			GetRepositoryFunc: func(ctx context.Context, entryID int64) (store.RegistryEntry, error) {
+//				panic("mock out the GetRepository method")
+//			},
+//			GetUserFunc: func(ctx context.Context, id interface{}) (store.User, error) {
+//				panic("mock out the GetUser method")
+//			},
+//			RepositoryGarbageCollectorFunc: func(ctx context.Context, syncDate int64) error {
+//				panic("mock out the RepositoryGarbageCollector method")
+//			},
+//			UpdateAccessFunc: func(ctx context.Context, access store.Access) error {
+//				panic("mock out the UpdateAccess method")
+//			},
+//			UpdateGroupFunc: func(ctx context.Context, group store.Group) error {
+//				panic("mock out the UpdateGroup method")
+//			},
+//			UpdateRepositoryFunc: func(ctx context.Context, conditionClause map[string]interface{}, data map[string]interface{}) error {
+//				panic("mock out the UpdateRepository method")
+//			},
+//			UpdateUserFunc: func(ctx context.Context, user store.User) error {
+//				panic("mock out the UpdateUser method")
+//			},
+//		}
 //
-// 		// use mockedInterface in code that requires Interface
-// 		// and then make assertions.
+//		// use mockedInterface in code that requires Interface
+//		// and then make assertions.
 //
-// 	}
+//	}
 type InterfaceMock struct {
 	// AccessGarbageCollectorFunc mocks the AccessGarbageCollector method.
 	AccessGarbageCollectorFunc func(ctx context.Context) error
@@ -135,7 +135,7 @@ type InterfaceMock struct {
 	FindRepositoriesFunc func(ctx context.Context, filter QueryFilter) (ListResponse, error)
 
 	// FindUsersFunc mocks the FindUsers method.
-	FindUsersFunc func(ctx context.Context, filter QueryFilter) (ListResponse, error)
+	FindUsersFunc func(ctx context.Context, filter QueryFilter, withPassword bool) (ListResponse, error)
 
 	// GetAccessFunc mocks the GetAccess method.
 	GetAccessFunc func(ctx context.Context, id int64) (store.Access, error)
@@ -263,6 +263,8 @@ type InterfaceMock struct {
 			Ctx context.Context
 			// Filter is the filter argument value.
 			Filter QueryFilter
+			// WithPassword is the withPassword argument value.
+			WithPassword bool
 		}
 		// GetAccess holds details about calls to the GetAccess method.
 		GetAccess []struct {
@@ -373,7 +375,8 @@ func (mock *InterfaceMock) AccessGarbageCollector(ctx context.Context) error {
 
 // AccessGarbageCollectorCalls gets all the calls that were made to AccessGarbageCollector.
 // Check the length with:
-//     len(mockedInterface.AccessGarbageCollectorCalls())
+//
+//	len(mockedInterface.AccessGarbageCollectorCalls())
 func (mock *InterfaceMock) AccessGarbageCollectorCalls() []struct {
 	Ctx context.Context
 } {
@@ -404,7 +407,8 @@ func (mock *InterfaceMock) Close(ctx context.Context) error {
 
 // CloseCalls gets all the calls that were made to Close.
 // Check the length with:
-//     len(mockedInterface.CloseCalls())
+//
+//	len(mockedInterface.CloseCalls())
 func (mock *InterfaceMock) CloseCalls() []struct {
 	Ctx context.Context
 } {
@@ -437,7 +441,8 @@ func (mock *InterfaceMock) CreateAccess(ctx context.Context, access *store.Acces
 
 // CreateAccessCalls gets all the calls that were made to CreateAccess.
 // Check the length with:
-//     len(mockedInterface.CreateAccessCalls())
+//
+//	len(mockedInterface.CreateAccessCalls())
 func (mock *InterfaceMock) CreateAccessCalls() []struct {
 	Ctx    context.Context
 	Access *store.Access
@@ -472,7 +477,8 @@ func (mock *InterfaceMock) CreateGroup(ctx context.Context, group *store.Group) 
 
 // CreateGroupCalls gets all the calls that were made to CreateGroup.
 // Check the length with:
-//     len(mockedInterface.CreateGroupCalls())
+//
+//	len(mockedInterface.CreateGroupCalls())
 func (mock *InterfaceMock) CreateGroupCalls() []struct {
 	Ctx   context.Context
 	Group *store.Group
@@ -507,7 +513,8 @@ func (mock *InterfaceMock) CreateRepository(ctx context.Context, entry *store.Re
 
 // CreateRepositoryCalls gets all the calls that were made to CreateRepository.
 // Check the length with:
-//     len(mockedInterface.CreateRepositoryCalls())
+//
+//	len(mockedInterface.CreateRepositoryCalls())
 func (mock *InterfaceMock) CreateRepositoryCalls() []struct {
 	Ctx   context.Context
 	Entry *store.RegistryEntry
@@ -542,7 +549,8 @@ func (mock *InterfaceMock) CreateUser(ctx context.Context, user *store.User) err
 
 // CreateUserCalls gets all the calls that were made to CreateUser.
 // Check the length with:
-//     len(mockedInterface.CreateUserCalls())
+//
+//	len(mockedInterface.CreateUserCalls())
 func (mock *InterfaceMock) CreateUserCalls() []struct {
 	Ctx  context.Context
 	User *store.User
@@ -579,7 +587,8 @@ func (mock *InterfaceMock) DeleteAccess(ctx context.Context, key string, id inte
 
 // DeleteAccessCalls gets all the calls that were made to DeleteAccess.
 // Check the length with:
-//     len(mockedInterface.DeleteAccessCalls())
+//
+//	len(mockedInterface.DeleteAccessCalls())
 func (mock *InterfaceMock) DeleteAccessCalls() []struct {
 	Ctx context.Context
 	Key string
@@ -616,7 +625,8 @@ func (mock *InterfaceMock) DeleteGroup(ctx context.Context, id int64) error {
 
 // DeleteGroupCalls gets all the calls that were made to DeleteGroup.
 // Check the length with:
-//     len(mockedInterface.DeleteGroupCalls())
+//
+//	len(mockedInterface.DeleteGroupCalls())
 func (mock *InterfaceMock) DeleteGroupCalls() []struct {
 	Ctx context.Context
 	ID  int64
@@ -653,7 +663,8 @@ func (mock *InterfaceMock) DeleteRepository(ctx context.Context, key string, id 
 
 // DeleteRepositoryCalls gets all the calls that were made to DeleteRepository.
 // Check the length with:
-//     len(mockedInterface.DeleteRepositoryCalls())
+//
+//	len(mockedInterface.DeleteRepositoryCalls())
 func (mock *InterfaceMock) DeleteRepositoryCalls() []struct {
 	Ctx context.Context
 	Key string
@@ -690,7 +701,8 @@ func (mock *InterfaceMock) DeleteUser(ctx context.Context, id int64) error {
 
 // DeleteUserCalls gets all the calls that were made to DeleteUser.
 // Check the length with:
-//     len(mockedInterface.DeleteUserCalls())
+//
+//	len(mockedInterface.DeleteUserCalls())
 func (mock *InterfaceMock) DeleteUserCalls() []struct {
 	Ctx context.Context
 	ID  int64
@@ -725,7 +737,8 @@ func (mock *InterfaceMock) FindAccesses(ctx context.Context, filter QueryFilter)
 
 // FindAccessesCalls gets all the calls that were made to FindAccesses.
 // Check the length with:
-//     len(mockedInterface.FindAccessesCalls())
+//
+//	len(mockedInterface.FindAccessesCalls())
 func (mock *InterfaceMock) FindAccessesCalls() []struct {
 	Ctx    context.Context
 	Filter QueryFilter
@@ -760,7 +773,8 @@ func (mock *InterfaceMock) FindGroups(ctx context.Context, filter QueryFilter) (
 
 // FindGroupsCalls gets all the calls that were made to FindGroups.
 // Check the length with:
-//     len(mockedInterface.FindGroupsCalls())
+//
+//	len(mockedInterface.FindGroupsCalls())
 func (mock *InterfaceMock) FindGroupsCalls() []struct {
 	Ctx    context.Context
 	Filter QueryFilter
@@ -795,7 +809,8 @@ func (mock *InterfaceMock) FindRepositories(ctx context.Context, filter QueryFil
 
 // FindRepositoriesCalls gets all the calls that were made to FindRepositories.
 // Check the length with:
-//     len(mockedInterface.FindRepositoriesCalls())
+//
+//	len(mockedInterface.FindRepositoriesCalls())
 func (mock *InterfaceMock) FindRepositoriesCalls() []struct {
 	Ctx    context.Context
 	Filter QueryFilter
@@ -811,33 +826,38 @@ func (mock *InterfaceMock) FindRepositoriesCalls() []struct {
 }
 
 // FindUsers calls FindUsersFunc.
-func (mock *InterfaceMock) FindUsers(ctx context.Context, filter QueryFilter) (ListResponse, error) {
+func (mock *InterfaceMock) FindUsers(ctx context.Context, filter QueryFilter, withPassword bool) (ListResponse, error) {
 	if mock.FindUsersFunc == nil {
 		panic("InterfaceMock.FindUsersFunc: method is nil but Interface.FindUsers was just called")
 	}
 	callInfo := struct {
-		Ctx    context.Context
-		Filter QueryFilter
+		Ctx          context.Context
+		Filter       QueryFilter
+		WithPassword bool
 	}{
-		Ctx:    ctx,
-		Filter: filter,
+		Ctx:          ctx,
+		Filter:       filter,
+		WithPassword: withPassword,
 	}
 	mock.lockFindUsers.Lock()
 	mock.calls.FindUsers = append(mock.calls.FindUsers, callInfo)
 	mock.lockFindUsers.Unlock()
-	return mock.FindUsersFunc(ctx, filter)
+	return mock.FindUsersFunc(ctx, filter, withPassword)
 }
 
 // FindUsersCalls gets all the calls that were made to FindUsers.
 // Check the length with:
-//     len(mockedInterface.FindUsersCalls())
+//
+//	len(mockedInterface.FindUsersCalls())
 func (mock *InterfaceMock) FindUsersCalls() []struct {
-	Ctx    context.Context
-	Filter QueryFilter
+	Ctx          context.Context
+	Filter       QueryFilter
+	WithPassword bool
 } {
 	var calls []struct {
-		Ctx    context.Context
-		Filter QueryFilter
+		Ctx          context.Context
+		Filter       QueryFilter
+		WithPassword bool
 	}
 	mock.lockFindUsers.RLock()
 	calls = mock.calls.FindUsers
@@ -865,7 +885,8 @@ func (mock *InterfaceMock) GetAccess(ctx context.Context, id int64) (store.Acces
 
 // GetAccessCalls gets all the calls that were made to GetAccess.
 // Check the length with:
-//     len(mockedInterface.GetAccessCalls())
+//
+//	len(mockedInterface.GetAccessCalls())
 func (mock *InterfaceMock) GetAccessCalls() []struct {
 	Ctx context.Context
 	ID  int64
@@ -900,7 +921,8 @@ func (mock *InterfaceMock) GetGroup(ctx context.Context, id int64) (store.Group,
 
 // GetGroupCalls gets all the calls that were made to GetGroup.
 // Check the length with:
-//     len(mockedInterface.GetGroupCalls())
+//
+//	len(mockedInterface.GetGroupCalls())
 func (mock *InterfaceMock) GetGroupCalls() []struct {
 	Ctx context.Context
 	ID  int64
@@ -935,7 +957,8 @@ func (mock *InterfaceMock) GetRepository(ctx context.Context, entryID int64) (st
 
 // GetRepositoryCalls gets all the calls that were made to GetRepository.
 // Check the length with:
-//     len(mockedInterface.GetRepositoryCalls())
+//
+//	len(mockedInterface.GetRepositoryCalls())
 func (mock *InterfaceMock) GetRepositoryCalls() []struct {
 	Ctx     context.Context
 	EntryID int64
@@ -970,7 +993,8 @@ func (mock *InterfaceMock) GetUser(ctx context.Context, id interface{}) (store.U
 
 // GetUserCalls gets all the calls that were made to GetUser.
 // Check the length with:
-//     len(mockedInterface.GetUserCalls())
+//
+//	len(mockedInterface.GetUserCalls())
 func (mock *InterfaceMock) GetUserCalls() []struct {
 	Ctx context.Context
 	ID  interface{}
@@ -1005,7 +1029,8 @@ func (mock *InterfaceMock) RepositoryGarbageCollector(ctx context.Context, syncD
 
 // RepositoryGarbageCollectorCalls gets all the calls that were made to RepositoryGarbageCollector.
 // Check the length with:
-//     len(mockedInterface.RepositoryGarbageCollectorCalls())
+//
+//	len(mockedInterface.RepositoryGarbageCollectorCalls())
 func (mock *InterfaceMock) RepositoryGarbageCollectorCalls() []struct {
 	Ctx      context.Context
 	SyncDate int64
@@ -1040,7 +1065,8 @@ func (mock *InterfaceMock) UpdateAccess(ctx context.Context, access store.Access
 
 // UpdateAccessCalls gets all the calls that were made to UpdateAccess.
 // Check the length with:
-//     len(mockedInterface.UpdateAccessCalls())
+//
+//	len(mockedInterface.UpdateAccessCalls())
 func (mock *InterfaceMock) UpdateAccessCalls() []struct {
 	Ctx    context.Context
 	Access store.Access
@@ -1075,7 +1101,8 @@ func (mock *InterfaceMock) UpdateGroup(ctx context.Context, group store.Group) e
 
 // UpdateGroupCalls gets all the calls that were made to UpdateGroup.
 // Check the length with:
-//     len(mockedInterface.UpdateGroupCalls())
+//
+//	len(mockedInterface.UpdateGroupCalls())
 func (mock *InterfaceMock) UpdateGroupCalls() []struct {
 	Ctx   context.Context
 	Group store.Group
@@ -1112,7 +1139,8 @@ func (mock *InterfaceMock) UpdateRepository(ctx context.Context, conditionClause
 
 // UpdateRepositoryCalls gets all the calls that were made to UpdateRepository.
 // Check the length with:
-//     len(mockedInterface.UpdateRepositoryCalls())
+//
+//	len(mockedInterface.UpdateRepositoryCalls())
 func (mock *InterfaceMock) UpdateRepositoryCalls() []struct {
 	Ctx             context.Context
 	ConditionClause map[string]interface{}
@@ -1149,7 +1177,8 @@ func (mock *InterfaceMock) UpdateUser(ctx context.Context, user store.User) erro
 
 // UpdateUserCalls gets all the calls that were made to UpdateUser.
 // Check the length with:
-//     len(mockedInterface.UpdateUserCalls())
+//
+//	len(mockedInterface.UpdateUserCalls())
 func (mock *InterfaceMock) UpdateUserCalls() []struct {
 	Ctx  context.Context
 	User store.User
