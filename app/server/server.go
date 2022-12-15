@@ -254,7 +254,7 @@ func (s *Server) routes() chi.Router {
 			uh := userHandlers{
 				endpointsHandler: eh,
 				registryService:  s.RegistryService,
-				userAdapter:      newUsersRegistryAdapter(s.ctx, engine.QueryFilter{}),
+				userAdapter:      newUsersRegistryAdapter(s.ctx, engine.QueryFilter{}, s.Storage.FindUsers),
 			}
 
 			// try to update users list in htpasswd from store if htpasswd is defined

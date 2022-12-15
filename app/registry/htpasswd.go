@@ -1,12 +1,10 @@
 package registry
 
 import (
-	"bufio"
 	"fmt"
 	"github.com/zebox/registry-admin/app/store"
 	"os"
 	"path/filepath"
-	"strings"
 	"sync"
 )
 
@@ -23,7 +21,7 @@ type htpasswd struct {
 
 // FetchUsers interface allows get users list from store engine in registry instance
 type FetchUsers interface {
-	Users(fn UsersFn) ([]store.User, error)
+	Users() ([]store.User, error)
 }
 
 // update will call every time when access list will change
@@ -79,45 +77,4 @@ func createHtpasswdFileIfNoExist(path string) error {
 
 	_, err = fmt.Fprint(f, nil)
 	return err
-}
-
-// parseHTPasswd parses the contents of htpasswd. This will read all the
-// entries in the file. An error is returned if a syntax errors
-// are encountered or if the reader fails.
-func (ht *htpasswd) parseHTPasswd() (map[string][]byte, error) {
-
-	f, err := os.Open(ht.path)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open .htpasswd file: %v", err)
-	}
-
-	entries := map[string][]byte{}
-	scanner := bufio.NewScanner(f)
-	var line int
-	for scanner.Scan() {
-		line++ // 1-based line numbering
-		content := strings.TrimSpace(scanner.Text())
-
-		if len(content) < 1 {
-			continue
-		}
-
-		// lines that *begin* with a '#' are considered comments
-		if content[0] == '#' {
-			continue
-		}
-
-		i := strings.Index(content, ":")
-		if i < 0 || i >= len(content) {
-			return nil, fmt.Errorf("htpasswd: invalid entry at line %d: %q", line, scanner.Text())
-		}
-
-		entries[content[:i]] = []byte(content[i+1:])
-	}
-
-	if err := scanner.Err(); err != nil {
-		return nil, err
-	}
-
-	return entries, nil
 }
