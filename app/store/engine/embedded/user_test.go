@@ -182,6 +182,10 @@ func TestEmbedded_FindUsers(t *testing.T) {
 	assert.Equal(t, int64(2), result.Total)
 	assert.Equal(t, 2, len(result.Data))
 
+	if len(result.Data) > 2 {
+		t.Logf("%+v", result.Data)
+	}
+
 	for _, user := range result.Data {
 		u := user.(store.User)
 		assert.NotEmpty(t, u.Password)
