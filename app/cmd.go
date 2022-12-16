@@ -176,7 +176,7 @@ func createRegistryConnection(opts RegistryGroup) (*registry.Registry, error) {
 
 	// registry host value should be set with http(s) scheme and without port value
 	opts.Host = strings.TrimRight(opts.Host, "/")
-	var re = regexp.MustCompile(`^(https?://)(((www\.)?|www\.)([A-Za-z0-9-]+\.[a-z]+)*([?&][A-Za-z0-9-=+_]+)*(\.[a-z]+)*)$|^(https?://)((\d{1,3}\.){3}\d{1,3})$|^(https?://)(localhost)$`)
+	var re = regexp.MustCompile(`(?m)^(https?://)(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$`)
 	if !re.MatchString(opts.Host) {
 		return nil, errors.New("registry host value should be set with http(s) scheme and without port value")
 	}
