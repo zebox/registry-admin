@@ -37,7 +37,7 @@ notifications:
       disabled: false
       url: http://registry-admin/api/v1/registry/events
       headers:
-        Authorization: [Basic YWRtaW46YWRtaW4=]
+        Authorization: [ Basic YWRtaW46YWRtaW4= ]
       timeout: 1s
       threshold: 5
       backoff: 3s

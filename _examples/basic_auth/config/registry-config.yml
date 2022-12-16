@@ -1,0 +1,43 @@
+version: 0.1
+
+log:
+  accesslog:
+    disabled: false
+  level: debug
+  formatter: text
+  fields:
+    service: registry
+
+storage:
+  filesystem:
+    rootdirectory: /var/lib/registry
+    maxthreads: 100
+  delete:
+    enabled: true
+
+http:
+  addr: ":5000"
+  net: tcp
+
+auth:
+  htpasswd:
+    realm: basic-realm
+    path: /var/lib/registry/.htpasswd
+
+notifications:
+  events:
+    includereferences: true
+  endpoints:
+    - name: ra-listener
+      disabled: false
+      url: http://registry-admin/api/v1/registry/events
+      headers:
+        Authorization: [ Basic YWRtaW46YWRtaW4= ]
+      timeout: 1s
+      threshold: 5
+      backoff: 3s
+      ignoredmediatypes:
+        - application/octet-stream
+      ignore:
+        mediatypes:
+          - application/octet-stream

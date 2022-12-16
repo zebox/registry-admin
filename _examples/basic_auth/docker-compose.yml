@@ -1,0 +1,25 @@
+version: '2'
+services:
+  registry-admin:
+    restart: unless-stopped
+    image: zebox/registry-admin:master
+    ports:
+      - 8080:80
+    environment:
+      RA_CONFIG_FILE: "/app/config/basic-ra-config.yml"
+    volumes:
+      - ${PWD}/certs:/certs
+      - ${PWD}/config:/app/config
+
+  registry:
+    restart: unless-stopped
+    image: registry:2
+    ports:
+      - 50554:5000
+    volumes:
+      - ${PWD}/data:/var/lib/registry
+      - ${PWD}/certs:/certs
+      - ${PWD}/config/registry-config.yml:/etc/docker/registry/config.yml
+      - ${PWD}/config:/var/lib/registry/.htpasswd
+    depends_on:
+      - "registry-admin"
