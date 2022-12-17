@@ -1,18 +1,20 @@
 services:
   registry-admin:
     restart: unless-stopped
-    image: zebox/registry-admin:latest
+    image: zebox/registry-admin:master
+    hostname: registry-admin
     ports:
       - 8080:80
     environment:
-      CONFIG_FILE: "/app/ra-config.yml"
+      CONFIG_FILE: "/app/basic-ra-config.yml"
     volumes:
       - ./certs:/certs
-      - ./configs/ra-config.yml:/app/ra-config.yml
+      - ./configs/basic-ra-config.yml:/app/basic-ra-config.yml
 
   registry:
     restart: unless-stopped
     image: registry:2
+    hostname: registry
     ports:
       - 50554:5000
     volumes:

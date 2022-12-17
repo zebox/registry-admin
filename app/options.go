@@ -8,12 +8,13 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	log "github.com/go-pkgz/lgr"
+	"log"
+	"os"
+	"path/filepath"
+
 	"github.com/jessevdk/go-flags"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v3"
-	"os"
-	"path/filepath"
 )
 
 // configReader implement different file read implementation (json, yml, toml etc.)
@@ -122,7 +123,7 @@ func parseArgs() (*Options, error) {
 				return nil, errParse
 			}
 		default:
-			return nil, errors.Errorf("config parser for '%s' not implemented", ext)
+			return nil, errors.Errorf("config parser for %q not implemented", ext)
 		}
 
 	}
@@ -133,6 +134,8 @@ func parseArgs() (*Options, error) {
 			"'token_secret' at 'auth' section in the configuration file, set the 'RA_AUTH_TOKEN_SECRET' environment variable " +
 			"or use '--auth.token-secret' CLI flag.")
 	}
+
+	log.Printf("[DEBUG] current configuration: %+v", options)
 
 	return &options, nil
 }

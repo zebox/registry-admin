@@ -39,6 +39,8 @@ RUN \
 
 FROM umputun/baseimage:app-v1.9.2
 
+ENV TIME_ZONE=UTC
+
 LABEL org.opencontainers.image.authors="zebox <zebox@ya.ru>" \
       org.opencontainers.image.description="Registry administartion UI tool" \
       org.opencontainers.image.licenses="MIT" \

@@ -1,7 +1,7 @@
 import * as React from 'react';
-import { AppBar, Logout, UserMenu, useTranslate } from 'react-admin';
+import {AppBar, Logout, UserMenu, ToggleThemeButton, useTranslate} from 'react-admin';
 import {Link} from 'react-router-dom';
-import GitHubIcon from '@mui/icons-material/GitHub';
+import {darkTheme, lightTheme} from './themes';
 import {
     Box,
     MenuItem,
@@ -12,12 +12,11 @@ import {
     Theme,
 } from '@mui/material';
 import SettingsIcon from '@mui/icons-material/Settings';
-import { useTheme } from '@mui/material/styles';
 import Logo from './Logo';
 
 const ConfigurationMenu = React.forwardRef((props, ref) => {
     const translate = useTranslate();
-   
+
     return (
         <MenuItem
             component={Link}
@@ -44,7 +43,6 @@ const CustomAppBar = (props: any) => {
     const isLargeEnough = useMediaQuery<Theme>(theme =>
         theme.breakpoints.up('sm')
     );
-    const theme = useTheme();
     return (
         <AppBar
             {...props}
@@ -64,9 +62,12 @@ const CustomAppBar = (props: any) => {
                 id="react-admin-title"
             />
 
-            {isLargeEnough && <Logo />}
-            {isLargeEnough && <Box component="span" sx={{ flex: 1 }} />}
-            <a href="https://github.com/zebox/registry-admin"><GitHubIcon sx={{color:theme.palette.secondary.light}}/></a>
+            {isLargeEnough && <Logo/>}
+            {isLargeEnough && <Box component="span" sx={{flex: 1}}/>}
+            <ToggleThemeButton
+                lightTheme={lightTheme}
+                darkTheme={darkTheme}
+            />
         </AppBar>
     );
 };
