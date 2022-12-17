@@ -134,6 +134,8 @@ func parseArgs() (*Options, error) {
 			"or use '--auth.token-secret' CLI flag.")
 	}
 
+	log.Printf("[DEBUG] current configuration: %+v", options)
+
 	return &options, nil
 }
 
