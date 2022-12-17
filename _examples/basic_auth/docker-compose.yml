@@ -1,4 +1,4 @@
-version: '2'
+version: '2.1'
 services:
   registry-admin:
     restart: unless-stopped
@@ -6,10 +6,12 @@ services:
     ports:
       - 8080:80
     environment:
-      RA_CONFIG_FILE: "/app/config/basic-ra-config.yml"
+      - RA_CONFIG_FILE=/app/config/basic-ra-config.yml
     volumes:
-      - ${PWD}/certs:/certs
-      - ${PWD}/config:/app/config
+      - ./certs:/certs
+      - ./config:/app/config
+      - ./access:/app/access
+      - ./data:/app/data
 
   registry:
     restart: unless-stopped
@@ -17,9 +19,9 @@ services:
     ports:
       - 50554:5000
     volumes:
-      - ${PWD}/data:/var/lib/registry
-      - ${PWD}/certs:/certs
-      - ${PWD}/config/registry-config.yml:/etc/docker/registry/config.yml
-      - ${PWD}/config:/var/lib/registry/.htpasswd
+      - ./data:/var/lib/registry
+      - ./certs:/certs
+      - ./config/registry-config.yml:/etc/docker/registry/config.yml
+      - ./access:/etc/docker/registry/access
     depends_on:
-      - "registry-admin"
+      - registry-admin

@@ -22,7 +22,7 @@ http:
 auth:
   htpasswd:
     realm: basic-realm
-    path: /var/lib/registry/.htpasswd
+    path: /etc/docker/registry/access/.htpasswd
 
 notifications:
   events:
@@ -32,7 +32,7 @@ notifications:
       disabled: false
       url: http://registry-admin/api/v1/registry/events
       headers:
-        Authorization: [ Basic YWRtaW46YWRtaW4= ]
+        Authorization: [ Basic YWRtaW46c3VwZXItc2VjcmV0]
       timeout: 1s
       threshold: 5
       backoff: 3s

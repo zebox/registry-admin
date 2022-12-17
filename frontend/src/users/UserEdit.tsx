@@ -28,7 +28,7 @@ const UserEdit = (props: any) => {
                 <PasswordInput label={translate('resources.users.fields.password')}
                     source="password"
                     autoComplete="new-password"
-                    {...rest} validate={required()} />
+                 />
                 <ReferenceInput source="group" reference="groups">
                     <SelectInput label={translate('resources.users.fields.group')} 
                         emptyValue={''} 

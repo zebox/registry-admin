@@ -1,0 +1,15 @@
+hostname: 127.0.0.1
+
+registry:
+  host: http://registry
+  port: 5000
+  auth_type: basic
+  htpasswd: /app/access/.htpasswd
+  login: admin
+  password: super-secret
+
+store:
+  type: embed
+  admin_password: super-secret
+  embed:
+    path: /app/data/__store.db

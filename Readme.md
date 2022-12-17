@@ -139,6 +139,20 @@ options isn't defined certificates will be created at a user home directory in s
     registry_auth.pub
     registry_auth_ca.crt
 ```
+**Notice:** when self-signed certificates is used you should configure Docker Engine on a client host for work with ones.
+```text
+# https://docs.docker.com/config/daemon/
+# /etc/docker/daemon.json (Linux)
+# C:\ProgramData\docker\config\daemon.json (Windows)
+
+{
+ ...
+ 
+  "insecure-registries": ["{registry-host}:{port}"],
+  
+ ...
+}
+```
 
 **Notice**: Certificates generated for registry token also can be using for HTTP TLS/SSL.
 

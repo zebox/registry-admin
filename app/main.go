@@ -29,6 +29,7 @@ func main() {
 	setupLog(opts.Debug)
 
 	log.Print("[INFO] server starting...")
+	log.Printf("[DEBUG] current configuration: %+v", opts)
 
 	if err = run(); err != nil && err != http.ErrServerClosed {
 		log.Printf("[ERROR] failed to run server: %v", err)
