@@ -122,7 +122,7 @@ func parseArgs() (*Options, error) {
 				return nil, errParse
 			}
 		default:
-			return nil, errors.Errorf("config parser for '%s' not implemented", ext)
+			return nil, errors.Errorf("config parser for %q not implemented", ext)
 		}
 
 	}
