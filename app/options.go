@@ -8,12 +8,13 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	log "github.com/go-pkgz/lgr"
+	"log"
+	"os"
+	"path/filepath"
+
 	"github.com/jessevdk/go-flags"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v3"
-	"os"
-	"path/filepath"
 )
 
 // configReader implement different file read implementation (json, yml, toml etc.)
