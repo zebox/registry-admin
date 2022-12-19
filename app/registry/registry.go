@@ -176,6 +176,13 @@ func NewRegistry(login, password string, settings Settings) (*Registry, error) {
 	var certsPathIsFilled bool
 	for i := 0; i < v.NumField(); i++ {
 		field := v.Field(i).Interface()
+
+		// skips check for IP and FQDNs
+		fName := v.Type().Field(i).Name
+		if fName == "IP" || fName == "FQDNs" {
+			continue
+		}
+
 		switch val := field.(type) {
 		case string:
 			if val == "" && certsPathIsFilled {
@@ -198,15 +205,7 @@ func NewRegistry(login, password string, settings Settings) (*Registry, error) {
 		r.htpasswd = nil // not needed for token auth
 		var err error
 		if certsPathIsFilled {
-			hostName := r.settings.Host
-
-			// try to extract service domain name or address
-			parts := strings.Split(r.settings.Host, "/")
-			if len(parts) == 3 {
-				hostName = parts[2]
-			}
-			r.registryToken, err = NewRegistryToken(TokenIssuer(settings.Issuer), CertsName(settings.CertificatesPaths), ServiceIPHost(r.settings.IP, hostName))
-			if err != nil {
+			if r.registryToken, err = NewRegistryToken(TokenIssuer(settings.Issuer), CertsName(settings.CertificatesPaths)); err != nil {
 				return nil, err
 			}
 		} else {

@@ -143,22 +143,25 @@ func Test_createRegistryConnection(t *testing.T) {
 	opts := Options{
 		Registry: RegistryGroup{
 			Host:     "http://localhost/",
-			IP:       "127.0.0.1",
 			Port:     5000,
 			AuthType: "token",
 			Login:    "test_login",
 			Password: "test_password",
 			Htpasswd: ".test_htpasswd",
 			Certs: struct {
-				Path      string `long:"path" env:"CERT_PATH" description:"A path to directory where will be stored new self-signed cert,keys and CA files, when 'token' auth type is used" json:"path" yaml:"path"`
-				Key       string `long:"key" env:"KEY_PATH" description:"A path where will be stored new self-signed private key file, when 'token' auth type is used" json:"key"`
-				PublicKey string `long:"public-key" env:"PUBLIC_KEY_PATH" description:"A path where will be stored new self-signed public key file, when 'token' auth type is used" json:"public_key" yaml:"public_key"`
-				CARoot    string `long:"ca-root" env:"CA_ROOT_PATH" description:"A path where will be stored new CA bundles file, when 'token' auth type is used" json:"ca_root" yaml:"ca_root"`
+				Path      string   `long:"path" env:"CERT_PATH" description:"A path to directory where will be stored new self-signed cert,keys and CA files, when 'token' auth type is used" json:"path" yaml:"path"`
+				Key       string   `long:"key" env:"KEY_PATH" description:"A path where will be stored new self-signed private key file, when 'token' auth type is used" json:"key"`
+				PublicKey string   `long:"public-key" env:"PUBLIC_KEY_PATH" description:"A path where will be stored new self-signed public key file, when 'token' auth type is used" json:"public_key" yaml:"public_key"`
+				CARoot    string   `long:"ca-root" env:"CA_ROOT_PATH" description:"A path where will be stored new CA bundles file, when 'token' auth type is used" json:"ca_root" yaml:"ca_root"`
+				FQDNs     []string `long:"fqdn" env:"FQDN" env-delim:"," description:"FQDN(s) for registry certificates" json:"fqdns" yaml:"fqdns"`
+				IP        string   `long:"ip" env:"IP" description:"Address which appends to certificate SAN (Subject Alternative Name)" json:"ip"`
 			}(struct {
 				Path      string
 				Key       string
 				PublicKey string
 				CARoot    string
+				FQDNs     []string `long:"fqdn" env:"FQDN" env-delim:"," description:"FQDN(s) for registry certificates" json:"fqdns" yaml:"fqdns"`
+				IP        string   `long:"ip" env:"IP" description:"Address which appends to certificate SAN (Subject Alternative Name)" json:"ip"`
 			}{Path: tmpDir + "/", Key: tmpDir + "/test.key", PublicKey: tmpDir + "/test.pub", CARoot: tmpDir + "/test.crt"}),
 		},
 	}

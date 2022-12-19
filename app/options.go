@@ -77,7 +77,6 @@ type StoreGroup struct {
 // RegistryGroup main setting for connection to private registry instance
 type RegistryGroup struct {
 	Host                     string `long:"host" env:"HOST" required:"true" description:"Main host or address to docker registry service" json:"host"`
-	IP                       string `long:"ip" env:"IP" description:"Address which appends to certificate SAN (Subject Alternative Name)" json:"ip"`
 	Port                     uint   `long:"port" env:"PORT" description:"Port which registry accept requests. Default:5000" default:"5000" json:"port"`
 	AuthType                 string `long:"auth-type" env:"AUTH_TYPE" description:"Type for auth to docker registry service. Available 'basic' and 'token'. Default 'token'" choice:"basic" choice:"token" default:"basic" json:"auth_type" yaml:"auth_type"`
 	Login                    string `long:"login" env:"LOGIN" description:"Username is a credential for access to registry service using basic auth type" json:"login"`
@@ -88,10 +87,12 @@ type RegistryGroup struct {
 	Issuer                   string `long:"issuer" env:"ISSUER" description:"A token issuer name which defined in registry settings" json:"issuer"`
 	GarbageCollectorInterval int64  `long:"gc-interval" env:"GC_INTERVAL" description:"Use for define custom time interval for garbage collector call (in hour), default 1 hours" json:"gc_interval" yaml:"gc_interval"`
 	Certs                    struct {
-		Path      string `long:"path" env:"CERT_PATH" description:"A path to directory where will be stored new self-signed cert,keys and CA files, when 'token' auth type is used" json:"path" yaml:"path"`
-		Key       string `long:"key" env:"KEY_PATH" description:"A path where will be stored new self-signed private key file, when 'token' auth type is used" json:"key"`
-		PublicKey string `long:"public-key" env:"PUBLIC_KEY_PATH" description:"A path where will be stored new self-signed public key file, when 'token' auth type is used" json:"public_key" yaml:"public_key"`
-		CARoot    string `long:"ca-root" env:"CA_ROOT_PATH" description:"A path where will be stored new CA bundles file, when 'token' auth type is used" json:"ca_root" yaml:"ca_root"`
+		Path      string   `long:"path" env:"CERT_PATH" description:"A path to directory where will be stored new self-signed cert,keys and CA files, when 'token' auth type is used" json:"path" yaml:"path"`
+		Key       string   `long:"key" env:"KEY_PATH" description:"A path where will be stored new self-signed private key file, when 'token' auth type is used" json:"key"`
+		PublicKey string   `long:"public-key" env:"PUBLIC_KEY_PATH" description:"A path where will be stored new self-signed public key file, when 'token' auth type is used" json:"public_key" yaml:"public_key"`
+		CARoot    string   `long:"ca-root" env:"CA_ROOT_PATH" description:"A path where will be stored new CA bundles file, when 'token' auth type is used" json:"ca_root" yaml:"ca_root"`
+		FQDNs     []string `long:"fqdn" env:"FQDN" env-delim:"," description:"FQDN(s) for registry certificates" json:"fqdns" yaml:"fqdns"`
+		IP        string   `long:"ip" env:"IP" description:"Address which appends to certificate SAN (Subject Alternative Name)" json:"ip"`
 	} `group:"certs" namespace:"certs" env-namespace:"CERTS" json:"certs"`
 }
 

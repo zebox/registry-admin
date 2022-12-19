@@ -2,7 +2,6 @@ hostname: 127.0.0.1
 
 registry:
   host: http://registry
-  ip: 127.0.0.1 # <- paste here real IP of docker host which publish the container
   port: 5000
   auth_type: token
   issuer: registry_token_issuer
@@ -12,6 +11,8 @@ registry:
     key: /app/certs/cert.key
     public_key: /app/certs/cert.pub
     ca_root: /app/certs/cert.crt
+    ip: 127.0.0.1 # <- paste a real IP of docker host which publish the container
+    fqdns: [demo.host.local, localhost, registry.host.local]
 
 store:
   type: embed

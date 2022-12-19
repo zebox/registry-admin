@@ -77,6 +77,8 @@ type Certs struct {
 	KeyPath       string
 	PublicKeyPath string
 	CARootPath    string
+	FQDNs         []string
+	IP            string
 }
 
 // ClientToken is Bearer AccessToken representing authorized access for a client
@@ -93,11 +95,6 @@ type ClientToken struct {
 // AccessToken is a token instance using for authorization in registry
 type AccessToken struct {
 	Certs
-
-	// append Subject Alternative Name for requested IP and Domain to certificate
-	// it prevents untasted error with HTTPS client request
-	// https://oidref.com/2.5.29.17
-	serviceIP, serviceHost string
 
 	// AccessToken claims field
 	tokenIssuer string
@@ -147,15 +144,8 @@ func CertsName(certs Certs) TokenOption {
 		rt.PublicKeyPath = certs.PublicKeyPath
 		rt.KeyPath = certs.KeyPath
 		rt.CARootPath = certs.CARootPath
-	}
-}
-
-// ServiceIPHost define service host values
-func ServiceIPHost(ip, host string) TokenOption {
-	return func(rt *AccessToken) {
-		rt.serviceIP = ip
-		rt.serviceHost = host
-
+		rt.FQDNs = certs.FQDNs
+		rt.IP = certs.IP
 	}
 }
 
@@ -164,8 +154,6 @@ func ServiceIPHost(ip, host string) TokenOption {
 func NewRegistryToken(opts ...TokenOption) (*AccessToken, error) {
 
 	rt := &AccessToken{
-		serviceIP:       defaultTokenIssuer,
-		serviceHost:     "localhost",
 		tokenExpiration: defaultTokenExpiration,
 		tokenIssuer:     defaultTokenIssuer,
 		l:               log.Default(),
@@ -184,6 +172,7 @@ func NewRegistryToken(opts ...TokenOption) (*AccessToken, error) {
 	rt.PublicKeyPath = rt.RootPath + publicKeyName
 	rt.KeyPath = rt.RootPath + privateKeyName
 	rt.CARootPath = rt.RootPath + caName
+	rt.FQDNs = []string{"localhost"}
 
 	for _, opt := range opts {
 		opt(rt)
@@ -387,18 +376,23 @@ func (rt *AccessToken) parseToken(tokenString string) (ct ClientToken, err error
 }
 
 // appendDSnToCertificate appends Subject Alternative Name for requested IP and Domain to certificate
+// It's require for append Subject Alternative Name for requested IP and Domain to certificate
+// and prevents untasted error with HTTPS client request
+// https://oidref.com/2.5.29.17
 func (rt *AccessToken) appendDSnToCertificate() {
-	if rt.serviceIP != "" {
+	if rt.Certs.IP != "" {
 		var ipAddressRegExp = regexp.MustCompile(`(?m)^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$`)
-		if ipAddressRegExp.MatchString(rt.serviceIP) {
-			rt.caRoot.IPAddresses = append(rt.caRoot.IPAddresses, net.ParseIP(rt.serviceIP))
+		if ipAddressRegExp.MatchString(rt.Certs.IP) {
+			rt.caRoot.IPAddresses = append(rt.caRoot.IPAddresses, net.ParseIP(rt.Certs.IP))
 		} else {
 			rt.l.Logf("failed to append ip address to certificate SN, ip address is invalid")
 		}
-
 	}
 
 	rt.caRoot.KeyUsage = x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign
 	rt.caRoot.ExtKeyUsage = []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth}
-	rt.caRoot.DNSNames = append(rt.caRoot.DNSNames, rt.serviceHost)
+
+	if len(rt.FQDNs) > 0 {
+		rt.caRoot.DNSNames = append(rt.caRoot.DNSNames, rt.FQDNs...)
+	}
 }

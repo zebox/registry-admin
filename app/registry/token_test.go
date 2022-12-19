@@ -45,12 +45,13 @@ func TestNewRegistryToken(t *testing.T) {
 		TokenIssuer("127.0.0.2"),
 		TokenLogger(log.Default()),
 		CertsName(Certs{
-			tmpDir,
-			tmpDir + "/test.key",
-			tmpDir + "/test.pub",
-			tmpDir + "/test_ca.crt",
+			RootPath:      tmpDir,
+			KeyPath:       tmpDir + "/test.key",
+			PublicKeyPath: tmpDir + "/test.pub",
+			CARootPath:    tmpDir + "/test_ca.crt",
+			FQDNs:         []string{"domain.local.test"},
+			IP:            "127.0.0.2",
 		}),
-		ServiceIPHost("127.0.0.2", "domain.local.test"),
 	)
 
 	require.NoError(t, err)
@@ -59,8 +60,8 @@ func TestNewRegistryToken(t *testing.T) {
 	assert.Equal(t, tmpDir+"/test.key", rt.KeyPath)
 	assert.Equal(t, tmpDir+"/test.pub", rt.PublicKeyPath)
 	assert.Equal(t, tmpDir+"/test_ca.crt", rt.CARootPath)
-	assert.Equal(t, "127.0.0.2", rt.serviceIP)
-	assert.Equal(t, "domain.local.test", rt.serviceHost)
+	assert.Equal(t, "127.0.0.2", rt.Certs.IP)
+	assert.Contains(t, rt.Certs.FQDNs, "domain.local.test")
 
 	// test with error
 	_, err = NewRegistryToken(
@@ -102,6 +103,18 @@ func TestNewRegistryToken(t *testing.T) {
 		}),
 	)
 	assert.Error(t, err)
+
+	// with bad ip address
+	_, err = NewRegistryToken(
+		CertsName(Certs{
+			RootPath:      tmpDir,
+			KeyPath:       tmpDir + "/test.key",
+			PublicKeyPath: tmpDir + "/test.pub",
+			CARootPath:    tmpDir + "bac_ca_file_path.crt",
+			IP:            "bad.ip.address",
+		}),
+	)
+	assert.Error(t, err)
 }
 
 func TestRegistryToken_Generate(t *testing.T) {
@@ -115,10 +128,10 @@ func TestRegistryToken_Generate(t *testing.T) {
 		TokenIssuer("OLYMP TESTER"),
 		TokenExpiration(3),
 		CertsName(Certs{
-			tmpDir,
-			tmpDir + "/test.key",
-			tmpDir + "/test.pub",
-			tmpDir + "/test_ca.crt",
+			RootPath:      tmpDir,
+			KeyPath:       tmpDir + "/test.key",
+			PublicKeyPath: tmpDir + "/test.pub",
+			CARootPath:    tmpDir + "/test_ca.crt",
 		}),
 	)
 	require.NoError(t, err)
@@ -156,13 +169,12 @@ func TestRegistryToken_CreateCerts(t *testing.T) {
 
 	rt := AccessToken{}
 
-	rt.serviceHost = "localhost"
-	rt.serviceIP = "127.0.0.2"
-
 	rt.RootPath = tmpDir
 	rt.KeyPath = tmpDir + privateKeyName
 	rt.PublicKeyPath = tmpDir + publicKeyName
 	rt.CARootPath = tmpDir + caName
+	rt.Certs.FQDNs = []string{"localhost"}
+	rt.Certs.IP = "127.0.0.2"
 
 	err := rt.createCerts()
 	require.NoError(t, err)

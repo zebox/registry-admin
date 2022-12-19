@@ -205,8 +205,7 @@ func createRegistryConnection(opts RegistryGroup) (*registry.Registry, error) {
 	if registrySettings.AuthType == registry.SelfToken {
 
 		// required for append to certificate extension
-		registrySettings.IP = opts.IP
-
+		registrySettings.IP = opts.Certs.IP
 		// paths to private, public keys and CA certificates for token generation if 'token' auth type defined
 		registrySettings.CertificatesPaths.RootPath = opts.Certs.Path
 		registrySettings.CertificatesPaths.KeyPath = opts.Certs.Key
