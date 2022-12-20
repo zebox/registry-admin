@@ -92,7 +92,7 @@ Latest stable version has :vX.Y.Z docker tag (with :latest alias) and the curren
 
 #### 1. RegistryAdmin
 At first, you need setup required parameters in compose file or using command line flags. Various configuration example 
-you can find in the `_examples` folder.
+you can find in the [_examples](_examples) folder.
 
 #### 1.1. Main setting
 - `hostname` - defines host name or ip address which includes to `AllowedOrigins` header and using for `CORS` requests check
