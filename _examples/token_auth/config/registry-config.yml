@@ -21,7 +21,7 @@ http:
 
 auth:
   token:
-    realm: http://127.0.0.1:8080/api/v1/registry/auth  # <- external ip accessible for clients from outside a container
+    realm: http://127.0.0.1:8080/api/v1/registry/auth  # <- external ip accessible for clients from outside of container
     service: container_registry
     issuer: registry_token_issuer
     rootcertbundle: /certs/cert.crt
@@ -34,7 +34,7 @@ notifications:
       disabled: false
       url: http://registry-admin/api/v1/registry/events
       headers:
-        Authorization: [Basic YWRtaW46c3VwZXItc2VjcmV0]
+        Authorization: [Basic YWRtaW46c3VwZXItc2VjcmV0] # 'admin:super-secret' base64 encode string
       timeout: 1s
       threshold: 5
       backoff: 3s

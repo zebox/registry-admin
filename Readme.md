@@ -1,4 +1,4 @@
-![logo](assets/registry_admin.svg)
+<img src="assets/registry_admin.svg" alt="drawing" width="400"/>
 
 The RegistryAdmin project is a tool that allows users to manage access to a private Docker registry. 
 It provides a web-based user interface for managing repositories, images, and user access, and allows users to authenticate 
