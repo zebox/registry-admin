@@ -12,4 +12,4 @@ store:
   type: embed
   admin_password: super-secret
   embed:
-    path: /app/data/__store.db
+    path: /app/data/store.db
