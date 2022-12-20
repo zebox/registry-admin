@@ -78,7 +78,7 @@ type StoreGroup struct {
 type RegistryGroup struct {
 	Host                     string `long:"host" env:"HOST" required:"true" description:"Main host or address to docker registry service" json:"host"`
 	Port                     uint   `long:"port" env:"PORT" description:"Port which registry accept requests. Default:5000" default:"5000" json:"port"`
-	AuthType                 string `long:"auth-type" env:"AUTH_TYPE" description:"Type for auth to docker registry service. Available 'basic' and 'token'. Default 'token'" choice:"basic" choice:"token" default:"basic" json:"auth_type" yaml:"auth_type"`
+	AuthType                 string `long:"auth-type" env:"AUTH_TYPE" description:"Type for auth to docker registry service. Available 'basic' and 'token'. Default 'token'" choice:"basic" choice:"token" default:"token" json:"auth_type" yaml:"auth_type"`
 	Login                    string `long:"login" env:"LOGIN" description:"Username is a credential for access to registry service using basic auth type" json:"login"`
 	Password                 string `long:"password" env:"PASSWORD" description:"Password is a credential for access to registry service using basic auth type" json:"password"`
 	Htpasswd                 string `long:"htpasswd" env:"HTPASSWD" description:"Path to htpasswd file when basic auth type selected" json:"htpasswd"`

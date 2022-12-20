@@ -377,7 +377,7 @@ func (rt *AccessToken) parseToken(tokenString string) (ct ClientToken, err error
 
 // appendDSnToCertificate appends Subject Alternative Name for requested IP and Domain to certificate
 // It's require for append Subject Alternative Name for requested IP and Domain to certificate
-// and prevents untasted error with HTTPS client request
+// and prevents untrusted error with HTTPS client request
 // https://oidref.com/2.5.29.17
 func (rt *AccessToken) appendDSnToCertificate() {
 	if rt.Certs.IP != "" {
