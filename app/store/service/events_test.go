@@ -243,5 +243,9 @@ func prepareEngineMock() *engine.InterfaceMock {
 			}
 			return errors.Errorf("entry not found: id %v", id)
 		},
+
+		AccessGarbageCollectorFunc: func(ctx context.Context) error {
+			return nil
+		},
 	}
 }
