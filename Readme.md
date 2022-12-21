@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="assets/registry_admin_logo.svg" alt="drawing" width="400"/>
+  <img src="assets/registry_admin_logo.svg" alt="logo" width="400"/>
 </div>
 
 The RegistryAdmin project is a tool that allows users to manage access to a private Docker registry. 
@@ -11,7 +11,10 @@ This can be useful for users who want to have more control over their registry a
 to it more easily. 
 
 Web user interface create with [React-Admin](https://marmelab.com/react-admin) framework and [MUI](https://mui.com/) components.
-![preview](assets/registry_admin_demo.gif "Preview of Registry Admin UI")
+<div align="center">
+  <img src="assets/demo_1.png" alt="demo"/>
+</div>
+
 ### Features
 * Management users and access to registry
 * Restrict access to repository per user action (`pull`/`push`, only for `token` auth scheme)
