@@ -1,7 +1,7 @@
 import * as React from 'react';
-import {AppBar, Logout, UserMenu, ToggleThemeButton, useTranslate} from 'react-admin';
-import {Link} from 'react-router-dom';
-import {darkTheme, lightTheme} from './themes';
+import { AppBar, Logout, UserMenu, ToggleThemeButton, useTranslate } from 'react-admin';
+import { Link } from 'react-router-dom';
+import { darkTheme, lightTheme } from './themes';
 import {
     Box,
     MenuItem,
@@ -61,9 +61,8 @@ const CustomAppBar = (props: any) => {
                 }}
                 id="react-admin-title"
             />
-
-            {isLargeEnough && <Logo/>}
-            {isLargeEnough && <Box component="span" sx={{flex: 1}}/>}
+            {isLargeEnough && <Logo />}
+            {isLargeEnough && <Box component="span" sx={{ flex: 1 }} />}
             <ToggleThemeButton
                 lightTheme={lightTheme}
                 darkTheme={darkTheme}

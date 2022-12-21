@@ -1,4 +1,6 @@
-<img src="assets/registry_admin.svg" alt="drawing" width="400"/>
+<div align="center">
+  <img src="assets/registry_admin_logo.svg" alt="drawing" width="400"/>
+</div>
 
 The RegistryAdmin project is a tool that allows users to manage access to a private Docker registry. 
 It provides a web-based user interface for managing repositories, images, and user access, and allows users to authenticate 
@@ -163,9 +165,9 @@ using a separate access control manager. For get more information about it, foll
 At first, you need define `auth` option for `token` auth and set specific `certificate` and `key` which generated with the 
 RegistryAdmin app. Token options must be the same as RegistryAdmin `Registry` defined options (`issuer`,`service`,`cert_ca`).
 
-:exclamation: `real` option it *IP address* or *Hostname* RegistryAdmin instance must accessible for docker clients which 
+:exclamation: `realm` is option of *IP address* or *Hostname* RegistryAdmin instance must accessible for docker clients which 
 uses it for authenticate to private registry.
-![Real example in docker environment](assets/realm_example.png "Real example in docker environment")
+![Realm example in docker environment](assets/realm_example.png "Real example in docker environment")
 
 ```yml
 auth:
