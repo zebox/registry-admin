@@ -8,7 +8,7 @@ const Logo = (props: SVGProps<SVGSVGElement>) => {
     id="e1690c7f-0f7f-4da9-91c6-93f6e68ff73e"
     data-name="Layer 1"
     xmlns="http://www.w3.org/2000/svg"
-    width={946.532}
+    width={217.532}
     height={36.475}
     viewBox="0 0 933.15 173.15"
     {...props}

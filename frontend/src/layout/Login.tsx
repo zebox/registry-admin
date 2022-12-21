@@ -73,6 +73,7 @@ const Login = () => {
                 sx={{
                     display: 'flex',
                     flexDirection: 'column',
+                 
                     minHeight: '100vh',
                     alignItems: 'center',
                     justifyContent: 'flex-start',
@@ -81,7 +82,7 @@ const Login = () => {
                     backgroundSize: 'cover',
                 }}
             >
-                <Card sx={{ minWidth: 300, marginTop: '6em' }}>
+                <Card sx={{ minWidth: 300, maxWidth:400, marginTop: '6em' }}>
                    
                     <Box
                         sx={{

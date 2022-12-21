@@ -11,7 +11,7 @@ This can be useful for users who want to have more control over their registry a
 to it more easily. 
 
 Web user interface create with [React-Admin](https://marmelab.com/react-admin) framework and [MUI](https://mui.com/) components.
-
+![preview](assets/registry_admin_demo.gif "Preview of Registry Admin UI")
 ### Features
 * Management users and access to registry
 * Restrict access to repository per user action (`pull`/`push`, only for `token` auth scheme)
