@@ -1,4 +1,4 @@
-### Example with `baisic` authentication type
+### Example with `basic` authentication type
 
 1. Grant permission for RegistryAdmin user inside container:
 
