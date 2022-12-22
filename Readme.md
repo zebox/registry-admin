@@ -344,4 +344,4 @@ best not to break things unless there is a good reason.
 
 ### Credits
 
-This project was inspired by the projects and ideas of [Umputun](https://github.com/umputun)
+This project was inspired by projects and ideas of [Umputun](https://github.com/umputun)
