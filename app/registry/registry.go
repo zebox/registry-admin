@@ -59,9 +59,6 @@ type Settings struct {
 	// also it's value appends Subject Alternative Name for requested IP and Domain to certificate
 	Host string
 
-	// required for appends Subject Alternative Name for requested IP and Domain to certificate
-	IP string
-
 	// Port which registry accept requests
 	Port uint
 

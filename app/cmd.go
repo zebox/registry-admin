@@ -203,14 +203,15 @@ func createRegistryConnection(opts RegistryGroup) (*registry.Registry, error) {
 	}
 
 	if registrySettings.AuthType == registry.SelfToken {
-
-		// required for append to certificate extension
-		registrySettings.IP = opts.Certs.IP
 		// paths to private, public keys and CA certificates for token generation if 'token' auth type defined
 		registrySettings.CertificatesPaths.RootPath = opts.Certs.Path
 		registrySettings.CertificatesPaths.KeyPath = opts.Certs.Key
 		registrySettings.CertificatesPaths.PublicKeyPath = opts.Certs.PublicKey
 		registrySettings.CertificatesPaths.CARootPath = opts.Certs.CARoot
+
+		// required for append to certificate extension
+		registrySettings.CertificatesPaths.IP = opts.Certs.IP
+		registrySettings.CertificatesPaths.FQDNs = opts.Certs.FQDNs
 	}
 
 	return registry.NewRegistry(opts.Login, opts.Password, registrySettings)
