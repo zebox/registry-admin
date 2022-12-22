@@ -8,7 +8,7 @@ authenticate
 using either `password`. The main goal of the project is to provide a high-level API for managing user access
 to a private registry, and to restrict user actions (such as push and pull) for specific repositories based on
 the [official](https://docs.docker.com/registry/) private Docker registry [image](https://hub.docker.com/_/registry).
-This can be useful for users who want to have more control over their registry and who want to be able to manage access
+This can be useful for registry owners who want to have more control over their registry and who want to be able to manage access
 to it more easily.
 
 Web user interface created with [React-Admin](https://marmelab.com/react-admin) framework and [MUI](https://mui.com/)
