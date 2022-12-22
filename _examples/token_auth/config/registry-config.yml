@@ -18,6 +18,9 @@ storage:
 http:
   addr: ":5000"
   net: tcp
+  tls:
+    certificate: /certs/cert.crt
+    key: /certs/cert.key
 
 auth:
   token:
