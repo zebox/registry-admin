@@ -21,7 +21,7 @@ http:
 
 auth:
   token:
-    realm: http://127.0.0.1:8080/api/v1/registry/auth  # <- external ip accessible for clients from outside of container
+    realm: http://localhost:8080/api/v1/registry/auth  # <- external ip accessible for clients from outside of container
     service: container_registry
     issuer: registry_token_issuer
     rootcertbundle: /certs/cert.crt

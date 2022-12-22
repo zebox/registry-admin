@@ -17,6 +17,8 @@ services:
     image: registry:2
     ports:
       - 50554:5000
+    environment:
+      - REGISTRY_AUTH_TOKEN_REALM=tnas.local:8080 # <- change this for real hostname and exposed port which accessible for docker clients
     volumes:
       - ./data:/var/lib/registry
       - ./certs:/certs
