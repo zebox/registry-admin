@@ -281,7 +281,7 @@ registry:
       /registry.https-insecure           Set https connection to registry insecure [$RA_REGISTRY_HTTPS_INSECURE]
       /registry.service:                 A service name which defined in registry settings [$RA_REGISTRY_SERVICE]
       /registry.issuer:                  A token issuer name which defined in registry settings [$RA_REGISTRY_ISSUER]
-      /registry.gc-interval:             Use for define custom time interval for garbage collector call (in hour), default 1 hours [$RA_REGISTRY_GC_INTERVAL]
+      /registry.gc-interval:             Use for define custom time interval for garbage collector execute (minutes), default 1 hours [$RA_REGISTRY_GC_INTERVAL]
 
 certs:
       /registry.certs.path:              A path to directory where will be stored new self-signed cert,keys and CA files, when 'token' auth type is used [$RA_REGISTRY_CERTS_CERT_PATH]

@@ -85,7 +85,7 @@ type RegistryGroup struct {
 	InsecureConnection       bool   `long:"https-insecure" env:"HTTPS_INSECURE" description:"Set https connection to registry insecure" json:"https_insecure"`
 	Service                  string `long:"service" env:"SERVICE" description:"A service name which defined in registry settings" json:"service"`
 	Issuer                   string `long:"issuer" env:"ISSUER" description:"A token issuer name which defined in registry settings" json:"issuer"`
-	GarbageCollectorInterval int64  `long:"gc-interval" env:"GC_INTERVAL" description:"Use for define custom time interval for garbage collector call (in hour), default 1 hours" json:"gc_interval" yaml:"gc_interval"`
+	GarbageCollectorInterval int64  `long:"gc-interval" env:"GC_INTERVAL" description:"Use for define custom time interval for garbage collector execute (minutes), default 1 hours" json:"gc_interval" yaml:"gc_interval"`
 	Certs                    struct {
 		Path      string   `long:"path" env:"CERT_PATH" description:"A path to directory where will be stored new self-signed cert,keys and CA files, when 'token' auth type is used" json:"path" yaml:"path"`
 		Key       string   `long:"key" env:"KEY_PATH" description:"A path where will be stored new self-signed private key file, when 'token' auth type is used" json:"key"`
