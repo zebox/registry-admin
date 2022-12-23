@@ -1,9 +1,0 @@
-registry:
-#  restart: always
-  image: registry:2
-  ports:
-    - 50554:5000
-  volumes:
-    - ./data:/var/lib/registry
-    - ./certs:/certs
-    - ./registry_config.yml:/etc/docker/registry/config.yml
