@@ -96,6 +96,7 @@ type RegistryGroup struct {
 	} `group:"certs" namespace:"certs" env-namespace:"CERTS" json:"certs"`
 }
 
+// ParseArgs calls flag parser for passing set of extra options defined for all commands
 func ParseArgs() (*Options, error) {
 	var options Options
 	_, errParse := flags.ParseArgs(&options, os.Args)

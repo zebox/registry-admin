@@ -30,6 +30,7 @@ import (
 
 var opts *Options
 
+// Execute is the entry point for start main server command
 func Execute(options *Options, webContent embed.FS) error {
 
 	opts = options
