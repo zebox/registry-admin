@@ -40,16 +40,16 @@ const i18nProvider = polyglotI18nProvider(locale => {
     return messages.en;
   }
 
-  const  config = JSON.parse(configString);
-  const {language}:UiConfig = config;
+    const config = JSON.parse(configString);
+    const {language}: UiConfig = config;
 
-  if (language!=="" && messages[language]) {
-    return messages[language];
-  }
+    if (language !== "" && messages[language]) {
+        return messages[language];
+    }
 
-  return messages[locale] ? messages[locale] : messages.en;
+    return messages[locale] ? messages[locale] : messages.en;
 
-}, 'en', { allowMissing: true });
+}, 'en', {allowMissing: true});
 
 
 function App() {
