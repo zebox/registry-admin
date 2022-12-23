@@ -4,24 +4,27 @@
 package main
 
 import (
-	log "github.com/go-pkgz/lgr"
+	"embed"
 	"net/http"
 	"os"
 	"os/signal"
 	"runtime"
 	"syscall"
+
+	log "github.com/go-pkgz/lgr"
+	"github.com/zebox/registry-admin/app/cmd"
 )
 
-var (
-	version = "unknown"
-	opts    *Options
-)
+//go:embed web/*
+var webContent embed.FS
+
+var version = "unknown"
 
 func main() {
 	log.Printf("REGISTRY ADMIN PORTAL: %s\n", version)
 
-	var err error
-	opts, err = parseArgs()
+	// parse args used here because setupLog required options on top level
+	opts, err := cmd.ParseArgs()
 
 	if err != nil {
 		log.Fatalf("[ERROR] failed to parse config parameters: %v", err)
@@ -31,7 +34,7 @@ func main() {
 	log.Print("[INFO] server starting...")
 	log.Printf("[DEBUG] current configuration: %+v", opts)
 
-	if err = run(); err != nil && err != http.ErrServerClosed {
+	if err = cmd.Execute(opts, webContent); err != nil && err != http.ErrServerClosed {
 		log.Printf("[ERROR] failed to run server: %v", err)
 		os.Exit(1)
 	}

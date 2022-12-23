@@ -1,10 +1,9 @@
-package main
+package cmd
 
 import (
 	"context"
 	"embed"
 	"fmt"
-
 	"io"
 	"math"
 	"net/http"
@@ -29,10 +28,11 @@ import (
 	log "github.com/go-pkgz/lgr"
 )
 
-//go:embed web/*
-var webContent embed.FS
+var opts *Options
 
-func run() error {
+func Execute(options *Options, webContent embed.FS) error {
+
+	opts = options
 
 	// setup logger for access requests
 	accessLogger, errLog := createLoggerToFile()

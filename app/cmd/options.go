@@ -1,7 +1,7 @@
 // Option is a main set of service option
 // Some ideas and piece of code borrow from projects of Umputun (https://github.com/umputun)
 
-package main
+package cmd
 
 import (
 	"crypto/rand"
@@ -96,7 +96,7 @@ type RegistryGroup struct {
 	} `group:"certs" namespace:"certs" env-namespace:"CERTS" json:"certs"`
 }
 
-func parseArgs() (*Options, error) {
+func ParseArgs() (*Options, error) {
 	var options Options
 	_, errParse := flags.ParseArgs(&options, os.Args)
 

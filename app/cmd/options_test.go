@@ -1,4 +1,4 @@
-package main
+package cmd
 
 import (
 	"os"
@@ -133,14 +133,14 @@ func Test_parseArgs(t *testing.T) {
 	testMatcherOptions.Debug = true
 
 	os.Args = []string{os.Args[0]} // clear Go test flags
-	testOpts, errParse := parseArgs()
+	testOpts, errParse := ParseArgs()
 	require.NoError(t, errParse)
 	require.NotNil(t, testOpts)
 	assert.Equal(t, &testMatcherOptions, testOpts)
 
 	// test for random token generated for main auth token
 	assert.NoError(t, os.Setenv("RA_AUTH_TOKEN_SECRET", ""))
-	testOpts, errParse = parseArgs()
+	testOpts, errParse = ParseArgs()
 	require.NoError(t, errParse)
 	require.NotNil(t, testOpts)
 	assert.NotEmpty(t, testOpts.Auth.TokenSecret)
