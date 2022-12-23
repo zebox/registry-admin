@@ -1,0 +1,53 @@
+{
+  "listen": "*",
+  "hostname": "localhost",
+  "port": 80,
+  "debug": true,
+  "registry": {
+    "host": "https://registry-admin",
+    "port": 5000,
+    "auth_type": "token",
+    "login": "admin",
+    "password": "password",
+    "htpasswd": "../testdata/.htpasswd",
+    "issuer": "registry_token_issuer",
+    "https_insecure": false,
+    "service": "container_registry",
+    "gc_interval": 30,
+    "certs": {
+      "path": "certs",
+      "key": "certs/cert.key",
+      "public_key": "certs/cert.pub",
+      "ca_root": "certs/cert.crt",
+      "ip": "10.10.12.100",
+      "fqdn": [
+        "demo.registry.local",
+        "registry.host.local"
+      ]
+    }
+  },
+  "auth": {
+    "token_secret": "super-secret-password-string",
+    "issuer_name": "your-issuer-name",
+    "jwt_ttl": "24h",
+    "cookie_ttl": "48h"
+  },
+  "logger": {
+    "enabled": true,
+    "filename": "./access.log",
+    "max_size": "5M",
+    "max_backups": 3
+  },
+  "ssl": {
+    "type": "static",
+    "port": 443,
+    "cert": "certs/cert.crt",
+    "key": "certs/cert.key"
+  },
+  "store": {
+    "type": "embed",
+    "embed": {
+      "path": "store.db"
+    }
+  }
+}
