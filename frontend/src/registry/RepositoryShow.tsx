@@ -1,7 +1,21 @@
 import * as React from "react";
-import { useParams } from 'react-router-dom';
-import { useDelete, usePermissions, useTranslate, Datagrid, useRecordContext, Title, ListBase, ListToolbar, Pagination, TextField, Loading, Confirm } from 'react-admin';
-import { Card, CardContent, Typography, Button } from '@mui/material';
+import {useParams} from 'react-router-dom';
+import {
+    useDelete,
+    usePermissions,
+    useTranslate,
+    useRefresh,
+    Datagrid,
+    useRecordContext,
+    Title,
+    ListBase,
+    ListToolbar,
+    Pagination,
+    TextField,
+    Loading,
+    Confirm
+} from 'react-admin';
+import {Card, CardContent, Typography, Button} from '@mui/material';
 
 import { ConvertUnixTimeToDate, SearchFieldTranslated } from "../helpers/Helpers";
 import { SizeFieldReadable } from "./RepositoryList";
@@ -101,6 +115,7 @@ const ShowImageDetail = ({ source }: any) => {
 const TagDeleteButton = (props: any) => {
     const record = useRecordContext();
     const translate = useTranslate();
+    const refresh = useRefresh();
 
     const [deleteOne, { isLoading, error }] = useDelete();
     const [open, setOpen] = React.useState(false);
@@ -111,6 +126,7 @@ const TagDeleteButton = (props: any) => {
             { id: record["tag"], previousData: record, meta: { name: record["repository_name"], digest: record["digest"] } }
         )
         setOpen(false);
+        refresh();
     }
 
     const handleDialogClose = () => {

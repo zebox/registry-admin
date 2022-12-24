@@ -90,4 +90,29 @@ const Configuration = () => {
     );
 };
 
+export const SaveConfig = (option: RaThemeOptions | string) => {
+    const [, setLocale] = useLocaleState();
+    const [, setTheme] = useTheme();
+
+    var config: UiConfig = {theme: "light", language: "en"};
+    const configString = localStorage.getItem(uiConfig);
+
+    if (configString !== null) {
+        config = JSON.parse(configString);
+    }
+
+    if ((option as RaThemeOptions) !== undefined) {
+        config.theme = option === darkTheme ? "dark" : "light";
+        localStorage.setItem(uiConfig, JSON.stringify(config));
+        setTheme(option as RaThemeOptions);
+    }
+
+    if (typeof option === 'string') {
+        config.language = option;
+        localStorage.setItem(uiConfig, JSON.stringify(config));
+        setLocale(option);
+    }
+
+}
+
 export default Configuration;

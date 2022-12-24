@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {AppBar, LocalesMenuButton, Logout, UserMenu, ToggleThemeButton, useTranslate} from 'react-admin';
+import {AppBar, Logout, UserMenu, ToggleThemeButton, useTranslate} from 'react-admin';
 import {Link} from 'react-router-dom';
 import { darkTheme, lightTheme } from './themes';
 import {
@@ -67,11 +67,6 @@ const CustomAppBar = (props: any) => {
                 lightTheme={lightTheme}
                 darkTheme={darkTheme}
             />
-            <LocalesMenuButton languages={[
-                {locale: 'en', name: 'English'},
-                {locale: 'ru', name: 'Русский'},
-            ]}/>
-
         </AppBar>
     );
 };
