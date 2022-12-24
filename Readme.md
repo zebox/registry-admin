@@ -179,16 +179,20 @@ options isn't defined certificates will be created at a user home directory in s
 
 **Notice**: Certificates generated for registry token also can be using for HTTP TLS/SSL.
 
-#### 1.3.  Private Docker Registry settings (with token auth) - Recommended
+#### 1.3. Private Docker Registry settings (with token auth) - Recommended
+
 Supported registry V2 only. For use docker registry with token authentication you need configure it as a standalone
 access control manager for resources hosted by other services which wish to authenticate and manage authorization
-using a separate access control manager. For get more information about it, follow to the official 
+using a separate access control manager. For get more information about it, follow to the official
 [documentations](https://docs.docker.com/registry/spec/auth/token/).
 
 At first, you need define `auth` option for `token` auth and set specific `certificate` and `key` which generated with
-the
-RegistryAdmin app. Token options must be the same as RegistryAdmin `Registry` defined
-options (`issuer`,`service`,`cert_ca`).
+the RegistryAdmin app. Token options must be the same as RegistryAdmin `Registry` defined
+options (`issuer`,`service`,`cert_ca`). The RegistryAdmin app has public endpoint for authenticate users requests to
+registry,
+that must be used in `realm` registry option.
+
+`https://{registry-admin-host}:{port}/api/v1/auth`
 
 :exclamation: `realm` is option of *IP address* or *Hostname* RegistryAdmin instance that must accessible for docker
 clients which
@@ -232,7 +236,7 @@ notifications:
           - application/octet-stream
 ```
 
-### Registry settings (with basic auth, .htpasswd) - Not recommended
+### RegistryAdmin settings (with basic auth, .htpasswd) - Not recommended
 
 `basic` option using `.htpasswd` file and doesn't support restrict access to specific repositories. For use `basic`
 authentication you required following options:
