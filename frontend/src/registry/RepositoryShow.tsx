@@ -1,10 +1,11 @@
 import * as React from "react";
-import {useParams} from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import {
     useDelete,
     usePermissions,
     useTranslate,
     useRefresh,
+    useNotify,
     Datagrid,
     useRecordContext,
     Title,
@@ -15,7 +16,7 @@ import {
     Loading,
     Confirm
 } from 'react-admin';
-import {Card, CardContent, Typography, Button} from '@mui/material';
+import { Card, CardContent, Typography, Button } from '@mui/material';
 
 import { ConvertUnixTimeToDate, SearchFieldTranslated } from "../helpers/Helpers";
 import { SizeFieldReadable } from "./RepositoryList";
@@ -28,6 +29,7 @@ import CopyToClipboard from "../components/ClipboardCopy/CopyToClipboard";
  */
 
 export const repositoryBaseResource = 'registry/catalog';
+let isErrorShow: Boolean = false;
 
 const RepositoryShow = () => {
     const translate = useTranslate();
@@ -48,12 +50,12 @@ const RepositoryShow = () => {
     </TagList>
 }
 
-const TagFiled = ({source}:any):React.ReactElement=>{
+const TagFiled = ({ source }: any): React.ReactElement => {
     const record = useRecordContext();
     return (
         <>
-          <TextField source="tag" />
-          <CopyToClipboard content={`${record['repository_name']}:${record[source]}`}/>
+            <TextField source="tag" />
+            <CopyToClipboard content={`${record['repository_name']}:${record[source]}`} />
         </>
     )
 }
@@ -116,11 +118,17 @@ const TagDeleteButton = (props: any) => {
     const record = useRecordContext();
     const translate = useTranslate();
     const refresh = useRefresh();
+    const notify = useNotify();
 
     const [deleteOne, { isLoading, error }] = useDelete();
     const [open, setOpen] = React.useState(false);
+   
+    const handleDialogClose = () => {
+        setOpen(false);
+    }
 
     const deleteTag = () => {
+        isErrorShow=false;
         deleteOne(
             repositoryBaseResource,
             { id: record["tag"], previousData: record, meta: { name: record["repository_name"], digest: record["digest"] } }
@@ -129,14 +137,33 @@ const TagDeleteButton = (props: any) => {
         refresh();
     }
 
-    const handleDialogClose = () => {
-        setOpen(false);
+    if (isLoading) return <Loading />
+
+    if (!isErrorShow && error) {
+        isErrorShow=true;
+        const err = error as Error;
+        notify(
+            typeof error === 'string'
+                ? error
+                :
+                typeof err === 'undefined' || err.message
+                    ? err.message
+                    : 'ra.notification.http_error',
+            {
+                type: 'warning',
+                messageArgs: {
+                    _:
+                        typeof error === 'string'
+                            ? error
+                            : err && err.message
+                                ? err.message
+                                : undefined,
+                },
+            }
+        )
+        
     }
 
-    if (isLoading) return <Loading />
-    if (error) {
-        console.error(error);
-    }
 
     return <React.Fragment>
         <Button onClick={() => setOpen(true)}>{translate('ra.action.delete')}</Button>
@@ -154,7 +181,6 @@ const TagDeleteButton = (props: any) => {
         />
 
     </React.Fragment>
-
 
 }
 const DateFieldFormatted = ({ source }: any) => {

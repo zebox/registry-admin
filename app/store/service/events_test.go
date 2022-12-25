@@ -107,9 +107,9 @@ func TestDataService_RepositoryEventsProcessing(t *testing.T) {
 	testEnvelope.Events[0].Action = notifications.EventActionPull
 	testEnvelope.Events[0].Target.Repository = "test/repo_1"
 	testEnvelope.Events[0].Target.Tag = "1.1.0"
-	err = ds.RepositoryEventsProcessing(ctx, testEnvelope)
+	errProcessing := ds.RepositoryEventsProcessing(ctx, testEnvelope)
 	ds.isWorking.Store(false)
-	assert.Error(t, err)
+	assert.Nil(t, errProcessing)
 
 	// test with multiple values
 	testEnvelope.Events[0].Target.Repository = "test/repo_"
@@ -138,6 +138,12 @@ func TestDataService_RepositoryEventsProcessing(t *testing.T) {
 	testEnvelopePullEvent.Events[0].Target.Descriptor.Digest = ""
 	err = ds.RepositoryEventsProcessing(nil, testEnvelope) // nolint
 	assert.Nil(t, err)
+
+	// test delete when syncing
+	ds.isWorking.Store(true)
+	testEnvelopePullEvent.Events[0].Target.Descriptor.Digest = ""
+	err = ds.RepositoryEventsProcessing(nil, testEnvelope) // nolint
+	assert.Equal(t, errorSyncGcInProgress, err)
 
 }
 

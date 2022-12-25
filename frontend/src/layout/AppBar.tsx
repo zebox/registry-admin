@@ -1,40 +1,15 @@
-import * as React from 'react';
-import {AppBar, Logout, UserMenu, ToggleThemeButton, useTranslate} from 'react-admin';
-import {Link} from 'react-router-dom';
+import { AppBar, Logout, UserMenu, ToggleThemeButton } from 'react-admin';
 import { darkTheme, lightTheme } from './themes';
 import {
     Box,
-    MenuItem,
-    ListItemIcon,
-    ListItemText,
     Typography,
     useMediaQuery,
     Theme,
 } from '@mui/material';
-import SettingsIcon from '@mui/icons-material/Settings';
 import Logo from './Logo';
 
-const ConfigurationMenu = React.forwardRef((props, ref) => {
-    const translate = useTranslate();
-
-    return (
-        <MenuItem
-            component={Link}
-            // @ts-ignore
-            ref={ref}
-            {...props}
-            to="/configuration"
-        >
-            <ListItemIcon>
-                <SettingsIcon />
-            </ListItemIcon>
-            <ListItemText>{translate('portal.configuration')}</ListItemText>
-        </MenuItem>
-    );
-});
 const CustomUserMenu = () => (
     <UserMenu>
-        <ConfigurationMenu />
         <Logout />
     </UserMenu>
 );
@@ -61,8 +36,8 @@ const CustomAppBar = (props: any) => {
                 }}
                 id="react-admin-title"
             />
-            {isLargeEnough && <Logo/>}
-            {isLargeEnough && <Box component="span" sx={{flex: 1}}/>}
+            {isLargeEnough && <Logo />}
+            {isLargeEnough && <Box component="span" sx={{ flex: 1 }} />}
             <ToggleThemeButton
                 lightTheme={lightTheme}
                 darkTheme={darkTheme}

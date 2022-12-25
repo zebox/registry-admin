@@ -51,7 +51,7 @@ func (ds *DataService) updateRepositoryEntry(ctx context.Context, event notifica
 		// registry. For avoid race between sync and pull event triggers uses check for syncing or garbage collector
 		// operation is in progress
 		if ds.isWorking.Load().(bool) {
-			return errorSyncGcInProgress
+			return nil
 		}
 
 		repositoryEntry := result.Data[0].(store.RegistryEntry)
@@ -113,6 +113,11 @@ func (ds *DataService) updateRepositoryEntry(ctx context.Context, event notifica
 
 // deleteRepositoryEntry deletes repository entry by an event delete
 func (ds *DataService) deleteRepositoryEntry(ctx context.Context, event notifications.Event) error {
+
+	// prevent delete when syncing in progress
+	if ds.isWorking.Load().(bool) {
+		return errorSyncGcInProgress
+	}
 
 	digest := event.Target.Descriptor.Digest
 

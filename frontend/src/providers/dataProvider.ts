@@ -34,7 +34,7 @@ const dataProvider: DataProvider = {
             const url = `${apiUrl}/${resource}?${stringify(query)}&${meta}`;
 
             return httpClient(url, createOptions("GET")).then(({ status, json }) => {
-                
+
                 if (!Object.hasOwn(json, 'total') || json.total === 0) {
                     json.total = 0;
                     json.data = [];
@@ -70,7 +70,7 @@ const dataProvider: DataProvider = {
             filter: JSON.stringify({ ids: params.ids }),
         };
         const url = `${apiUrl}/${resource}?${stringify(query)}`;
-        return new Promise((resolve, reject): Promise<GetManyResult<any> | any> => {
+        return new Promise((resolve,): Promise<GetManyResult<any> | any> => {
             return httpClient(url, createOptions("GET")).then(({ json }) => {
                 if (!Object.hasOwn(json, 'total') || json.total === 0) {
                     json.total = 0;
@@ -127,12 +127,25 @@ const dataProvider: DataProvider = {
     delete: function <RecordType extends RaRecord = any>(resource: string, params: DeleteParams<RecordType>): Promise<DeleteResult<RecordType>> {
         const meta = new URLSearchParams(params.meta).toString();
 
-        return httpClient(`${apiUrl}/${resource}/${params.id}${meta && meta.length > 0 ? "?" + meta : ""}`, {
-            method: 'DELETE',
-            mode: "cors",
-            credentials: "include"
-        }).then(({ json }) => ({ data: json }))
+        return new Promise((resolve, reject): Promise<DeleteResult<any> | any> => {
 
+            return httpClient(`${apiUrl}/${resource}/${params.id}${meta && meta.length > 0 ? "?" + meta : ""}`, {
+                method: 'DELETE',
+                mode: "cors",
+                credentials: "include"
+            }).then(({ json }) => {
+                resolve({ data: json });
+            })
+                .catch((error) => {
+                    console.error(error.body.message);
+                    reject(new HttpError(
+                        error.body.message,
+                        error.status,
+                        error.body
+                    ));
+                })
+
+        })
     },
     deleteMany: function <RecordType extends RaRecord = any>(resource: string, params: DeleteManyParams<RecordType>): Promise<DeleteManyResult<RecordType>> {
         const query = {

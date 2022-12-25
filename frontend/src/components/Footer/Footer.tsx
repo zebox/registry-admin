@@ -8,6 +8,7 @@ const Footer = () => {
         position: 'fixed', right: 0, bottom: 0, left: 0, zIndex: 100,
         padding: 6,
         textAlign: 'left',
+        width: 'fit-content'
     }}>
         <a href="https://github.com/zebox/registry-admin" style={{padding: 2}}><GitHubIcon
             sx={{color: theme.palette.primary.light}}/></a>

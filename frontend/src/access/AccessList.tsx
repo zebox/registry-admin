@@ -64,6 +64,7 @@ const AccessList = (props: any) => {
         aside={<AccessFilterSidebar />}
         hasCreate={requirePermission(permissions, 'admin')}
         sort={{ field: 'name', order: 'ASC' }}
+        title={translate(`resources.commands.access_name`)}
         perPage={25}
         filters={[
             <ReferenceInput source="owner_id" reference="users" label={translate('resources.accesses.fields.owner_id')}>

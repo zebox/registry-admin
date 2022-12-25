@@ -60,7 +60,7 @@ type Options struct {
 	Store StoreGroup `group:"store" namespace:"store" env-namespace:"RA_STORE" json:"store" yaml:"store"`
 	Debug bool       `long:"debug" env:"RA_DEBUG" description:"enable the debug mode" json:"debug"`
 
-	// implement interface for parse different types of config files
+	// implement configReader interface for parse different types of config files
 	configReader
 }
 
