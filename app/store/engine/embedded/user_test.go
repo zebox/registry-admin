@@ -54,7 +54,7 @@ func TestEmbedded_CreateUser(t *testing.T) {
 	}
 	err = db.CreateUser(ctx, user2)
 	assert.NotNil(t, err)
-	assert.Equal(t, err, errors.New("required user fields not set: Login, Name, Password, role 'unknown' not allowed"))
+	assert.Equal(t, err, errors.New("required user fields not set: Login, Name, password length should be equal or more 6 characters, role 'unknown' not allowed"))
 
 	ctxCancel()
 	wg.Wait()
@@ -283,6 +283,10 @@ func TestEmbedded_UpdateUser(t *testing.T) {
 
 	// try to update not existed user
 	user.ID = -1
+	assert.Error(t, db.UpdateUser(ctx, *user))
+
+	// try to update with minimal password length
+	user.Password = "123"
 	assert.Error(t, db.UpdateUser(ctx, *user))
 
 	// test with connection error

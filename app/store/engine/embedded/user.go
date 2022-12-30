@@ -13,6 +13,8 @@ import (
 	"github.com/zebox/registry-admin/app/store/engine"
 )
 
+const minPasswordLength = 6
+
 // CreateUser create a new user record
 func (e *Embedded) CreateUser(ctx context.Context, user *store.User) (err error) {
 
@@ -26,8 +28,8 @@ func (e *Embedded) CreateUser(ctx context.Context, user *store.User) (err error)
 	if user.Name == "" {
 		emptyParams = append(emptyParams, "Name")
 	}
-	if user.Password == "" {
-		emptyParams = append(emptyParams, "Password")
+	if len(user.Password) < minPasswordLength {
+		emptyParams = append(emptyParams, fmt.Sprintf("password length should be equal or more %d characters", minPasswordLength))
 	}
 
 	if !store.CheckRoleInList(user.Role) {
@@ -170,6 +172,10 @@ func (e *Embedded) UpdateUser(ctx context.Context, user store.User) (err error) 
 	}
 	var res sql.Result
 	if user.Password != "" {
+		if len(user.Password) < minPasswordLength {
+			return fmt.Errorf("password length should be equal or more %d characters", minPasswordLength)
+		}
+
 		if errHash := user.HashAndSalt(); errHash != nil {
 			return errHash
 		}
