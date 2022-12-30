@@ -76,12 +76,13 @@ const AccessList = (props: any) => {
             <TextField source="type" label={translate('resources.accesses.fields.resource_type')} />
             <TextField source="resource_name" label={translate('resources.accesses.fields.resource_name')} />
             <TextField source="action" label={translate('resources.accesses.fields.action')} />
-            <DisabledField source="disabled" label={translate('resources.accesses.fields.disabled')} />
+            <TextField source="name" label={translate('resources.accesses.fields.name')} />
+            <DisabledField source="disabled" label={translate('resources.accesses.fields.disabled')} />         
             {requirePermission(permissions, 'admin') ? <>
                 <EditButton alignIcon="right" />
                 <DeleteCustomButtonWithConfirmation source="name" {...props} />
             </> : null}
-            <TextField source="name" label={translate('resources.accesses.fields.name')} />
+        
         </Datagrid>
     </List>
 };
