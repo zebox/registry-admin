@@ -2,7 +2,7 @@
   <img src="assets/registry_admin_logo.svg" alt="logo" width="400"/>
 </div>
 
-The RegistryAdmin project is a tool that allows users to manage access to a private Docker registry.
+The RegistryAdmin is a tool that allows users to manage access to a private Docker registry.
 It provides a web-based user interface for managing repositories, images, and user access, and allows users to
 authenticate
 using either `password`. The main goal of the project is to provide a high-level API for managing user access
@@ -197,6 +197,7 @@ that must be used in `realm` registry option.
 :exclamation: `realm` is option of *IP address* or *Hostname* RegistryAdmin instance that must accessible for docker
 clients which
 uses it for authenticate to private registry.
+
 ![Realm example in docker environment](assets/realm_example.png "Real example in docker environment")
 
 ```yml
