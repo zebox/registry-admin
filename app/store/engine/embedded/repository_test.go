@@ -372,16 +372,16 @@ func TestEmbedded_DeleteRepository(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Greater(t, testEntry.ID, int64(0))
 
-	err = db.DeleteRepository(ctx, store.RegistryRepositoryNameField, "hello_test")
+	err = db.DeleteRepository(ctx, testEntry.RepositoryName, testEntry.Digest)
 	assert.NoError(t, err)
 
 	_, err = db.GetRepository(ctx, testEntry.ID)
 	require.Error(t, err)
 
-	err = db.DeleteRepository(ctx, store.RegistryRepositoryNameField, "hello_test")
-	assert.Error(t, err)
+	err = db.DeleteRepository(ctx, testEntry.RepositoryName, testEntry.Digest)
+	assert.Equal(t, err, engine.ErrNotFound)
 
-	err = db.DeleteRepository(ctx, store.RegistryRepositoryNameField, nil)
+	err = db.DeleteRepository(ctx, "invalid_name", "unknown")
 	assert.Error(t, err)
 
 	badConn := Embedded{}

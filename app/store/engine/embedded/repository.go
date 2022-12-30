@@ -151,11 +151,11 @@ func (e *Embedded) UpdateRepository(ctx context.Context, conditionClause, data m
 }
 
 // DeleteRepository delete repository entry by ID
-func (e *Embedded) DeleteRepository(ctx context.Context, key string, id interface{}) (err error) {
+func (e *Embedded) DeleteRepository(ctx context.Context, repositoryName, digest string) (err error) {
 
 	//nolint:gosec // key value not passed from user input and can be change in code only
-	deleteSQL := fmt.Sprintf("DELETE FROM %s WHERE %s=?", repositoriesTable, key)
-	res, err := e.db.ExecContext(ctx, deleteSQL, id)
+	deleteSQL := fmt.Sprintf("DELETE FROM %s WHERE %s = ? AND %s = ?", repositoriesTable, store.RegistryRepositoryNameField, store.RegistryContentDigestField)
+	res, err := e.db.ExecContext(ctx, deleteSQL, repositoryName, digest)
 	if err != nil {
 		return errors.Wrapf(err, "failed execute query for user delete")
 	}

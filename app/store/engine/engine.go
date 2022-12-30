@@ -96,7 +96,7 @@ type Interface interface {
 	UpdateRepository(ctx context.Context, conditionClause, data map[string]interface{}) (err error)
 
 	// DeleteRepository delete repository entry by ID
-	DeleteRepository(ctx context.Context, key string, id interface{}) (err error)
+	DeleteRepository(ctx context.Context, repositoryName, digest string) (err error)
 
 	// RepositoryGarbageCollector deletes outdated repositories entries
 	RepositoryGarbageCollector(ctx context.Context, syncDate int64) (err error)

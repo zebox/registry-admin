@@ -11,7 +11,6 @@ import (
 	"github.com/docker/distribution"
 	"github.com/docker/distribution/manifest/schema2"
 	"github.com/docker/distribution/notifications"
-	"github.com/opencontainers/go-digest"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -241,13 +240,13 @@ func prepareEngineMock() *engine.InterfaceMock {
 			return result, nil
 		},
 
-		DeleteRepositoryFunc: func(ctx context.Context, key string, id interface{}) error {
+		DeleteRepositoryFunc: func(ctx context.Context, repoName, digest string) error {
 			for _, val := range testRepositoriesEntries {
-				if val.Digest == id.(digest.Digest).String() {
+				if val.RepositoryName == repoName && val.Digest == digest {
 					return nil
 				}
 			}
-			return errors.Errorf("entry not found: id %v", id)
+			return errors.Errorf("entry not found: repo: %s, digest: %s", repoName, digest)
 		},
 
 		AccessGarbageCollectorFunc: func(ctx context.Context) error {

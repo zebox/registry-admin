@@ -127,7 +127,7 @@ func (ds *DataService) deleteRepositoryEntry(ctx context.Context, event notifica
 		return nil
 	}
 
-	if err := ds.Storage.DeleteRepository(ctx, "digest", digest); err != nil && err != engine.ErrNotFound {
+	if err := ds.Storage.DeleteRepository(ctx, event.Target.Repository, digest.String()); err != nil && err != engine.ErrNotFound {
 		return errors.Errorf("failed to delete image entry digest: %s err: %v", digest, err)
 	}
 
