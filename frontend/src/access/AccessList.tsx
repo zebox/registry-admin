@@ -72,7 +72,6 @@ const AccessList = (props: any) => {
             </ReferenceInput>
         ]} >
         <Datagrid bulkActionButtons={false} >
-            <TextField source="name" label={translate('resources.accesses.fields.name')} />
             <CustomUsersReference label={translate('resources.accesses.fields.owner_id')} />
             <TextField source="type" label={translate('resources.accesses.fields.resource_type')} />
             <TextField source="resource_name" label={translate('resources.accesses.fields.resource_name')} />
@@ -82,6 +81,7 @@ const AccessList = (props: any) => {
                 <EditButton alignIcon="right" />
                 <DeleteCustomButtonWithConfirmation source="name" {...props} />
             </> : null}
+            <TextField source="name" label={translate('resources.accesses.fields.name')} />
         </Datagrid>
     </List>
 };

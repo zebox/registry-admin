@@ -17,7 +17,6 @@ import {
     Confirm
 } from 'react-admin';
 import { Card, CardContent, Typography, Button } from '@mui/material';
-
 import { ConvertUnixTimeToDate, SearchFieldTranslated } from "../helpers/Helpers";
 import { SizeFieldReadable } from "./RepositoryList";
 import ImageConfigPage from './ImageConfig';
@@ -122,25 +121,33 @@ const TagDeleteButton = (props: any) => {
 
     const [deleteOne, { isLoading, error }] = useDelete();
     const [open, setOpen] = React.useState(false);
-   
+    const [deleteDisable, setDeleteDisable] = React.useState(false);
+
     const handleDialogClose = () => {
         setOpen(false);
     }
 
     const deleteTag = () => {
-        isErrorShow=false;
+        setDeleteDisable(true);
+        isErrorShow = false;
         deleteOne(
             repositoryBaseResource,
             { id: record["tag"], previousData: record, meta: { name: record["repository_name"], digest: record["digest"] } }
-        )
+        ).finally(() => {
+            // wait until changing sync
+            setTimeout(() => {
+                setDeleteDisable(false);
+                refresh();
+            }, 2000);
+
+        })
         setOpen(false);
-        refresh();
     }
 
     if (isLoading) return <Loading />
 
     if (!isErrorShow && error) {
-        isErrorShow=true;
+        isErrorShow = true;
         const err = error as Error;
         notify(
             typeof error === 'string'
@@ -161,12 +168,12 @@ const TagDeleteButton = (props: any) => {
                 },
             }
         )
-        
+
     }
 
 
     return <React.Fragment>
-        <Button onClick={() => setOpen(true)}>{translate('ra.action.delete')}</Button>
+        <Button onClick={() => setOpen(true)} disabled={deleteDisable}>{translate('ra.action.delete')}</Button>
         <Confirm
             isOpen={open}
             loading={isLoading}

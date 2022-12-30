@@ -27,6 +27,7 @@ func (ds *DataService) RepositoryEventsProcessing(ctx context.Context, envelope 
 			}
 			return err
 		case notifications.EventActionDelete:
+			log.Printf("[DEBUG] delete event for repo: %s digest: %s", e.Target.Repository, e.Target.Descriptor.Digest)
 			return ds.deleteRepositoryEntry(ctx, e)
 		}
 	}

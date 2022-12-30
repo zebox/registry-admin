@@ -15,6 +15,17 @@ import {
 import { requirePermission } from "../helpers/Helpers";
 import { RoleList } from "./UsersList";
 
+const passwordLengthEditUsers = (min: number, message: string = 'ra.validation.minLength') =>
+    (value: string) => {
+
+        // empty password field need for skip password value update when a user edit
+        if (value.length===0) {
+            return undefined;
+        }
+        return value && value.length < min ? { message, args: { min } } : undefined;
+    }
+
+
 const UserEdit = (props: any) => {
     const translate = useTranslate();
     const { source, ...rest } = props;
@@ -28,23 +39,24 @@ const UserEdit = (props: any) => {
                 <PasswordInput label={translate('resources.users.fields.password')}
                     source="password"
                     autoComplete="new-password"
-                 />
+                    validate={passwordLengthEditUsers(6)}
+                />
                 <ReferenceInput source="group" reference="groups">
-                    <SelectInput label={translate('resources.users.fields.group')} 
-                        emptyValue={''} 
+                    <SelectInput label={translate('resources.users.fields.group')}
+                        emptyValue={''}
                         emptyText=''
-                        optionText="name" 
-                        optionValue="id" 
+                        optionText="name"
+                        optionValue="id"
                         {...rest} validate={required()}
-                        />
+                    />
                 </ReferenceInput>
                 <SelectInput
                     label={translate('resources.users.fields.role')}
                     source="role"
                     defaultValue={"user"}
                     emptyValue={''}
-                    choices={RoleList} 
-                    {...rest} validate={required()}/>
+                    choices={RoleList}
+                    {...rest} validate={required()} />
                 <BooleanInput label={translate('resources.users.fields.blocked')} source="blocked" />
                 <TextInput label={translate('resources.users.fields.description')} source="description"
                     autoComplete='off' fullWidth />
