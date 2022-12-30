@@ -43,7 +43,7 @@ var _ Interface = &InterfaceMock{}
 //			DeleteGroupFunc: func(ctx context.Context, id int64) error {
 //				panic("mock out the DeleteGroup method")
 //			},
-//			DeleteRepositoryFunc: func(ctx context.Context, key string, id interface{}) error {
+//			DeleteRepositoryFunc: func(ctx context.Context, repositoryName string, digest string) error {
 //				panic("mock out the DeleteRepository method")
 //			},
 //			DeleteUserFunc: func(ctx context.Context, id int64) error {
@@ -120,7 +120,7 @@ type InterfaceMock struct {
 	DeleteGroupFunc func(ctx context.Context, id int64) error
 
 	// DeleteRepositoryFunc mocks the DeleteRepository method.
-	DeleteRepositoryFunc func(ctx context.Context, key string, id interface{}) error
+	DeleteRepositoryFunc func(ctx context.Context, repositoryName string, digest string) error
 
 	// DeleteUserFunc mocks the DeleteUser method.
 	DeleteUserFunc func(ctx context.Context, id int64) error
@@ -224,10 +224,10 @@ type InterfaceMock struct {
 		DeleteRepository []struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
-			// Key is the key argument value.
-			Key string
-			// ID is the id argument value.
-			ID interface{}
+			// RepositoryName is the repositoryName argument value.
+			RepositoryName string
+			// Digest is the digest argument value.
+			Digest string
 		}
 		// DeleteUser holds details about calls to the DeleteUser method.
 		DeleteUser []struct {
@@ -642,23 +642,23 @@ func (mock *InterfaceMock) DeleteGroupCalls() []struct {
 }
 
 // DeleteRepository calls DeleteRepositoryFunc.
-func (mock *InterfaceMock) DeleteRepository(ctx context.Context, key string, id interface{}) error {
+func (mock *InterfaceMock) DeleteRepository(ctx context.Context, repositoryName string, digest string) error {
 	if mock.DeleteRepositoryFunc == nil {
 		panic("InterfaceMock.DeleteRepositoryFunc: method is nil but Interface.DeleteRepository was just called")
 	}
 	callInfo := struct {
-		Ctx context.Context
-		Key string
-		ID  interface{}
+		Ctx            context.Context
+		RepositoryName string
+		Digest         string
 	}{
-		Ctx: ctx,
-		Key: key,
-		ID:  id,
+		Ctx:            ctx,
+		RepositoryName: repositoryName,
+		Digest:         digest,
 	}
 	mock.lockDeleteRepository.Lock()
 	mock.calls.DeleteRepository = append(mock.calls.DeleteRepository, callInfo)
 	mock.lockDeleteRepository.Unlock()
-	return mock.DeleteRepositoryFunc(ctx, key, id)
+	return mock.DeleteRepositoryFunc(ctx, repositoryName, digest)
 }
 
 // DeleteRepositoryCalls gets all the calls that were made to DeleteRepository.
@@ -666,14 +666,14 @@ func (mock *InterfaceMock) DeleteRepository(ctx context.Context, key string, id 
 //
 //	len(mockedInterface.DeleteRepositoryCalls())
 func (mock *InterfaceMock) DeleteRepositoryCalls() []struct {
-	Ctx context.Context
-	Key string
-	ID  interface{}
+	Ctx            context.Context
+	RepositoryName string
+	Digest         string
 } {
 	var calls []struct {
-		Ctx context.Context
-		Key string
-		ID  interface{}
+		Ctx            context.Context
+		RepositoryName string
+		Digest         string
 	}
 	mock.lockDeleteRepository.RLock()
 	calls = mock.calls.DeleteRepository
