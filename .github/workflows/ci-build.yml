@@ -61,6 +61,7 @@ jobs:
         run: $GITHUB_WORKSPACE/golangci-lint run
 
       - name: submit go coverage
+        run: $(go env GOPATH)/bin/goveralls -service="github" -coverprofile=$GITHUB_WORKSPACE/profile.cov
         env:
           COVERALLS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

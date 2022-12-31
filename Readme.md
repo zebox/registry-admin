@@ -2,6 +2,9 @@
   <img src="assets/registry_admin_logo.svg" alt="logo" width="400"/>
 </div>
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/zebox/registry-admin)](https://goreportcard.com/report/github.com/zebox/registry-admin)
+[![Coverage Status](https://coveralls.io/repos/github/zebox/registry-admin/badge.svg?branch=master)](https://coveralls.io/github/zebox/registry-admin?branch=master)
+
 The RegistryAdmin is the UI tool that allows users to manage access to a private Docker registry.
 It provides a web-based user interface for managing repositories, images, and user access, and allows users to
 authenticate using either `password`. The main goal of the project is to provide a high-level API for managing user access
