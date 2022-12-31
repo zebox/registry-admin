@@ -60,6 +60,9 @@ jobs:
         working-directory: app
         run: $GITHUB_WORKSPACE/golangci-lint run
 
+      - name: submit go coverage
+        env:
+          COVERALLS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # build frontend stage
       - name: Install node
