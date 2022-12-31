@@ -4,6 +4,8 @@
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/zebox/registry-admin)](https://goreportcard.com/report/github.com/zebox/registry-admin)
 [![Coverage Status](https://coveralls.io/repos/github/zebox/registry-admin/badge.svg?branch=master)](https://coveralls.io/github/zebox/registry-admin?branch=master)
+[![Build Status](https://github.com/zebox/registry-admin/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/zebox/registry-admin/actions)
+![Build Status](https://github.com/zebox/registry-admin/actions/workflows/ci-build.yml/badge.svg)
 
 The RegistryAdmin is the UI tool that allows users to manage access to a private Docker registry.
 It provides a web-based user interface for managing repositories, images, and user access, and allows users to
@@ -272,65 +274,65 @@ for each option as a suffix, i.e. [$HOSTNAME].
 
 ```text
 
-      /listen:                           listen on host:port (127.0.0.1:80/443 without) (default: *) [$RA_LISTEN]
-      /hostname:                         Main hostname of service (default: localhost) [$RA_HOST_NAME]
-      /port:                             Main web-service port. Default:80 (default: 80) [$RA_PORT]
-      /config-file:                      Path to config file [$RA_CONFIG_FILE]
-      /debug                             enable the debug mode [$RA_DEBUG]
+      --listen:                           listen on host:port (127.0.0.1:80/443 without) (default: *) [$RA_LISTEN]
+      --hostname:                         Main hostname of service (default: localhost) [$RA_HOST_NAME]
+      --port:                             Main web-service port. Default:80 (default: 80) [$RA_PORT]
+      --config-file:                      Path to config file [$RA_CONFIG_FILE]
+      --debug                             enable the debug mode [$RA_DEBUG]
 
 registry:
-      /registry.host:                    Main host or address to docker registry service [$RA_REGISTRY_HOST]
-      /registry.port:                    Port which registry accept requests. Default:5000 (default: 5000) [$RA_REGISTRY_PORT]
-      /registry.auth-type:[basic|token]  Type for auth to docker registry service. Available 'basic' and 'token'. Default 'token' (default: token) [$RA_REGISTRY_AUTH_TYPE]
-      /registry.login:                   Username is a credential for access to registry service using basic auth type [$RA_REGISTRY_LOGIN]
-      /registry.password:                Password is a credential for access to registry service using basic auth type [$RA_REGISTRY_PASSWORD]
-      /registry.htpasswd:                Path to htpasswd file when basic auth type selected [$RA_REGISTRY_HTPASSWD]
-      /registry.https-insecure           Set https connection to registry insecure [$RA_REGISTRY_HTTPS_INSECURE]
-      /registry.service:                 A service name which defined in registry settings [$RA_REGISTRY_SERVICE]
-      /registry.issuer:                  A token issuer name which defined in registry settings [$RA_REGISTRY_ISSUER]
-      /registry.gc-interval:             Use for define custom time interval for garbage collector execute (minutes), default 1 hours [$RA_REGISTRY_GC_INTERVAL]
+      --registry.host:                    Main host or address to docker registry service [$RA_REGISTRY_HOST]
+      --registry.port:                    Port which registry accept requests. Default:5000 (default: 5000) [$RA_REGISTRY_PORT]
+      --registry.auth-type:[basic|token]  Type for auth to docker registry service. Available 'basic' and 'token'. Default 'token' (default: token) [$RA_REGISTRY_AUTH_TYPE]
+      --registry.login:                   Username is a credential for access to registry service using basic auth type [$RA_REGISTRY_LOGIN]
+      --registry.password:                Password is a credential for access to registry service using basic auth type [$RA_REGISTRY_PASSWORD]
+      --registry.htpasswd:                Path to htpasswd file when basic auth type selected [$RA_REGISTRY_HTPASSWD]
+      --registry.https-insecure           Set https connection to registry insecure [$RA_REGISTRY_HTTPS_INSECURE]
+      --registry.service:                 A service name which defined in registry settings [$RA_REGISTRY_SERVICE]
+      --registry.issuer:                  A token issuer name which defined in registry settings [$RA_REGISTRY_ISSUER]
+      --registry.gc-interval:             Use for define custom time interval for garbage collector execute (minutes), default 1 hours [$RA_REGISTRY_GC_INTERVAL]
 
 certs:
-      /registry.certs.path:              A path to directory where will be stored new self-signed cert,keys and CA files, when 'token' auth type is used [$RA_REGISTRY_CERTS_CERT_PATH]
-      /registry.certs.key:               A path where will be stored new self-signed private key file, when 'token' auth type is used [$RA_REGISTRY_CERTS_KEY_PATH]
-      /registry.certs.public-key:        A path where will be stored new self-signed public key file, when 'token' auth type is used [$RA_REGISTRY_CERTS_PUBLIC_KEY_PATH]
-      /registry.certs.ca-root:           A path where will be stored new CA bundles file, when 'token' auth type is used [$RA_REGISTRY_CERTS_CA_ROOT_PATH]
-      /registry.certs.fqdn:              FQDN(s) for registry certificates [$RA_REGISTRY_CERTS_FQDN]
-      /registry.certs.ip:                Address which appends to certificate SAN (Subject Alternative Name) [$RA_REGISTRY_CERTS_IP]
+      --registry.certs.path:              A path to directory where will be stored new self-signed cert,keys and CA files, when 'token' auth type is used [$RA_REGISTRY_CERTS_CERT_PATH]
+      --registry.certs.key:               A path where will be stored new self-signed private key file, when 'token' auth type is used [$RA_REGISTRY_CERTS_KEY_PATH]
+      --registry.certs.public-key:        A path where will be stored new self-signed public key file, when 'token' auth type is used [$RA_REGISTRY_CERTS_PUBLIC_KEY_PATH]
+      --registry.certs.ca-root:           A path where will be stored new CA bundles file, when 'token' auth type is used [$RA_REGISTRY_CERTS_CA_ROOT_PATH]
+      --registry.certs.fqdn:              FQDN(s) for registry certificates [$RA_REGISTRY_CERTS_FQDN]
+      --registry.certs.ip:                Address which appends to certificate SAN (Subject Alternative Name) [$RA_REGISTRY_CERTS_IP]
 
 auth:
-      /auth.token-secret:                Main secret for auth token sign [$RA_AUTH_TOKEN_SECRET]
-      /auth.jwt-issuer:                  Token issuer signature (default: zebox) [$RA_AUTH_ISSUER_NAME]
-      /auth.jwt-ttl:                     Define JWT expired timeout (default: 1h) [$RA_AUTH_JWT_TTL]
-      /auth.cookie-ttl:                  Define cookies expired timeout (default: 24h) [$RA_AUTH_COOKIE_TTL]
+      --auth.token-secret:                Main secret for auth token sign [$RA_AUTH_TOKEN_SECRET]
+      --auth.jwt-issuer:                  Token issuer signature (default: zebox) [$RA_AUTH_ISSUER_NAME]
+      --auth.jwt-ttl:                     Define JWT expired timeout (default: 1h) [$RA_AUTH_JWT_TTL]
+      --auth.cookie-ttl:                  Define cookies expired timeout (default: 24h) [$RA_AUTH_COOKIE_TTL]
 
 logger:
-      /logger.stdout                     enable stdout logging [$RA_LOGGER_STDOUT]
-      /logger.enabled                    enable access and error rotated logs [$RA_LOGGER_ENABLED]
-      /logger.file:                      location of access log (default: access.log) [$RA_LOGGER_FILE]
-      /logger.max-size:                  maximum size before it gets rotated (default: 10M) [$RA_LOGGER_SIZE]
-      /logger.max-backups:               maximum number of old log files to retain (default: 10) [$RA_LOGGER_BACKUPS]
+      --logger.stdout                     enable stdout logging [$RA_LOGGER_STDOUT]
+      --logger.enabled                    enable access and error rotated logs [$RA_LOGGER_ENABLED]
+      --logger.file:                      location of access log (default: access.log) [$RA_LOGGER_FILE]
+      --logger.max-size:                  maximum size before it gets rotated (default: 10M) [$RA_LOGGER_SIZE]
+      --logger.max-backups:               maximum number of old log files to retain (default: 10) [$RA_LOGGER_BACKUPS]
 
 ssl:
-      /ssl.type:[none|static|auto]       ssl (auto) support. Default is 'none' (default: none) [$RA_SSL_TYPE]
-      /ssl.cert:                         path to cert.pem file [$RA_SSL_CERT]
-      /ssl.key:                          path to key.pem file [$RA_SSL_KEY]
-      /ssl.acme-location:                dir where certificates will be stored by autocert manager (default: ./acme) [$RA_SSL_ACME_LOCATION]
-      /ssl.acme-email:                   admin email for certificate notifications [$RA_SSL_ACME_EMAIL]
-      /ssl.port:                         Main web-service secure SSL port. Default:443 (default: 443) [$RA_SSL_PORT]
-      /ssl.http-port:                    http port for redirect to https and acme challenge test (default: 80) [$RA_SSL_ACME_HTTP_PORT]
-      /ssl.fqdn:                         FQDN(s) for ACME certificates [$RA_SSL_ACME_FQDN]
+      --ssl.type:[none|static|auto]       ssl (auto) support. Default is 'none' (default: none) [$RA_SSL_TYPE]
+      --ssl.cert:                         path to cert.pem file [$RA_SSL_CERT]
+      --ssl.key:                          path to key.pem file [$RA_SSL_KEY]
+      --ssl.acme-location:                dir where certificates will be stored by autocert manager (default: ./acme) [$RA_SSL_ACME_LOCATION]
+      --ssl.acme-email:                   admin email for certificate notifications [$RA_SSL_ACME_EMAIL]
+      --ssl.port:                         Main web-service secure SSL port. Default:443 (default: 443) [$RA_SSL_PORT]
+      --ssl.http-port:                    http port for redirect to https and acme challenge test (default: 80) [$RA_SSL_ACME_HTTP_PORT]
+      --ssl.fqdn:                         FQDN(s) for ACME certificates [$RA_SSL_ACME_FQDN]
 
 store:
-      /store.type:[embed]                type of storage (default: embed) [$RA_STORE_DB_TYPE]
-      /store.admin-password:             Define password for default admin user when storage create first (default: admin) [$RA_STORE_ADMIN_PASSWORD]
+      --store.type:[embed]                type of storage (default: embed) [$RA_STORE_DB_TYPE]
+      --store.admin-password:             Define password for default admin user when storage create first (default: admin) [$RA_STORE_ADMIN_PASSWORD]
 
 embed:
-      /store.embed.path:                 Parent directory for the sqlite files (default: ./data.db) [$RA_STORE_EMBED_DB_PATH]
+      --store.embed.path:                 Parent directory for the sqlite files (default: ./data.db) [$RA_STORE_EMBED_DB_PATH]
 
 Help Options:
-  /?                                     Show this help message
-  /h, /help                              Show this help message
+  -?                                     Show this help message
+  -h, --help                              Show this help message
 ```
 
 ### Development Guidelines
