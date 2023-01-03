@@ -122,7 +122,7 @@ func ParseArgs() (*Options, error) {
 		case ".yml", ".yaml":
 			options.configReader = new(yamlConfigParser)
 			if errReadCfg := options.ReadConfigFromFile(options.ConfigPath, &options); errReadCfg != nil {
-				return nil, errParse
+				return nil, errReadCfg
 			}
 		default:
 			return nil, errors.Errorf("config parser for %q not implemented", ext)

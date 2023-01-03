@@ -20,7 +20,9 @@ registry:
     public_key: certs/cert.pub
     ca_root: certs/cert.crt
     ip: 10.10.12.100
-    fqdn: demo.registry.local, registry.host.local
+    fqdn:
+      - demo.registry.local
+      - registry.host.local
 
 auth:
   token_secret: super-secret-password-string
