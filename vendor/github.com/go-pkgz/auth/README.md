@@ -101,6 +101,7 @@ For the example above authentication handlers wired as `/auth` and provides:
 - `/auth/<provider>/logout` and `/auth/logout` - invalidate "session" by removing JWT cookie
 - `/auth/list` - gives a json list of active providers
 - `/auth/user` - returns `token.User` (json)
+- `/auth/status` - returns status of logged in user (json)
 
 ### User info
 
@@ -208,6 +209,26 @@ The API for this provider:
  - `GET /auth/<name>/login?token=<conf.token>&sess=[1|0]` - authorize with confirmation token
 
 The provider acts like any other, i.e. will be registered as `/auth/email/login`.
+
+### Email
+
+For email notify provider, please use `github.com/go-pkgz/auth/provider/sender` package:
+```go
+    sndr := sender.NewEmailClient(sender.EmailParams{
+        Host:         "email.hostname",
+        Port:         567,
+        SMTPUserName: "username",
+        SMTPPassword: "pass",
+        StartTLS:     true,
+        From:         "notify@email.hostname",
+        Subject:      "subject",
+        ContentType:  "text/html",
+        Charset:      "UTF-8",
+    }, log.Default())
+    authenticator.AddVerifProvider("email", "template goes here", sndr)
+```
+
+See [that documentation](https://github.com/go-pkgz/email#options) for full options list.
 
 ### Telegram
 
@@ -336,7 +357,7 @@ There are several ways to adjust functionality of the library:
 1. `SecretReader` - interface with a single method `Get(aud string) string` to return the secret used for JWT signing and verification
 1. `ClaimsUpdater` - interface with `Update(claims Claims) Claims` method. This is the primary way to alter a token at login time and add any attributes, set ip, email, admin status, roles and so on.
 1. `Validator` - interface with `Validate(token string, claims Claims) bool` method. This is post-token hook and will be called on **each request** wrapped with `Auth` middleware. This will be the place for special logic to reject some tokens or users.
-1. `UserUpdater` - interface with `Update(claims token.User) token.User` method.  This method will be called on **each request** wrapped with `UpdateUser` middleware. This will be the place for special logic modify User Info in request context. [Example of usage.]((https://github.com/go-pkgz/auth/blob/master/_example/main.go#L148))
+1. `UserUpdater` - interface with `Update(claims token.User) token.User` method.  This method will be called on **each request** wrapped with `UpdateUser` middleware. This will be the place for special logic modify User Info in request context. [Example of usage.](https://github.com/go-pkgz/auth/blob/19c1b6d26608494955a4480f8f6165af85b1deab/_example/main.go#L189)
 
 All of the interfaces above have corresponding Func adapters - `SecretFunc`, `ClaimsUpdFunc`, `ValidatorFunc` and `UserUpdFunc`.
 
@@ -382,6 +403,22 @@ Working with oauth2 providers can be a pain, especially during development phase
 It will run fake aouth2 "server" on port :8084 and user could login with any user name. See [example](https://github.com/go-pkgz/auth/blob/master/_example/main.go) for more details.
 
 _Warning: this is not the real oauth2 server but just a small fake thing for development and testing only. Don't use `dev` provider with any production code._
+
+By default, Dev provider doesn't return `email` claim from `/user` endpoint, to match behaviour of other providers which only request minimal scopes.
+However sometimes it is useful to have `email` included into user info. This can be done by configuring `devAuthServer.GetEmailFn` function:
+
+```go
+    go func() {
+		devAuthServer, err := service.DevAuth()
+		devOauth2Srv.GetEmailFn = func(username string) string {
+			return username + "@example.com"
+		}
+		if err != nil {
+			log.Fatal(err)
+		}
+		devAuthServer.Run()
+	}()
+```
 
 ### Other ways to authenticate
 

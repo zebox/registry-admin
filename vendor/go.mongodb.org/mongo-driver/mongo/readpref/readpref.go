@@ -4,6 +4,7 @@
 // not use this file except in compliance with the License. You may obtain
 // a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
 
+// Package readpref defines read preferences for MongoDB queries.
 package readpref // import "go.mongodb.org/mongo-driver/mongo/readpref"
 
 import (
@@ -65,6 +66,9 @@ func New(mode Mode, opts ...Option) (*ReadPref, error) {
 	}
 
 	for _, opt := range opts {
+		if opt == nil {
+			continue
+		}
 		err := opt(rp)
 		if err != nil {
 			return nil, err

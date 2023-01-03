@@ -3,17 +3,17 @@ package provider
 import (
 	"context"
 	"fmt"
+	"html/template"
 	"net"
 	"net/http"
 	"net/url"
 	"strings"
 	"sync"
-	"text/template"
 	"time"
 
+	goauth2 "github.com/go-oauth2/oauth2/v4/server"
 	"github.com/microcosm-cc/bluemonday"
 	"golang.org/x/oauth2"
-	goauth2 "gopkg.in/oauth2.v3/server"
 
 	"github.com/go-pkgz/auth/avatar"
 	"github.com/go-pkgz/auth/logger"

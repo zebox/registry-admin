@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/go-pkgz/rest"
-	"github.com/pkg/errors"
 
 	"github.com/go-pkgz/auth/avatar"
 	"github.com/go-pkgz/auth/logger"
@@ -121,7 +120,7 @@ func NewService(opts Opts) (res *Service) {
 
 	if opts.SecretReader == nil {
 		jwtService.SecretReader = token.SecretFunc(func(string) (string, error) {
-			return "", errors.New("secrets reader not available")
+			return "", fmt.Errorf("secrets reader not available")
 		})
 		res.logger.Logf("[WARN] no secret reader defined")
 	}
@@ -170,7 +169,7 @@ func (s *Service) Handlers() (authHandler, avatarHandler http.Handler) {
 		if elems[len(elems)-1] == "logout" {
 			if len(s.providers) == 0 {
 				w.WriteHeader(http.StatusBadRequest)
-				rest.RenderJSON(w, rest.JSON{"error": "provides not defined"})
+				rest.RenderJSON(w, rest.JSON{"error": "providers not defined"})
 				return
 			}
 			s.providers[0].Handler(w, r)
@@ -180,12 +179,23 @@ func (s *Service) Handlers() (authHandler, avatarHandler http.Handler) {
 		// show user info
 		if elems[len(elems)-1] == "user" {
 			claims, _, err := s.jwtService.Get(r)
-			if err != nil {
+			if err != nil || claims.User == nil {
 				w.WriteHeader(http.StatusUnauthorized)
 				rest.RenderJSON(w, rest.JSON{"error": err.Error()})
 				return
 			}
 			rest.RenderJSON(w, claims.User)
+			return
+		}
+
+		// status of logged-in user
+		if elems[len(elems)-1] == "status" {
+			claims, _, err := s.jwtService.Get(r)
+			if err != nil || claims.User == nil {
+				rest.RenderJSON(w, rest.JSON{"status": "not logged in"})
+				return
+			}
+			rest.RenderJSON(w, rest.JSON{"status": "logged in", "user": claims.User.Name})
 			return
 		}
 
@@ -247,8 +257,8 @@ func (s *Service) AddProvider(name, cid, csecret string) {
 	s.authMiddleware.Providers = s.providers
 }
 
-// AddDevProvider with a custom port
-func (s *Service) AddDevProvider(port int) {
+// AddDevProvider with a custom host and port
+func (s *Service) AddDevProvider(host string, port int) {
 	p := provider.Params{
 		URL:         s.opts.URL,
 		JwtService:  s.jwtService,
@@ -256,6 +266,7 @@ func (s *Service) AddDevProvider(port int) {
 		AvatarSaver: s.avatarProxy,
 		L:           s.logger,
 		Port:        port,
+		Host:        host,
 	}
 	s.providers = append(s.providers, provider.NewService(provider.NewDev(p)))
 }
@@ -273,7 +284,7 @@ func (s *Service) AddAppleProvider(appleConfig provider.AppleConfig, privKeyLoad
 	// Error checking at create need for catch one when apple private key init
 	appleProvider, err := provider.NewApple(p, appleConfig, privKeyLoader)
 	if err != nil {
-		return errors.Wrap(err, "an AppleProvider creating failed")
+		return fmt.Errorf("an AppleProvider creating failed: %w", err)
 	}
 
 	s.providers = append(s.providers, provider.NewService(appleProvider))
@@ -354,7 +365,7 @@ func (s *Service) AddCustomHandler(handler provider.Provider) {
 func (s *Service) DevAuth() (*provider.DevAuthServer, error) {
 	p, err := s.Provider("dev") // peak dev provider
 	if err != nil {
-		return nil, errors.Wrap(err, "dev provider not registered")
+		return nil, fmt.Errorf("dev provider not registered: %w", err)
 	}
 	// make and start dev auth server
 	return &provider.DevAuthServer{Provider: p.Provider.(provider.Oauth2Handler), L: s.logger}, nil
@@ -367,7 +378,7 @@ func (s *Service) Provider(name string) (provider.Service, error) {
 			return p, nil
 		}
 	}
-	return provider.Service{}, errors.Errorf("provider %s not found", name)
+	return provider.Service{}, fmt.Errorf("provider %s not found", name)
 }
 
 // Providers gets all registered providers

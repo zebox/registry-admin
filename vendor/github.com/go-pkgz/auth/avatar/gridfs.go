@@ -5,10 +5,8 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"time"
 
-	"github.com/pkg/errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -39,7 +37,7 @@ func (gf *GridFS) Put(userID string, reader io.Reader) (avatar string, err error
 
 	buf := &bytes.Buffer{}
 	if _, err = io.Copy(buf, reader); err != nil {
-		return "", errors.Wrapf(err, "can't read avatar for %s", userID)
+		return "", fmt.Errorf("can't read avatar for %s: %w", userID, err)
 	}
 
 	avaHash := hash(buf.Bytes(), id)
@@ -55,7 +53,10 @@ func (gf *GridFS) Get(avatar string) (reader io.ReadCloser, size int, err error)
 	}
 	buf := &bytes.Buffer{}
 	sz, e := bucket.DownloadToStreamByName(avatar, buf)
-	return ioutil.NopCloser(buf), int(sz), errors.Wrapf(e, "can't read avatar %s", avatar)
+	if e != nil {
+		return nil, 0, fmt.Errorf("can't read avatar %s: %w", avatar, e)
+	}
+	return io.NopCloser(buf), int(sz), nil
 }
 
 //
@@ -113,7 +114,7 @@ func (gf *GridFS) Remove(avatar string) error {
 		}
 		return bucket.Delete(r.ID)
 	}
-	return errors.Errorf("avatar %s not found", avatar)
+	return fmt.Errorf("avatar %s not found", avatar)
 }
 
 // List all avatars (ids) on gfs

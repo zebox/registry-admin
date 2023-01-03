@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -40,7 +40,8 @@ type Params struct {
 	Issuer      string
 	AvatarSaver AvatarSaver
 
-	Port int // relevant for providers supporting port customization, for example dev oauth2
+	Port int    // relevant for providers supporting port customization, for example dev oauth2
+	Host string // relevant for providers supporting host customization, for example dev oauth2
 }
 
 // UserData is type for user information returned from oauth2 providers /info API method
@@ -172,7 +173,7 @@ func (p Oauth2Handler) AuthHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
-	data, err := ioutil.ReadAll(uinfo.Body)
+	data, err := io.ReadAll(uinfo.Body)
 	if err != nil {
 		rest.SendErrorJSON(w, r, p.L, http.StatusInternalServerError, err, "failed to read user info")
 		return
