@@ -184,6 +184,8 @@ func createRegistryConnection(opts RegistryGroup) (*registry.Registry, error) {
 
 	registrySettings.Host = opts.Host
 	registrySettings.Port = opts.Port
+	registrySettings.InsecureRequest = opts.InsecureConnection
+	registrySettings.HTTPSCert = opts.Certs.HTTPSCert
 
 	// select registry auth type
 	switch opts.AuthType {

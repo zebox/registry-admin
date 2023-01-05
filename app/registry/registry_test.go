@@ -32,6 +32,7 @@ func TestNewRegistry(t *testing.T) {
 			PublicKeyPath: tmpDir + "/" + publicKeyName,
 			CARootPath:    tmpDir + "/" + caName,
 		},
+		HTTPSCert: tmpDir + "/" + caName,
 	}
 
 	_, err := NewRegistry("test_login", "test_password", testSetting)

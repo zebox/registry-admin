@@ -84,6 +84,9 @@ type Settings struct {
 	// If CertificatesPaths has all fields are empty, but certificates files exist AccessToken try to load existed keys and CA file.
 	CertificatesPaths Certs
 
+	// HttpsCert used when a https access cert and a token cert is differs. In this case HTTPSCert will add to trusted CA pool
+	HTTPSCert string
+
 	// InsecureRequest define option secure for make a https request to docker registry host, false by default
 	InsecureRequest bool
 }
@@ -221,6 +224,17 @@ func NewRegistry(login, password string, settings Settings) (*Registry, error) {
 			return nil, err
 		}
 		transport.TLSClientConfig.InsecureSkipVerify = r.settings.InsecureRequest
+
+		// certificates generated for token maybe not used for TLS access and then TLS certificate should be defined
+		// separately for add to trusted RootCAs
+		if r.settings.HTTPSCert != "" {
+			httpsCert, errRead := os.ReadFile(r.settings.HTTPSCert)
+			if errRead != nil {
+				return nil, fmt.Errorf("failed to add HTTPSCert to trusted root: %v", errRead)
+			}
+			transport.TLSClientConfig.RootCAs.AppendCertsFromPEM(httpsCert)
+		}
+
 		r.httpClient.Transport = transport
 	}
 
@@ -470,6 +484,7 @@ func (r *Registry) DeleteTag(ctx context.Context, repoName, digest string) error
 }
 
 func createHTTPSTransport(certs Certs) (*http.Transport, error) {
+
 	certData, err := os.ReadFile(certs.CARootPath)
 	if err != nil {
 		return nil, err

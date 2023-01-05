@@ -93,6 +93,7 @@ type RegistryGroup struct {
 		CARoot    string   `long:"ca-root" env:"CA_ROOT_PATH" description:"A path where will be stored new CA bundles file, when 'token' auth type is used" json:"ca_root" yaml:"ca_root"`
 		FQDNs     []string `long:"fqdn" env:"FQDN" env-delim:"," description:"FQDN(s) for registry certificates" json:"fqdns" yaml:"fqdns"`
 		IP        string   `long:"ip" env:"IP" description:"Address which appends to certificate SAN (Subject Alternative Name)" json:"ip"`
+		HTTPSCert string   `long:"https-cert" env:"CERT_HTTPS" description:"A path to HTTPS certificate used for TLS access to registry instance" json:"https_cert" yaml:"https_cert"`
 	} `group:"certs" namespace:"certs" env-namespace:"CERTS" json:"certs"`
 }
 

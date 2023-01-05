@@ -299,6 +299,7 @@ certs:
       --registry.certs.ca-root:           A path where will be stored new CA bundles file, when 'token' auth type is used [$RA_REGISTRY_CERTS_CA_ROOT_PATH]
       --registry.certs.fqdn:              FQDN(s) for registry certificates [$RA_REGISTRY_CERTS_FQDN]
       --registry.certs.ip:                Address which appends to certificate SAN (Subject Alternative Name) [$RA_REGISTRY_CERTS_IP]
+      --registry.https-certs:             A path to a HTTPS certificate used for TLS access to registry instance [$RA_REGISTRY_HTTPS_CERT]
 
 auth:
       --auth.token-secret:                Main secret for auth token sign [$RA_AUTH_TOKEN_SECRET]
