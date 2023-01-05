@@ -82,7 +82,7 @@ type RegistryGroup struct {
 	Login                    string `long:"login" env:"LOGIN" description:"Username is a credential for access to registry service using basic auth type" json:"login"`
 	Password                 string `long:"password" env:"PASSWORD" description:"Password is a credential for access to registry service using basic auth type" json:"password"`
 	Htpasswd                 string `long:"htpasswd" env:"HTPASSWD" description:"Path to htpasswd file when basic auth type selected" json:"htpasswd"`
-	InsecureConnection       bool   `long:"https-insecure" env:"HTTPS_INSECURE" description:"Set https connection to registry insecure" json:"https_insecure"`
+	InsecureConnection       bool   `long:"https-insecure" env:"HTTPS_INSECURE" description:"Set https connection to registry insecure" json:"https_insecure" yaml:"https_insecure"`
 	Service                  string `long:"service" env:"SERVICE" description:"A service name which defined in registry settings" json:"service"`
 	Issuer                   string `long:"issuer" env:"ISSUER" description:"A token issuer name which defined in registry settings" json:"issuer"`
 	GarbageCollectorInterval int64  `long:"gc-interval" env:"GC_INTERVAL" description:"Use for define custom time interval for garbage collector execute (minutes), default 1 hours" json:"gc_interval" yaml:"gc_interval"`

@@ -220,6 +220,7 @@ func NewRegistry(login, password string, settings Settings) (*Registry, error) {
 		if err != nil {
 			return nil, err
 		}
+		transport.TLSClientConfig.InsecureSkipVerify = r.settings.InsecureRequest
 		r.httpClient.Transport = transport
 	}
 
