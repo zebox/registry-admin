@@ -258,7 +258,7 @@ func TestServer_BasicAuthCheckerFn(t *testing.T) {
 
 	{
 		ok, _, err := srv.BasicAuthCheckerFn("fake_user", "fake_password")
-		assert.Error(t, err)
+		assert.Nil(t, err)
 		assert.False(t, ok)
 	}
 
@@ -283,7 +283,7 @@ func TestServer_Check(t *testing.T) {
 	assert.True(t, ok)
 
 	ok, err = srv.Check("fake_user", "fake_password")
-	assert.Error(t, err)
+	assert.Nil(t, err)
 	assert.False(t, ok)
 }
 func TestServer_Validate(t *testing.T) {

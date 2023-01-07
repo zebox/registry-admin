@@ -455,7 +455,7 @@ func (s *Server) BasicAuthCheckerFn(user, password string) (bool, token.User, er
 	u, err := s.Storage.GetUser(s.ctx, user)
 	if err != nil {
 		log.Printf("[WARN] failed to check login credentials for user [%s]  err: %v", user, err)
-		return false, claim, err
+		return false, claim, nil
 	}
 
 	if u.Disabled {

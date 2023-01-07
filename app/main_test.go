@@ -186,7 +186,7 @@ func TestMainWithSSLAndAuth(t *testing.T) {
 		resp, err := client.Get(fmt.Sprintf("https://localhost:%d/auth/local/login?user=fakse&passwd=user", sslPort))
 		require.NoError(t, err)
 		defer func() { assert.NoError(t, resp.Body.Close()) }()
-		assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)
+		assert.Equal(t, http.StatusForbidden, resp.StatusCode)
 		assert.NoError(t, err)
 	}
 	{
