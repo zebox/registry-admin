@@ -181,7 +181,22 @@ options isn't defined certificates will be created at a user home directory in s
 }
 ```
 
-**Notice**: Certificates generated for registry token also can be using for HTTP TLS/SSL.
+Certificates generated for registry token also can be using for HTTP TLS/SSL. That certificate automatically add to trusted CA. 
+But if you use another certificate for HTTPS access you should add it to trusted CA pool. For it use option  
+`--registry.https-certs` for define path to a used certificate which using for TLS/SSL access. It's also required for certificates 
+issued by Let's Encrypt. Also, you can define `--registry.https-insecure` option for skips check for the trusted certificate,
+but in NOT RECOMMENDED.
+```yml
+# in a registry-admin config
+registry:
+  ...
+  certs:
+    ...
+    https_cert: /{path-to-ssl}/cert.pem
+    ...
+
+```
+
 
 #### 1.3. Private Docker Registry settings (with token auth) - Recommended
 
@@ -265,6 +280,44 @@ minimal info about processed requests, something like this:
 127.0.0.1 - - [06/Dec/2022:18:36:34 +0300] "GET /auth/user HTTP/2.0" 200 159
 127.0.0.1 - - [06/Dec/2022:18:36:34 +0300] "GET /api/v1/registry/auth HTTP/2.0" 200 198
 ```
+
+### Additional Security (fail2ban)
+When RegistryAdmin has access from Internet you should minimal set up security rules for prevent password brute force. 
+The simplest way using `fail2ban` service  with access log file on a docker host.
+
+1. Configure `access.log` for RegistryAdmin service
+```yml
+# in registry-admin config file
+logger:
+  enabled: true
+  filename: /var/log/registry-admin/access.log # mount the directory to a docker host folder for get access for fail2ban
+  max_size: 5M
+  max_backups: 3
+
+```
+2. Create the `filter` with rule for the `registry-admin` service which handle `401` and `403` auth/z errors
+```text
+# /etc/fail2ban/filter.d/registry-admin.conf
+
+[Definition]
+failregex = ^<HOST> .+\" 40[1,3] \d+ .*$
+```
+
+3. Create `jail` with the `registry-admin` rule
+```text
+# in /etc/fail2ban/jail.local
+
+[registry-admin]
+
+enabled  = true
+port     = http,https
+filter   = registry-admin
+logpath  = /{path-to-mounted-dir}/logs/access.log
+findtime = 3600 # 1 hour or define your own
+bantime  = 86400 # 24 hours or define your own
+maxretry = 5
+```
+
 
 ### Options
 
