@@ -28,22 +28,22 @@ jobs:
       matrix:
         node: [ 16.15.1 ]
     steps:
-      - name: disable and stop mono-xsp4.service
+      - name: Disable and stop mono-xsp4.service
         run: |
           sudo systemctl stop mono-xsp4.service || true
           sudo systemctl disable mono-xsp4.service || true
 
-      - name: set up go 1.19
+      - name: Set up go 1.19
         uses: actions/setup-go@v2
         with:
           go-version: '1.19'
         id: go
 
-      - name: checkout
-        uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v3
 
       # test stage
-      - name: build and test
+      - name: Build and Test
         working-directory: app
         run: |
           go test -timeout=120s -v -race -p 1 -covermode=atomic -coverprofile=$GITHUB_WORKSPACE/profile.cov_tmp ./...
@@ -52,15 +52,17 @@ jobs:
         env:
           GO111MODULE: "on"
           CGO_ENABLED: "1"
-      - name: install golangci-lint
+
+      - name: Install golangci-lint
         run: |
           curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b $GITHUB_WORKSPACE v1.50.1
           GO111MODULE=off go get -u -v github.com/mattn/goveralls
-      - name: run linters
+
+      - name: Run linters
         working-directory: app
         run: $GITHUB_WORKSPACE/golangci-lint run
 
-      - name: submit go coverage
+      - name: Submit go coverage
         run: $(go env GOPATH)/bin/goveralls -service="github" -coverprofile=$GITHUB_WORKSPACE/profile.cov
         env:
           COVERALLS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -82,20 +84,19 @@ jobs:
         working-directory: ./frontend
         run: |
           yarn build
-       
 
       # build backend stage
-      - name: set up QEMU
+      - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
 
-      - name: set up Docker Buildx
+      - name: Set up Docker Buildx
         id: buildx
         uses: docker/setup-buildx-action@v2
 
-      - name: available platforms
+      - name: Available platforms
         run: echo ${{ steps.buildx.outputs.platforms }}
 
-      - name: build and deploy master image to dockerhub
+      - name: Build and deploy master image to dockerhub
         if: ${{ github.ref == 'refs/heads/master' }}
         env:
           DOCKER_HUB_TOKEN: ${{ secrets.DOCKER_HUB_TOKEN }}
@@ -111,7 +112,7 @@ jobs:
                 --platform linux/amd64,linux/arm/v7,linux/arm64 \
                 -t ${USERNAME}/registry-admin:${ref} .
 
-      - name: deploy tagged (latest) to dockerhub
+      - name: Deploy tagged (latest) to dockerhub
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
         env:
               DOCKER_HUB_TOKEN: ${{ secrets.DOCKER_HUB_TOKEN }}
@@ -126,4 +127,74 @@ jobs:
                   --build-arg CI=github --build-arg GITHUB_SHA=${GITHUB_SHA} --build-arg GIT_BRANCH=${ref} \
                   --platform linux/amd64,linux/arm/v7,linux/arm64 \
                   -t ${USERNAME}/registry-admin:${ref} -t ${USERNAME}/registry-admin:latest .
-    
+
+      - name: Save JS build artifacts
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: js-build-artifacts
+          path: app/web
+
+  release-linux-windows-binary:
+    needs: build
+    if: ${{ startsWith(github.ref, 'refs/tags/') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: set up go 1.19
+        uses: actions/setup-go@v3
+        with:
+          go-version: '1.19'
+        id: go
+
+      - name: checkout
+        uses: actions/checkout@v2
+
+      - name: restore JS build artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: js-build-artifacts
+          path: app/web
+
+      - name: Install cross-compiler for linux/arm64
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install gcc-aarch64-linux-gnu mingw-w64 gcc-arm*
+
+      - name: create release
+        uses: goreleaser/goreleaser-action@v4
+        with:
+          distribution: goreleaser
+          version: latest
+          args: release --rm-dist --config .goreleaser-linux-windows.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    release-darwin-binary:
+      needs: release-linux-windows-binary
+      if: ${{ startsWith(github.ref, 'refs/tags/') }}
+      runs-on: macos-latest
+      steps:
+
+        - name: set up go 1.19
+          uses: actions/setup-go@v3
+          with:
+            go-version: '1.19'
+          id: go
+
+        - name: checkout
+          uses: actions/checkout@v2
+
+        - name: restore JS build artifacts
+          uses: actions/download-artifact@v2
+          with:
+            name: js-build-artifacts
+            path: app/web
+
+        - name: Create release
+          uses: goreleaser/goreleaser-action@v4
+          with:
+            distribution: goreleaser
+            version: latest
+            args: release --rm-dist --config .goreleaser-darwin.yml
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

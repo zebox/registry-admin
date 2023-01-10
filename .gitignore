@@ -4,6 +4,7 @@ app/web/*
 bin/
 certs/
 web/
+dist/
 compile.bat
 testdata
 data.db

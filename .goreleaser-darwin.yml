@@ -1,0 +1,22 @@
+builds:
+  - env:
+      - CGO_ENABLED=1
+    id: darwin_build
+    goos:
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    dir: app
+    ldflags: "-s -w -X main.version={{.Tag}}-{{.ShortCommit}}-{{.CommitDate}}"
+
+checksum:
+  name_template: "{{ .ProjectName }}_darwin_checksums.txt"
+
+archives:
+  - name_template: "{{.ProjectName}}_{{.Tag}}_{{.Os}}_{{.Arch}}"
+    id: darwin_build
+    rlcp: true
+    files:
+      - LICENSE.md
+      - Readme.md
