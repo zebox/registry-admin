@@ -6,7 +6,6 @@ ARG CI
 ADD . /build
 WORKDIR /build/frontend
 
-RUN ls -la
 RUN \
     if [ -z "$CI" ] ; then \
     echo "build frontend outside of CI" && yarn && yarn build; \
