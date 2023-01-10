@@ -96,9 +96,9 @@ notifications:
 
 ### Install
 RegistryAdmin distributed as a small self-contained binary as well as a docker image. 
-Both binary and image support multiple architectures and multiple operating systems,
-including linux_x86_64, linux_arm64, linux_arm, macos_x86_64, macos_arm64, windows_x86_64 
-and windows_arm. 
+Binary support multiple architectures and multiple operating systems,
+including linux_x86_64, linux_arm64, linux_arm, macos_x86_64, macos_arm64 and windows_x86_64. Docker image support linux_x86_64, 
+linux_arm64 and linux_arm architectures. 
 
 * for a binary distribution download the proper file in the release section
 * docker container available on Docker Hub. I.e. docker pull zebox/registry-admin.
