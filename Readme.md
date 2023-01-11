@@ -62,15 +62,13 @@ You can use the `htpasswd` authentication scheme, but with this method you can o
 to repositories by specific user. This feature is only available when using token-based authentication.
 
 To enhance the user experience with features such as sorting, searching, and autocompleting, RegistryAdmin has an
-embedded
-storage system that synchronizes with the data in the registry. This is necessary to avoid the limits of the search API
-([catalog](https://docs.docker.com/registry/spec/api/#catalog)) exposed by the registry API, as the search function only
-allows pagination with a cursor and does not support searching by repository entry. The app also includes an internal
-garbage collector for check data consistency in the embedded storage.
+embedded storage system that synchronizes with the data in the registry. This is necessary to avoid the limits of the
+search API ([catalog](https://docs.docker.com/registry/spec/api/#catalog)) exposed by the registry API, as the search
+function only allows pagination with a cursor and does not support searching by repository entry. The app also includes
+an internal garbage collector for check data consistency in the embedded storage.
 
-To monitor changes in the registry, you should configure
-registry [notification](https://docs.docker.com/registry/configuration/#notifications)
-to be sent to the RegistryAdmin app.
+For catch changes in the registry, you should configure registry
+[notification](https://docs.docker.com/registry/configuration/#notifications) to be sent to the RegistryAdmin app.
 
 ```yml
 # in registry config file
@@ -94,11 +92,19 @@ notifications:
           - application/octet-stream
 ```
 
+Access to RegistryAdmin UI based on users role:
+
+- `Admin` - full rights to read and write for users, access and entries of repositories.
+- `Manager` - limited rights for browse access list and repositories entries.
+- `User` - can browse assigned repositories entries only.
+
 ### Install
-RegistryAdmin distributed as a small self-contained binary as well as a docker image. 
+
+RegistryAdmin distributed as a small self-contained binary as well as a docker image.
 Binary support multiple architectures and multiple operating systems,
-including linux_x86_64, linux_arm64, linux_arm, macos_x86_64, macos_arm64 and windows_x86_64. Docker image support linux_x86_64, 
-linux_arm64 and linux_arm architectures. 
+including linux_x86_64, linux_arm64, linux_arm, macos_x86_64, macos_arm64 and windows_x86_64. Docker image support
+linux_x86_64,
+linux_arm64 and linux_arm architectures.
 
 * for a binary distribution download the proper file in the release section
 * docker container available on Docker Hub. I.e. docker pull zebox/registry-admin.
@@ -113,8 +119,8 @@ To get started, you will need to set up the required parameters in a *docker-com
 You can find various configuration examples in the [_examples](_examples) folder.
 
 When you start RegistryAdmin as docker container you should set permission for application
-folders (`certs`,`config`,`data`)
-user with UID `1001
+folders (`certs`,`config`,`data`) user with UID `1001`. For override UID inside a container you should use environment
+variable in a container starting parameters `APP_UID`.
 
 ```bash
 chown -R 1001:1001 {root-registry-admin-folder}

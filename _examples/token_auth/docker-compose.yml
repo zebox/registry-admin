@@ -18,7 +18,7 @@ services:
     ports:
       - 50554:5000
     environment:
-      - REGISTRY_AUTH_TOKEN_REALM=https://tnas.local:8080/api/v1/auth # <- !!! Change this for real hostname of RegistryAdmin and exposed port which accessible for docker clients
+      - REGISTRY_AUTH_TOKEN_REALM=https://demo.host.local:8080/api/v1/auth # <- !!! Change this for real hostname of RegistryAdmin and exposed port which accessible for docker clients
     volumes:
       - ./data:/var/lib/registry
       - ./certs:/certs
