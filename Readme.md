@@ -192,6 +192,7 @@ But if you use another certificate for HTTPS access you should add it to trusted
 `--registry.https-certs` for define path to a used certificate which using for TLS/SSL access. It's also required for certificates 
 issued by Let's Encrypt. Also, you can define `--registry.https-insecure` option for skips check for the trusted certificate,
 but in NOT RECOMMENDED.
+
 ```yml
 # in a registry-admin config
 registry:
@@ -203,6 +204,16 @@ registry:
 
 ```
 
+Keep in mind if you use `auto` ssl mode you must define `--ssl.acme-location` option for store ACME cache. Then cache
+date should be define in `registry` config in [letsencrypt](https://docs.docker.com/registry/configuration/#letsencrypt)
+option:
+
+```yml
+letsencrypt:
+      cachefile: /path/to/cache-file
+      email: emailused@letsencrypt.com
+      hosts: [you-registry.domain.org]
+```
 
 #### 1.3. Private Docker Registry settings (with token auth) - Recommended
 
