@@ -307,21 +307,39 @@ logger:
 
 [Definition]
 failregex = ^<HOST> .+\" 40[1,3] \d+ .*$
+
+ignoreregex =
+
 ```
 
-3. Create `jail` with the `registry-admin` rule
+3. Prepare Ban-action
+For catch traffic to a docker container you need prepare `fail2ban` action at chain statement, because normal system 
+traffic traditionally comes across on the `INPUT` chain, while Docker container traffic is sent through the `FORWARD` chain.
+
+```bash
+# in the /etc/fail2ban/action.d/ directory
+sudo cp iptables-common.conf > iptables-common-forward.conf
+sudo sed -i 's/INPUT/FORWARD/g' iptables-common-forward.conf
+
+sudo cp iptables-multiport.conf > iptables-multiport-forward.conf
+sudo sed -i 's/iptables-common.conf/iptables-common-forward.conf/g' iptables-multiport-forward.conf
+```
+
+4. Create `jail` with the `registry-admin` rule
 ```text
 # in /etc/fail2ban/jail.local
 
 [registry-admin]
 
 enabled  = true
-port     = http,https
+port     = http,https # or set your custom port
 filter   = registry-admin
-logpath  = /{path-to-mounted-dir}/logs/access.log
-findtime = 3600 # 1 hour or define your own
-bantime  = 86400 # 24 hours or define your own
+banaction = iptables-multiport-forward
+logpath  = /{path-to-logs-mounted-dir}/logs/access.log
 maxretry = 5
+findtime = 1h 
+bantime  = 1d 
+
 ```
 
 
