@@ -329,10 +329,10 @@ traffic traditionally comes across on the `INPUT` chain, while Docker container 
 
 ```bash
 # in the /etc/fail2ban/action.d/ directory
-sudo cp iptables-common.conf > iptables-common-forward.conf
+sudo cp iptables-common.conf iptables-common-forward.conf
 sudo sed -i 's/INPUT/FORWARD/g' iptables-common-forward.conf
 
-sudo cp iptables-multiport.conf > iptables-multiport-forward.conf
+sudo cp iptables-multiport.conf iptables-multiport-forward.conf
 sudo sed -i 's/iptables-common.conf/iptables-common-forward.conf/g' iptables-multiport-forward.conf
 ```
 
