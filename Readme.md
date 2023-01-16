@@ -360,6 +360,8 @@ Each option can be provided in three forms: command line, environment key:value 
 Command line options have a long form only, like --hostname=localhost. The environment key (name) listed
 for each option as a suffix, i.e. [$HOSTNAME].
 
+Config file [allowed](_examples/configs_json_yml) in both format `json` and `yml`
+
 ```text
 
       --listen:                           listen on host:port (127.0.0.1:80/443 without) (default: *) [$RA_LISTEN]
