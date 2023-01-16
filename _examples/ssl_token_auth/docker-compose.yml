@@ -1,0 +1,31 @@
+version: '2.1'
+services:
+  registry-admin:
+    restart: unless-stopped
+    image: zebox/registry-admin:latest
+    ports:
+      - 8080:80
+      - 8443:443
+    environment:
+      - APP_UID=0
+      - RA_CONFIG_FILE=/app/config/token-ra-config.yml
+    volumes:
+      - ./certs:/app/certs
+      - ./config:/app/config
+      - ./data:/app/data
+
+  registry:
+    restart: unless-stopped
+    image: registry:2
+    ports:
+      - 50554:5000
+      #environment:
+      #- REGISTRY_AUTH_TOKEN_REALM=https://demo.hostname.local:8080/api/v1/registry/auth # <- !!! Change this for real hostname of RegistryAdmin and exposed port which accessible for docker clients
+    volumes:
+      - ./data:/var/lib/registry
+      - ./certs:/certs
+      - ./config/registry-config.yml:/etc/docker/registry/config.yml
+    depends_on:
+      - registry-admin
+    # override container running command for add self-signed certificate to trusted CA
+    command: ["/bin/sh", "-c", "cp /certs/cert.crt /usr/local/share/ca-certificates && /usr/sbin/update-ca-certificates; registry serve /etc/docker/registry/config.yml"]
