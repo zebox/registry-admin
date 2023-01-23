@@ -229,14 +229,6 @@ func (s *Server) routes() chi.Router {
 		r.Mount("/auth", authHandler)
 	})
 
-	router.Group(func(r chi.Router) {
-		r.Use(authMiddleware.Auth)
-		r.Get("/test", func(writer http.ResponseWriter, request *http.Request) {
-			u, err := token.GetUserInfo(request)
-			log.Printf("%v %v", u, err)
-		})
-	})
-
 	// initialing main endpoints properties for use in handlers
 	eh := endpointsHandler{
 		dataStore:     s.Storage,
