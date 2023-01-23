@@ -7,7 +7,8 @@
 [![Build Status](https://github.com/zebox/registry-admin/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/zebox/registry-admin/actions)
 ![Build Status](https://github.com/zebox/registry-admin/actions/workflows/ci-build.yml/badge.svg)
 
-The RegistryAdmin is the UI tool that allows users to manage access to a private Docker registry.
+The RegistryAdmin is the docker registry UI tool that allows users to manage access and entries of a private Docker
+registry.
 It provides a web-based user interface for managing repositories, images, and user access, and allows users to
 authenticate using either `password`. The main goal of the project is to provide a high-level API for managing user access
 to a private registry, and to restrict user actions (such as push and pull) for specific repositories based on
