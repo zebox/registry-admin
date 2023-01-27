@@ -214,7 +214,6 @@ func (s *Server) routes() chi.Router {
 		AllowedHeaders:   []string{"Origin", "Accept", "Authorization", "Content-Type", "X-XSRF-Token", "X-JWT"},
 		ExposedHeaders:   []string{"Authorization"},
 		AllowCredentials: true,
-		Debug:            true,
 		MaxAge:           300,
 	})
 	router.Use(corsMiddleware.Handler)
