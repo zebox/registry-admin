@@ -320,6 +320,17 @@ func TestEmbedded_FindRepositoriesByUser(t *testing.T) {
 	assert.Equal(t, int64(3), result.Total)
 	assert.Equal(t, 3, len(result.Data))
 
+	// test for groupBy and summary size
+	filter.Filters = map[string]interface{}{store.RegistryRepositoryNameField: "aHello_test_1"}
+	filter.GroupByField = true
+	result, err = db.FindRepositories(ctx, filter)
+	assert.NoError(t, err)
+	assert.Equal(t, int64(1), result.Total)
+	require.Equal(t, 1, len(result.Data))
+
+	reposSize := entries[0].Size + entries[1].Size
+	assert.Equal(t, reposSize, result.Data[0].(store.RegistryEntry).Size)
+
 	ctxCancel()
 	wg.Wait()
 }
