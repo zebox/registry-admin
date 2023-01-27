@@ -73,8 +73,24 @@ func (e *Embedded) GetRepository(ctx context.Context, entryID int64) (entry stor
 // FindRepositories fetch list of existed repositories
 func (e *Embedded) FindRepositories(ctx context.Context, filter engine.QueryFilter) (entries engine.ListResponse, err error) {
 
-	f := filtersBuilder(filter, "repository_name", "tag")                              // set key filed for search query
-	queryString := fmt.Sprintf("SELECT * FROM %s %s", repositoriesTable, f.allClauses) //nolint:gosec // query sanitizing calling before
+	f := filtersBuilder(filter, "repository_name", "tag") // set key filed for search query
+
+	// It needs for check request for 'groupBy', that show repositories list.
+	// When request has 'groupBy' you should calculate summary size for each repository entry.
+	// For request which show repositories entry (tags list) summary size not required
+	sizeAggregateCheckerFn := func(isGroupBy bool) string {
+		if isGroupBy {
+			return "SUM(size)"
+		}
+		return "size"
+	}
+
+	//nolint:gosec // query sanitizing calling before
+	queryString := fmt.Sprintf(
+		"SELECT id,repository_name,tag,digest,config_digest,"+
+			sizeAggregateCheckerFn(filter.GroupByField)+
+			",pull_counter,timestamp,raw FROM %s %s", repositoriesTable, f.allClauses,
+	)
 
 	// check for select repositories by user access
 	if _, ok := filter.Filters["access.owner_id"]; ok {

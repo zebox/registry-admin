@@ -24,6 +24,16 @@ var entries = []store.RegistryEntry{
 		Raw:            `{"some":"json_1"}`,
 	},
 	{
+		RepositoryName: "aHello_test_1",
+		Tag:            "test_tag_1_2",
+		Digest:         "sha256:0ea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7bb",
+		ConfigDigest:   "sha256:2b83bbdc2334fbdb889af0f8e3892255a8b6a32029ffd7fc9e0b3dcd0e842166",
+		Size:           1500,
+		PullCounter:    1,
+		Timestamp:      time.Now().Unix(),
+		Raw:            `{"some":"json_2"}`,
+	},
+	{
 		RepositoryName: "aHello_test_2",
 		Tag:            "test_tag_2",
 		Digest:         "sha256:1ea8895f450959fa676bcc1df0611ea93823a735a01205fd8622846041d0c7c2",
@@ -178,8 +188,8 @@ func TestEmbedded_FindRepositories(t *testing.T) {
 
 	result, err := db.FindRepositories(ctx, filter)
 	assert.NoError(t, err)
-	assert.Equal(t, result.Total, int64(2))
-	assert.Equal(t, len(result.Data), 2)
+	assert.Equal(t, int64(3), result.Total)
+	assert.Equal(t, 2, len(result.Data))
 
 	for _, entry := range result.Data {
 		u := entry.(store.RegistryEntry)
@@ -197,8 +207,8 @@ func TestEmbedded_FindRepositories(t *testing.T) {
 
 	result, err = db.FindRepositories(ctx, filter)
 	assert.NoError(t, err)
-	assert.Equal(t, result.Total, int64(1))
-	assert.Equal(t, len(result.Data), 1)
+	assert.Equal(t, int64(2), result.Total)
+	assert.Equal(t, 2, len(result.Data))
 
 	// fetch with no result
 	filter = engine.QueryFilter{
@@ -209,8 +219,8 @@ func TestEmbedded_FindRepositories(t *testing.T) {
 
 	result, err = db.FindRepositories(ctx, filter)
 	assert.NoError(t, err)
-	assert.Equal(t, result.Total, int64(0))
-	assert.Equal(t, len(result.Data), 0)
+	assert.Equal(t, int64(0), result.Total)
+	assert.Equal(t, 0, len(result.Data))
 
 	// fetch records start with ba* and has disabled field is false
 	filter = engine.QueryFilter{
@@ -221,16 +231,27 @@ func TestEmbedded_FindRepositories(t *testing.T) {
 
 	result, err = db.FindRepositories(ctx, filter)
 	assert.NoError(t, err)
-	assert.Equal(t, result.Total, int64(6))
-	assert.Equal(t, len(result.Data), 5) // used a range limit filter value, total shouldn't equal to result
+	assert.Equal(t, int64(len(entries)), result.Total)
+	assert.Equal(t, 5, len(result.Data)) // used a range limit filter value, total shouldn't equal to result
 
 	// test with 'Distinct' filter value
 	filter.Range = [2]int64{}
 	filter.GroupByField = true
 	result, err = db.FindRepositories(ctx, filter)
 	assert.NoError(t, err)
-	assert.Equal(t, result.Total, int64(4))
-	assert.Equal(t, len(result.Data), 4)
+	assert.Equal(t, int64(4), result.Total)
+	assert.Equal(t, 4, len(result.Data))
+
+	// test for size summary when 'Distinct' filter using
+	filter.Filters = map[string]interface{}{store.RegistryRepositoryNameField: "aHello_test_1"}
+	filter.GroupByField = true
+	result, err = db.FindRepositories(ctx, filter)
+	assert.NoError(t, err)
+	assert.Equal(t, int64(1), result.Total)
+	require.Equal(t, 1, len(result.Data))
+
+	reposSize := entries[0].Size + entries[1].Size
+	assert.Equal(t, reposSize, result.Data[0].(store.RegistryEntry).Size)
 
 	// try with  bad or closed connection
 	badConn := Embedded{}
@@ -296,8 +317,8 @@ func TestEmbedded_FindRepositoriesByUser(t *testing.T) {
 
 	result, errFind := db.FindRepositories(ctx, filter)
 	assert.NoError(t, errFind)
-	assert.Equal(t, result.Total, int64(2))
-	assert.Equal(t, len(result.Data), 2)
+	assert.Equal(t, int64(3), result.Total)
+	assert.Equal(t, 3, len(result.Data))
 
 	ctxCancel()
 	wg.Wait()
@@ -321,7 +342,7 @@ func TestEmbedded_UpdateRepository(t *testing.T) {
 	err := db.UpdateRepository(ctx, conditionClause, fieldForUpdate)
 	require.NoError(t, err)
 
-	updatedEntry, errGet := db.GetRepository(ctx, 2)
+	updatedEntry, errGet := db.GetRepository(ctx, 3)
 	require.NoError(t, errGet)
 	assert.Equal(t, "test_tag_222", updatedEntry.Tag)
 
@@ -331,7 +352,7 @@ func TestEmbedded_UpdateRepository(t *testing.T) {
 	err = db.UpdateRepository(ctx, conditionClause, fieldForUpdate)
 	require.NoError(t, err)
 
-	updatedEntry, errGet = db.GetRepository(ctx, 2)
+	updatedEntry, errGet = db.GetRepository(ctx, 3)
 	require.NoError(t, errGet)
 	assert.Equal(t, "test_tag_0222", updatedEntry.Tag)
 	assert.Equal(t, timestamp, updatedEntry.Timestamp)
