@@ -23,7 +23,7 @@ func TestNewRegistryToken(t *testing.T) {
 		assert.NoError(t, os.RemoveAll(path))
 	}()
 
-	// test with defaults with generate
+	// test with defaults certs by auto create
 	rt, err := NewRegistryToken()
 	require.NoError(t, err)
 	assert.Equal(t, int64(defaultTokenExpiration), rt.tokenExpiration)
@@ -113,6 +113,59 @@ func TestNewRegistryToken(t *testing.T) {
 			CARootPath:    tmpDir + "bac_ca_file_path.crt",
 			IP:            "bad.ip.address",
 		}),
+	)
+	assert.Error(t, err)
+}
+
+// Test for create registry token with a custom certificates, which created with an external tool
+func TestToken_WithCustomTokenCerts(t *testing.T) {
+	tmpDir, errDir := os.MkdirTemp(os.TempDir(), "test_cert")
+	require.NoError(t, errDir)
+	defer func() {
+		assert.NoError(t, os.RemoveAll(tmpDir))
+	}()
+
+	// for emit error when file loadings with empty content
+	clearFileContentFn := func(path string) {
+		f, errOpen := os.OpenFile(path, os.O_RDWR, 0o777)
+		require.NoError(t, errOpen)
+		require.NoError(t, f.Truncate(1))
+		assert.NoError(t, f.Close())
+	}
+
+	testCerts := Certs{
+		RootPath:      tmpDir,
+		KeyPath:       tmpDir + "/test_private.key",
+		PublicKeyPath: tmpDir + "/test_public.pub",
+		CARootPath:    tmpDir + "/test_ca.crt",
+		IP:            "127.0.0.1",
+	}
+
+	rt, err := NewRegistryToken(
+
+		TokenExpiration(10),
+		TokenIssuer("127.0.0.2"),
+		TokenLogger(log.Default()),
+		CertsName(testCerts),
+	)
+
+	require.NoError(t, err)
+
+	err = rt.loadCerts()
+	assert.NoError(t, err)
+
+	// test for errors when certs files loads
+	for _, cert := range []string{rt.Certs.CARootPath, rt.Certs.PublicKeyPath, rt.Certs.KeyPath} {
+		clearFileContentFn(cert)
+		assert.Error(t, rt.loadCerts())
+	}
+
+	_, err = NewRegistryToken(
+
+		TokenExpiration(10),
+		TokenIssuer("127.0.0.2"),
+		TokenLogger(log.Default()),
+		CertsName(testCerts),
 	)
 	assert.Error(t, err)
 }
