@@ -39,6 +39,8 @@ const (
 	privateKeyName = "/registry_auth.key"
 	publicKeyName  = "/registry_auth.pub"
 	caName         = "/registry_auth_ca.crt"
+
+	errPrefixCertsNotFound = "cert file not found"
 )
 
 var errTemplateCertFileAlreadyExist = "cert file '%s' already exist"
@@ -92,7 +94,7 @@ type ClientToken struct {
 	AccessToken string `json:"access_token"`
 }
 
-// AccessToken is a token instance using for authorization in registry
+// AccessToken is a token instance using for authorization in registryal
 type AccessToken struct {
 	Certs
 
@@ -187,6 +189,12 @@ func NewRegistryToken(opts ...TokenOption) (*AccessToken, error) {
 	}
 
 	if err = rt.loadCerts(); err != nil {
+
+		// throw error when certs files exist but load is fail, otherwise tries to generate new certs
+		if !strings.HasPrefix(err.Error(), errPrefixCertsNotFound) {
+			return nil, err
+		}
+
 		err = rt.createCerts()
 		if err != nil {
 			return nil, err
@@ -285,10 +293,36 @@ func (rt *AccessToken) createCerts() (err error) {
 	return rt.saveKeys()
 }
 
+// statCerts - checks files defined in certs option for exist
+func (rt *AccessToken) statCerts() error {
+	var (
+		errExist  error
+		errString []string
+	)
+
+	if _, err := os.Stat(rt.KeyPath); err != nil {
+		errString = append(errString, rt.KeyPath)
+	}
+
+	if _, err := os.Stat(rt.PublicKeyPath); err != nil {
+		errString = append(errString, rt.PublicKeyPath)
+	}
+
+	if _, err := os.Stat(rt.CARootPath); err != nil {
+		errString = append(errString, rt.CARootPath)
+	}
+
+	if len(errString) > 0 {
+		errExist = fmt.Errorf("%s: %s", errPrefixCertsNotFound, strings.Join(errString, ", "))
+	}
+
+	return errExist
+}
+
 func (rt *AccessToken) loadCerts() (err error) {
 
-	if _, err = os.Stat(rt.Certs.RootPath); err != nil {
-		return err
+	if errStat := rt.statCerts(); errStat != nil {
+		return errStat
 	}
 
 	rt.privateKey, err = libtrust.LoadKeyFile(rt.Certs.KeyPath)
@@ -303,7 +337,12 @@ func (rt *AccessToken) loadCerts() (err error) {
 
 	bundle, errCaLoad := libtrust.LoadCertificateBundle(rt.Certs.CARootPath)
 	if errCaLoad != nil {
+
 		return errCaLoad
+	}
+
+	if len(bundle) == 0 {
+		return errors.New("certificates bundle not found in CA file")
 	}
 	rt.caRoot = bundle[0]
 
