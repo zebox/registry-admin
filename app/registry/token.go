@@ -191,13 +191,13 @@ func NewRegistryToken(opts ...TokenOption) (*AccessToken, error) {
 	if err = rt.loadCerts(); err != nil {
 
 		// throw error when certs files exist but load is fail, otherwise tries to generate new certs
-		if !strings.HasPrefix(err.Error(), errPrefixCertsNotFound) {
-			return nil, err
+		if err != nil && !strings.HasPrefix(err.Error(), errPrefixCertsNotFound) {
+			return nil, fmt.Errorf("failed to load existed certificates for token: %v", err)
 		}
 
 		err = rt.createCerts()
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to create new certificats for token: %v", err)
 		}
 	}
 
