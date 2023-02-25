@@ -116,6 +116,22 @@ github.com/klauspost/compress/zstd/internal/xxhash
 # github.com/konsorten/go-windows-terminal-sequences v1.0.2
 ## explicit
 github.com/konsorten/go-windows-terminal-sequences
+# github.com/labstack/echo/v4 v4.10.2
+## explicit; go 1.17
+github.com/labstack/echo/v4
+github.com/labstack/echo/v4/middleware
+# github.com/labstack/gommon v0.4.0
+## explicit; go 1.12
+github.com/labstack/gommon/bytes
+github.com/labstack/gommon/color
+github.com/labstack/gommon/log
+github.com/labstack/gommon/random
+# github.com/mattn/go-colorable v0.1.13
+## explicit; go 1.15
+github.com/mattn/go-colorable
+# github.com/mattn/go-isatty v0.0.17
+## explicit; go 1.15
+github.com/mattn/go-isatty
 # github.com/mattn/go-sqlite3 v1.14.10
 ## explicit; go 1.12
 github.com/mattn/go-sqlite3
@@ -147,14 +163,20 @@ github.com/pmezard/go-difflib/difflib
 # github.com/sirupsen/logrus v1.4.2
 ## explicit
 github.com/sirupsen/logrus
-# github.com/stretchr/testify v1.8.0
+# github.com/stretchr/testify v1.8.1
 ## explicit; go 1.13
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
 # github.com/tidwall/gjson v1.14.4
 ## explicit; go 1.12
+# github.com/valyala/bytebufferpool v1.0.0
+## explicit
+github.com/valyala/bytebufferpool
 # github.com/valyala/fasthttp v1.43.0
 ## explicit; go 1.16
+# github.com/valyala/fasttemplate v1.2.2
+## explicit; go 1.12
+github.com/valyala/fasttemplate
 # github.com/xdg-go/pbkdf2 v1.0.0
 ## explicit; go 1.9
 github.com/xdg-go/pbkdf2
@@ -212,7 +234,7 @@ go.mongodb.org/mongo-driver/x/mongo/driver/operation
 go.mongodb.org/mongo-driver/x/mongo/driver/session
 go.mongodb.org/mongo-driver/x/mongo/driver/topology
 go.mongodb.org/mongo-driver/x/mongo/driver/wiremessage
-# golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d
+# golang.org/x/crypto v0.6.0
 ## explicit; go 1.17
 golang.org/x/crypto/acme
 golang.org/x/crypto/acme/autocert
@@ -221,7 +243,7 @@ golang.org/x/crypto/blowfish
 golang.org/x/crypto/ocsp
 golang.org/x/crypto/pbkdf2
 golang.org/x/crypto/scrypt
-# golang.org/x/image v0.0.0-20220413100746-70e8d0d3baa9
+# golang.org/x/image v0.5.0
 ## explicit; go 1.12
 golang.org/x/image/draw
 golang.org/x/image/math/f64
@@ -231,6 +253,10 @@ golang.org/x/net/context
 golang.org/x/net/context/ctxhttp
 golang.org/x/net/html
 golang.org/x/net/html/atom
+golang.org/x/net/http/httpguts
+golang.org/x/net/http2
+golang.org/x/net/http2/h2c
+golang.org/x/net/http2/hpack
 golang.org/x/net/idna
 # golang.org/x/oauth2 v0.0.0-20220411215720-9780585627b5
 ## explicit; go 1.11
@@ -245,7 +271,7 @@ golang.org/x/oauth2/jws
 golang.org/x/oauth2/jwt
 golang.org/x/oauth2/microsoft
 golang.org/x/oauth2/yandex
-# golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
+# golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4
 ## explicit
 golang.org/x/sync/errgroup
 # golang.org/x/sys v0.5.0
@@ -257,7 +283,7 @@ golang.org/x/text/secure/bidirule
 golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
-# golang.org/x/time v0.0.0-20201208040808-7e3f01d25324
+# golang.org/x/time v0.3.0
 ## explicit
 golang.org/x/time/rate
 # google.golang.org/appengine v1.6.7
