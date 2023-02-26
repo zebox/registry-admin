@@ -82,6 +82,7 @@ const russianMessages: TranslationMessages = {
         message: {
             about: "Справка",
             are_you_sure: "Вы уверены?",
+            auth_error:"Произошла ошибка при проверке токена аутентификации",
             clear_array_input: 'Вы уверены, что хотите очистить вест список?',
             bulk_delete_content:
                 "Вы уверены, что хотите удалить %{name}? |||| Вы уверены, что хотите удалить объекты, кол-вом %{smart_count} ? |||| Вы уверены, что хотите удалить объекты, кол-вом %{smart_count} ?",

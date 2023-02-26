@@ -145,7 +145,6 @@ func (rh *registryHandlers) catalogList(w http.ResponseWriter, r *http.Request) 
 	}
 
 	groupBy, isGroupBy := r.URL.Query()["group_by"]
-	fmt.Printf("%v %v", isGroupBy, groupBy)
 
 	user, err := token.GetUserInfo(r)
 	if err != nil {
