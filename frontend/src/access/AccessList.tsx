@@ -73,7 +73,6 @@ const AccessList = (props: any) => {
         ]} >
         <Datagrid bulkActionButtons={false} >
             <CustomUsersReference label={translate('resources.accesses.fields.owner_id')} />
-            <TextField source="type" label={translate('resources.accesses.fields.resource_type')} />
             <TextField source="resource_name" label={translate('resources.accesses.fields.resource_name')} />
             <TextField source="action" label={translate('resources.accesses.fields.action')} />
             <TextField source="name" label={translate('resources.accesses.fields.name')} />
