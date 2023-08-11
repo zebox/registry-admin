@@ -21,7 +21,7 @@ github.com/didip/tollbooth/v6/limiter
 # github.com/didip/tollbooth_chi v0.0.0-20220429013743-da966f2f674b
 ## explicit; go 1.14
 github.com/didip/tollbooth_chi
-# github.com/docker/distribution v2.8.1+incompatible
+# github.com/docker/distribution v2.8.2+incompatible
 ## explicit
 github.com/docker/distribution
 github.com/docker/distribution/configuration
