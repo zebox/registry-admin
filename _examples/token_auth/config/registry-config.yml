@@ -18,13 +18,14 @@ storage:
 http:
   addr: ":5000"
   net: tcp
+  # don't comment out TLS because docker client force HTTPS connection when login
   tls:
     certificate: /certs/cert.crt
     key: /certs/cert.key
 
 auth:
   token:
-    realm: http://localhost:8080/api/v1/registry/auth  # <- external ip accessible for clients from outside of container
+    realm: http://{PASTE-REAL-IP-OR-HOSTNAME-FOR-REGISTRY-ADMIN}/api/v1/registry/auth  # <- external ip accessible for clients from outside of container
     service: container_registry
     issuer: registry_token_issuer
     rootcertbundle: /certs/cert.crt
