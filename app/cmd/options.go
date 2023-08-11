@@ -53,7 +53,7 @@ type Options struct {
 		ACMELocation  string   `long:"acme-location" env:"ACME_LOCATION" description:"dir where certificates will be stored by autocert manager" default:"./acme" json:"acme_location" yaml:"acme_location"`
 		ACMEEmail     string   `long:"acme-email" env:"ACME_EMAIL" description:"admin email for certificate notifications" json:"acme_email" yaml:"acme_email"`
 		Port          int      `long:"port" env:"PORT" description:"Main web-service secure SSL port. Default:443" default:"443" json:"port" yaml:"port"`
-		RedirHTTPPort int      `long:"http-port" env:"ACME_HTTP_PORT" description:"http port for redirect to https and acme challenge test (default: 80)" json:"redir_http_port" yaml:"redir_http_port" yaml:"redir_http_port"`
+		RedirHTTPPort int      `long:"http-port" env:"ACME_HTTP_PORT" description:"http port for redirect to https and acme challenge test (default: 80)" json:"redir_http_port" yaml:"redir_http_port"`
 		FQDNs         []string `long:"fqdn" env:"ACME_FQDN" env-delim:"," description:"FQDN(s) for ACME certificates" json:"acme_fqdns" yaml:"acme_fqdns"`
 	} `group:"ssl" namespace:"ssl" env-namespace:"RA_SSL" json:"ssl" yaml:"ssl"`
 
@@ -68,7 +68,7 @@ type Options struct {
 // Type implement as options for add support for different storage
 type StoreGroup struct {
 	Type          string `long:"type" env:"DB_TYPE" description:"type of storage" choice:"embed" default:"embed" json:"type" yaml:"type"` // nolint
-	AdminPassword string `long:"admin-password" env:"ADMIN_PASSWORD" description:"Define password for default admin user when storage create first" default:"admin" json:"admin_password" yaml:"admin_password" yaml:"admin_password"`
+	AdminPassword string `long:"admin-password" env:"ADMIN_PASSWORD" description:"Define password for default admin user when storage create first" default:"admin" json:"admin_password" yaml:"admin_password"`
 	Embed         struct {
 		Path string `long:"path" env:"DB_PATH" default:"./data.db" description:"Parent directory for the sqlite files" json:"path" yaml:"path"`
 	} `group:"embed" namespace:"embed" env-namespace:"EMBED" json:"embed" yaml:"embed"`

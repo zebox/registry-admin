@@ -23,3 +23,5 @@ services:
       - ./config/registry-config.yml:/etc/docker/registry/config.yml
     depends_on:
       - registry-admin
+    # override container running command for add self-signed certificate to trusted CA inside the registry container
+    command: [ "/bin/sh", "-c", "cp /certs/cert.crt /usr/local/share/ca-certificates && /usr/sbin/update-ca-certificates; registry serve /etc/docker/registry/config.yml" ]
