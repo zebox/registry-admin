@@ -79,6 +79,9 @@ type Settings struct {
 	// The name of the token issuer which hosts the resource.
 	Issuer string
 
+	// Override default token expiration time (in seconds), default 60 seconds
+	TokenTTL int64
+
 	// CertificatesPaths define a path to private, public keys and CA certificate.
 	// If CertificatesPaths has all fields are empty, AccessToken will create keys by default, with default path.
 	// If CertificatesPaths has all fields are empty, but certificates files exist AccessToken try to load existed keys and CA file.
@@ -202,14 +205,17 @@ func NewRegistry(login, password string, settings Settings) (*Registry, error) {
 
 	if r.settings.AuthType == SelfToken {
 
+		if settings.TokenTTL == 0 {
+			settings.TokenTTL = defaultTokenExpiration
+		}
 		r.htpasswd = nil // not needed for token auth
 		var err error
 		if certsPathIsFilled {
-			if r.registryToken, err = NewRegistryToken(TokenIssuer(settings.Issuer), CertsName(settings.CertificatesPaths)); err != nil {
+			if r.registryToken, err = NewRegistryToken(TokenIssuer(settings.Issuer), CertsName(settings.CertificatesPaths), TokenExpiration(settings.TokenTTL)); err != nil {
 				return nil, err
 			}
 		} else {
-			r.registryToken, err = NewRegistryToken(TokenIssuer(settings.Issuer))
+			r.registryToken, err = NewRegistryToken(TokenIssuer(settings.Issuer), TokenExpiration(settings.TokenTTL))
 			if err != nil {
 				return nil, err
 			}

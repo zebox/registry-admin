@@ -150,11 +150,11 @@ func Test_createRegistryConnection(t *testing.T) {
 			Htpasswd: ".test_htpasswd",
 			Certs: struct {
 				Path      string   `long:"path" env:"CERT_PATH" description:"A path to directory where will be stored new self-signed cert,keys and CA files, when 'token' auth type is used" json:"path" yaml:"path"`
-				Key       string   `long:"key" env:"KEY_PATH" description:"A path where will be stored new self-signed private key file, when 'token' auth type is used" json:"key"`
+				Key       string   `long:"key" env:"KEY_PATH" description:"A path where will be stored new self-signed private key file, when 'token' auth type is used" json:"key" yaml:"key"`
 				PublicKey string   `long:"public-key" env:"PUBLIC_KEY_PATH" description:"A path where will be stored new self-signed public key file, when 'token' auth type is used" json:"public_key" yaml:"public_key"`
 				CARoot    string   `long:"ca-root" env:"CA_ROOT_PATH" description:"A path where will be stored new CA bundles file, when 'token' auth type is used" json:"ca_root" yaml:"ca_root"`
 				FQDNs     []string `long:"fqdn" env:"FQDN" env-delim:"," description:"FQDN(s) for registry certificates" json:"fqdns" yaml:"fqdns"`
-				IP        string   `long:"ip" env:"IP" description:"Address which appends to certificate SAN (Subject Alternative Name)" json:"ip"`
+				IP        string   `long:"ip" env:"IP" description:"Address which appends to certificate SAN (Subject Alternative Name)" json:"ip" yaml:"ip"`
 				HTTPSCert string   `long:"https-cert" env:"CERT_HTTPS" description:"A path to HTTPS certificate used for TLS access to registry instance" json:"https_cert" yaml:"https_cert"`
 			}(struct {
 				Path      string
@@ -162,7 +162,7 @@ func Test_createRegistryConnection(t *testing.T) {
 				PublicKey string
 				CARoot    string
 				FQDNs     []string `long:"fqdn" env:"FQDN" env-delim:"," description:"FQDN(s) for registry certificates" json:"fqdns" yaml:"fqdns"`
-				IP        string   `long:"ip" env:"IP" description:"Address which appends to certificate SAN (Subject Alternative Name)" json:"ip"`
+				IP        string   `long:"ip" env:"IP" description:"Address which appends to certificate SAN (Subject Alternative Name)" json:"ip" yaml:"ip"`
 				HTTPSCert string   `long:"https-cert" env:"CERT_HTTPS" description:"A path to HTTPS certificate used for TLS access to registry instance" json:"https_cert" yaml:"https_cert"`
 			}{Path: tmpDir + "/", Key: tmpDir + "/test.key", PublicKey: tmpDir + "/test.pub", CARoot: tmpDir + "/test.crt"}),
 		},

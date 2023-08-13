@@ -201,6 +201,7 @@ func createRegistryConnection(opts RegistryGroup) (*registry.Registry, error) {
 		registrySettings.Service = opts.Service
 		registrySettings.Issuer = opts.Issuer
 		registrySettings.AuthType = registry.SelfToken
+		registrySettings.TokenTTL = opts.TokenTTL
 	default:
 		return nil, errors.Errorf("registry auth type '%s' not support", opts.AuthType)
 	}
