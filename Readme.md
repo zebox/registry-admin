@@ -381,6 +381,7 @@ registry:
       --registry.https-insecure           Set https connection to registry insecure [$RA_REGISTRY_HTTPS_INSECURE]
       --registry.service:                 A service name which defined in registry settings [$RA_REGISTRY_SERVICE]
       --registry.issuer:                  A token issuer name which defined in registry settings [$RA_REGISTRY_ISSUER]
+      --registry.token-ttl:               Define registry auth token TTL (in seconds). Default value 60 seconds. [$RA_REGISTRY_TOKEN_TTL]
       --registry.gc-interval:             Use for define custom time interval for garbage collector execute (minutes), default 1 hours [$RA_REGISTRY_GC_INTERVAL]
 
 certs:

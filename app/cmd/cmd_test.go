@@ -162,7 +162,7 @@ func Test_createRegistryConnection(t *testing.T) {
 				PublicKey string
 				CARoot    string
 				FQDNs     []string `long:"fqdn" env:"FQDN" env-delim:"," description:"FQDN(s) for registry certificates" json:"fqdns" yaml:"fqdns"`
-				IP        string   `long:"ip" env:"IP" description:"Address which appends to certificate SAN (Subject Alternative Name)" json:"ip"`
+				IP        string   `long:"ip" env:"IP" description:"Address which appends to certificate SAN (Subject Alternative Name)" json:"ip" yaml:"ip"`
 				HTTPSCert string   `long:"https-cert" env:"CERT_HTTPS" description:"A path to HTTPS certificate used for TLS access to registry instance" json:"https_cert" yaml:"https_cert"`
 			}{Path: tmpDir + "/", Key: tmpDir + "/test.key", PublicKey: tmpDir + "/test.pub", CARoot: tmpDir + "/test.crt"}),
 		},

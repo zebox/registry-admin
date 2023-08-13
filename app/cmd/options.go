@@ -85,6 +85,7 @@ type RegistryGroup struct {
 	InsecureConnection       bool   `long:"https-insecure" env:"HTTPS_INSECURE" description:"Set https connection to registry insecure" json:"https_insecure" yaml:"https_insecure"`
 	Service                  string `long:"service" env:"SERVICE" description:"A service name which defined in registry settings" json:"service" yaml:"service"`
 	Issuer                   string `long:"issuer" env:"ISSUER" description:"A token issuer name which defined in registry settings" json:"issuer" yaml:"issuer"`
+	TokenTTL                 int64  `long:"token-ttl" env:"TOKEN_TTL" description:"Define registry auth token TTL (in second). Default value 60 seconds." json:"token_ttl" yaml:"token_ttl"`
 	GarbageCollectorInterval int64  `long:"gc-interval" env:"GC_INTERVAL" description:"Use for define custom time interval for garbage collector execute (minutes), default 1 hours" json:"gc_interval" yaml:"gc_interval"`
 	Certs                    struct {
 		Path      string   `long:"path" env:"CERT_PATH" description:"A path to directory where will be stored new self-signed cert,keys and CA files, when 'token' auth type is used" json:"path" yaml:"path"`
@@ -94,7 +95,7 @@ type RegistryGroup struct {
 		FQDNs     []string `long:"fqdn" env:"FQDN" env-delim:"," description:"FQDN(s) for registry certificates" json:"fqdns" yaml:"fqdns"`
 		IP        string   `long:"ip" env:"IP" description:"Address which appends to certificate SAN (Subject Alternative Name)" json:"ip" yaml:"ip"`
 		HTTPSCert string   `long:"https-cert" env:"CERT_HTTPS" description:"A path to HTTPS certificate used for TLS access to registry instance" json:"https_cert" yaml:"https_cert"`
-	} `group:"certs" namespace:"certs" env-namespace:"CERTS" json:"certs"`
+	} `group:"certs" namespace:"certs" env-namespace:"CERTS" json:"certs" yaml:"certs"`
 }
 
 // ParseArgs calls flag parser for passing set of extra options defined for all commands
