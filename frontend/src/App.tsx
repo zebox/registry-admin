@@ -8,6 +8,7 @@ import { Login, Layout } from './layout';
 import Footer from './components/Footer/Footer';
 import englishMessages from './i18n/en';
 import russianMessages from './i18n/ru';
+import ukraineMessages from './i18n/ua';
 import { lightTheme } from './layout/themes';
 
 
@@ -26,6 +27,7 @@ interface ITranslation {
 }
 
 const messages: ITranslation = {
+  ua: ukraineMessages,
   ru: russianMessages,
   en: englishMessages,
 };
@@ -37,7 +39,8 @@ const i18nProvider = polyglotI18nProvider(
   // other language should defined here
   [
     { locale: 'en', name: 'English' },
-    { locale: 'ru', name: 'Русский' }
+    { locale: 'ru', name: 'Русский' },
+    { locale: 'ua', name: 'Українська' },
   ],
 
   { allowMissing: true }

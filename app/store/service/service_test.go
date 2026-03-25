@@ -4,17 +4,18 @@ import (
 	"context"
 	"crypto/sha256"
 	"fmt"
+	"math/rand"
+	"sort"
+	"strconv"
+	"testing"
+	"time"
+
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/zebox/registry-admin/app/registry"
 	"github.com/zebox/registry-admin/app/store"
 	"github.com/zebox/registry-admin/app/store/engine"
-	"math/rand"
-	"sort"
-	"strconv"
-	"testing"
-	"time"
 )
 
 const (
@@ -230,13 +231,13 @@ func prepareRegistryMock(size int) *registryInterfaceMock {
 
 			return tags, errors.New("repository not found")
 		},
-		ManifestFunc: func(ctx context.Context, repoName string, tag string) (manifest registry.ManifestSchemaV2, _ error) {
+		ManifestFunc: func(ctx context.Context, repoName string, childDigest string, manifestList registry.ManifestListSchemaItem) (manifest registry.ManifestSchemaV2, _ error) {
 			// emit fake error
 			if err := ctxCheckErrorFn(ctx, errorManifest); err != nil {
 				return manifest, errorManifest
 			}
 
-			if val, ok := testManifests[repoName+"_"+tag]; ok {
+			if val, ok := testManifests[repoName+"_"+childDigest]; ok {
 				return val, nil
 			}
 			return registry.ManifestSchemaV2{}, errors.New("manifest not found")
