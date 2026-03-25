@@ -85,7 +85,10 @@ type registryInterface interface {
 	ListingImageTags(ctx context.Context, repoName, n, last string) (registry.ImageTags, error)
 
 	// Manifest will fetch the manifest identified by 'name' and 'reference' where 'reference' can be a tag or digest.
-	Manifest(ctx context.Context, repoName, tag string) (registry.ManifestSchemaV2, error)
+	Manifest(ctx context.Context, repoName, childDigest string, manifestList registry.ManifestListSchemaItem) (registry.ManifestSchemaV2, error)
+
+	// ManifestList will fetch the manifest identified by 'name' and 'reference' where 'reference' can be a tag or digest.
+	ManifestList(ctx context.Context, repoName, tag string) (registry.ManifestListSchema, error)
 
 	// GetBlob retrieve information about image from config blob
 	GetBlob(ctx context.Context, name, digest string) (blob []byte, err error)

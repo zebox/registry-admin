@@ -15,25 +15,25 @@ var _ registryInterface = &registryInterfaceMock{}
 
 // registryInterfaceMock is a mock implementation of registryInterface.
 //
-// 	func TestSomethingThatUsesregistryInterface(t *testing.T) {
+//	func TestSomethingThatUsesregistryInterface(t *testing.T) {
 //
-// 		// make and configure a mocked registryInterface
-// 		mockedregistryInterface := &registryInterfaceMock{
-// 			CatalogFunc: func(ctx context.Context, n string, last string) (registry.Repositories, error) {
-// 				panic("mock out the Catalog method")
-// 			},
-// 			ListingImageTagsFunc: func(ctx context.Context, repoName string, n string, last string) (registry.ImageTags, error) {
-// 				panic("mock out the ListingImageTags method")
-// 			},
-// 			ManifestFunc: func(ctx context.Context, repoName string, tag string) (registry.ManifestSchemaV2, error) {
-// 				panic("mock out the Manifest method")
-// 			},
-// 		}
+//		// make and configure a mocked registryInterface
+//		mockedregistryInterface := &registryInterfaceMock{
+//			CatalogFunc: func(ctx context.Context, n string, last string) (registry.Repositories, error) {
+//				panic("mock out the Catalog method")
+//			},
+//			ListingImageTagsFunc: func(ctx context.Context, repoName string, n string, last string) (registry.ImageTags, error) {
+//				panic("mock out the ListingImageTags method")
+//			},
+//			ManifestFunc: func(ctx context.Context, repoName string, tag string) (registry.ManifestSchemaV2, error) {
+//				panic("mock out the Manifest method")
+//			},
+//		}
 //
-// 		// use mockedregistryInterface in code that requires registryInterface
-// 		// and then make assertions.
+//		// use mockedregistryInterface in code that requires registryInterface
+//		// and then make assertions.
 //
-// 	}
+//	}
 type registryInterfaceMock struct {
 	// CatalogFunc mocks the Catalog method.
 	CatalogFunc func(ctx context.Context, n string, last string) (registry.Repositories, error)
@@ -42,7 +42,10 @@ type registryInterfaceMock struct {
 	ListingImageTagsFunc func(ctx context.Context, repoName string, n string, last string) (registry.ImageTags, error)
 
 	// ManifestFunc mocks the Manifest method.
-	ManifestFunc func(ctx context.Context, repoName string, tag string) (registry.ManifestSchemaV2, error)
+	ManifestFunc func(ctx context.Context, repoName string, childDigest string, manifestList registry.ManifestListSchemaItem) (registry.ManifestSchemaV2, error)
+
+	// ManifestFunc mocks the Manifest method.
+	ManifestListFunc func(ctx context.Context, repoName string, tag string) (registry.ManifestListSchema, error)
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -68,6 +71,15 @@ type registryInterfaceMock struct {
 		}
 		// Manifest holds details about calls to the Manifest method.
 		Manifest []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// RepoName is the repoName argument value.
+			RepoName string
+			// Tag is the tag argument value.
+			Tag string
+		}
+		// ManifestList holds details about calls to the ManifestList method.
+		ManifestList []struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
 			// RepoName is the repoName argument value.
@@ -103,7 +115,8 @@ func (mock *registryInterfaceMock) Catalog(ctx context.Context, n string, last s
 
 // CatalogCalls gets all the calls that were made to Catalog.
 // Check the length with:
-//     len(mockedregistryInterface.CatalogCalls())
+//
+//	len(mockedregistryInterface.CatalogCalls())
 func (mock *registryInterfaceMock) CatalogCalls() []struct {
 	Ctx  context.Context
 	N    string
@@ -144,7 +157,8 @@ func (mock *registryInterfaceMock) ListingImageTags(ctx context.Context, repoNam
 
 // ListingImageTagsCalls gets all the calls that were made to ListingImageTags.
 // Check the length with:
-//     len(mockedregistryInterface.ListingImageTagsCalls())
+//
+//	len(mockedregistryInterface.ListingImageTagsCalls())
 func (mock *registryInterfaceMock) ListingImageTagsCalls() []struct {
 	Ctx      context.Context
 	RepoName string
@@ -164,8 +178,28 @@ func (mock *registryInterfaceMock) ListingImageTagsCalls() []struct {
 }
 
 // Manifest calls ManifestFunc.
-func (mock *registryInterfaceMock) Manifest(ctx context.Context, repoName string, tag string) (registry.ManifestSchemaV2, error) {
+func (mock *registryInterfaceMock) Manifest(ctx context.Context, repoName string, childDigest string, manifestList registry.ManifestListSchemaItem) (registry.ManifestSchemaV2, error) {
 	if mock.ManifestFunc == nil {
+		panic("registryInterfaceMock.ManifestFunc: method is nil but registryInterface.Manifest was just called")
+	}
+	callInfo := struct {
+		Ctx      context.Context
+		RepoName string
+		Tag      string
+	}{
+		Ctx:      ctx,
+		RepoName: repoName,
+		Tag:      childDigest,
+	}
+	mock.lockManifest.Lock()
+	mock.calls.Manifest = append(mock.calls.Manifest, callInfo)
+	mock.lockManifest.Unlock()
+	return mock.ManifestFunc(ctx, repoName, childDigest, manifestList)
+}
+
+// ManifestList calls ManifestListFunc.
+func (mock *registryInterfaceMock) ManifestList(ctx context.Context, repoName string, tag string) (registry.ManifestListSchema, error) {
+	if mock.ManifestListFunc == nil {
 		panic("registryInterfaceMock.ManifestFunc: method is nil but registryInterface.Manifest was just called")
 	}
 	callInfo := struct {
@@ -178,14 +212,15 @@ func (mock *registryInterfaceMock) Manifest(ctx context.Context, repoName string
 		Tag:      tag,
 	}
 	mock.lockManifest.Lock()
-	mock.calls.Manifest = append(mock.calls.Manifest, callInfo)
+	mock.calls.ManifestList = append(mock.calls.ManifestList, callInfo)
 	mock.lockManifest.Unlock()
-	return mock.ManifestFunc(ctx, repoName, tag)
+	return mock.ManifestListFunc(ctx, repoName, tag)
 }
 
 // ManifestCalls gets all the calls that were made to Manifest.
 // Check the length with:
-//     len(mockedregistryInterface.ManifestCalls())
+//
+//	len(mockedregistryInterface.ManifestCalls())
 func (mock *registryInterfaceMock) ManifestCalls() []struct {
 	Ctx      context.Context
 	RepoName string

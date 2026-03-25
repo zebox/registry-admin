@@ -16,7 +16,6 @@ require (
 	github.com/gorilla/handlers v1.5.1
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/jessevdk/go-flags v1.5.0
-	github.com/labstack/echo/v4 v4.10.2
 	github.com/mattn/go-sqlite3 v1.14.10
 	github.com/opencontainers/go-digest v1.0.0
 	github.com/pkg/errors v0.9.1
@@ -44,9 +43,6 @@ require (
 	github.com/hashicorp/errwrap v1.0.0 // indirect
 	github.com/klauspost/compress v1.15.9 // indirect
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
-	github.com/labstack/gommon v0.4.0 // indirect
-	github.com/mattn/go-colorable v0.1.13 // indirect
-	github.com/mattn/go-isatty v0.0.17 // indirect
 	github.com/microcosm-cc/bluemonday v1.0.20 // indirect
 	github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe // indirect
 	github.com/nullrocks/identicon v0.0.0-20180626043057-7875f45b0022 // indirect
@@ -55,9 +51,7 @@ require (
 	github.com/prometheus/client_golang v1.14.0 // indirect
 	github.com/sirupsen/logrus v1.4.2 // indirect
 	github.com/tidwall/gjson v1.14.4 // indirect
-	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasthttp v1.43.0 // indirect
-	github.com/valyala/fasttemplate v1.2.2 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.1.1 // indirect
 	github.com/xdg-go/stringprep v1.0.3 // indirect
