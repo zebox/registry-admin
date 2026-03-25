@@ -8,8 +8,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/zebox/registry-admin/app/store"
-	"github.com/zebox/registry-admin/app/store/engine"
 	"io"
 	"net/http"
 	"net/url"
@@ -18,6 +16,9 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/zebox/registry-admin/app/store"
+	"github.com/zebox/registry-admin/app/store/engine"
 )
 
 // This is package implement features for interacts with instances of the docker registry,
@@ -27,7 +28,11 @@ import (
 const (
 	// scheme version of manifest file
 	// for details about scheme version goto https://docs.docker.com/registry/spec/manifest-v2-2/
-	manifestSchemeV2 = "application/vnd.docker.distribution.manifest.v2+json"
+	ManifestSchemeV2 = "application/vnd.docker.distribution.manifest.v2+json"
+
+	ManifestImageScheme = "application/vnd.oci.image.manifest.v1+json"
+
+	ManifestListSchemeV2 = "application/vnd.docker.distribution.manifest.list.v2+json"
 
 	//  It uniquely identifies content by taking a collision-resistant hash of the bytes.
 	contentDigestHeader = "docker-content-digest"
@@ -107,7 +112,7 @@ type Registry struct {
 	httpClient *http.Client
 }
 
-type ApiResponse struct { //nolint
+type ApiResponse struct { // nolint
 	Total int64       `json:"total"`
 	Data  interface{} `json:"data"`
 }
@@ -125,6 +130,11 @@ type ImageTags struct {
 	NextLink string   // if catalog list request with pagination response will contain next page link
 }
 
+type ManifestPlatform struct {
+	Architecture string `json:"architecture"`
+	OS           string `json:"os"`
+}
+
 // ManifestSchemaV2 is V2 format schema for docker image manifest file which contain information about docker image, such as layers, size, and digest
 // https://docs.docker.com/registry/spec/manifest-v2-2/#image-manifest-field-descriptions
 type ManifestSchemaV2 struct {
@@ -134,8 +144,30 @@ type ManifestSchemaV2 struct {
 	LayersDescriptors []schema2Descriptor `json:"layers"`
 
 	// additional fields which not include in schema specification and need for this service only
-	TotalSize     int64  `json:"total_size"`     // total compressed size of image data
-	ContentDigest string `json:"content_digest"` // a main content digest using for delete image from registry
+	TotalSize     int64            `json:"total_size"` // total compressed size of image data
+	Digest        string           `json:"digest"`
+	ContentDigest string           `json:"content_digest"` // a main content digest using for delete image from registry
+	Platform      ManifestPlatform `json:"platform"`       // platform data for manifest list
+}
+
+// ManifestSchemaV2 is V2 format schema for docker image manifest file which contain information about docker image, such as layers, size, and digest
+// https://docs.docker.com/registry/spec/manifest-v2-2/#image-manifest-field-descriptions
+type ManifestListSchemaItem struct {
+	MediaType string `json:"mediaType"`
+	// additional fields which not include in schema specification and need for this service only
+	Size     int64            `json:"size"`     // total compressed size of image data
+	Digest   string           `json:"digest"`   // a main content digest using for delete image from registry
+	Platform ManifestPlatform `json:"platform"` // platform data for manifest list
+}
+
+type ManifestSchemaV1 struct{}
+
+type ManifestListSchema struct {
+	SchemaVersion int                      `json:"schemaVersion"`
+	MediaType     string                   `json:"mediaType"`
+	Manifests     []ManifestListSchemaItem `json:"manifests"`
+	TotalSize     int64                    `json:"total_size"`     // total compressed size of image data
+	ContentDigest string                   `json:"content_digest"` // a main content digest using for delete image from registry
 }
 
 type schema2Descriptor struct {
@@ -360,7 +392,7 @@ func (r *Registry) Catalog(ctx context.Context, n, last string) (Repositories, e
 		return repos, fmt.Errorf("api return error code: %d", resp.StatusCode)
 	}
 
-	err = json.NewDecoder(resp.Body).Decode(&repos)
+	err = r.readJson(resp, &repos)
 	if err != nil {
 		return repos, err
 	}
@@ -399,7 +431,7 @@ func (r *Registry) ListingImageTags(ctx context.Context, repoName, n, last strin
 		return tags, fmt.Errorf("api return error code: %d", resp.StatusCode)
 	}
 
-	err = json.NewDecoder(resp.Body).Decode(&tags)
+	err = r.readJson(resp, &tags)
 	if err != nil {
 		return tags, err
 	}
@@ -416,12 +448,22 @@ func (r *Registry) ListingImageTags(ctx context.Context, repoName, n, last strin
 }
 
 // Manifest do fetch the manifest identified by 'name' and 'reference' where 'reference' can be a tag or digest.
-func (r *Registry) Manifest(ctx context.Context, repoName, tag string) (ManifestSchemaV2, error) {
+func (r *Registry) Manifest(ctx context.Context, repoName, childDigest string, manifestList ManifestListSchemaItem) (ManifestSchemaV2, error) {
 	var manifest ManifestSchemaV2
 	var apiError APIError
-	baseURL := fmt.Sprintf("%s:%d/v2/%s/manifests/%s", r.settings.Host, r.settings.Port, repoName, tag)
+	baseURL := fmt.Sprintf("%s:%d/v2/%s/manifests/%s", r.settings.Host, r.settings.Port, repoName, childDigest)
 
-	resp, err := r.newHTTPRequest(ctx, baseURL, "GET", nil)
+	var resp *http.Response
+	var err error
+	switch manifestList.MediaType {
+	case ManifestImageScheme:
+		resp, err = r.newHTTPRequestImage(ctx, baseURL, "GET", nil)
+	case ManifestSchemeV2:
+		resp, err = r.newHTTPRequest(ctx, baseURL, "GET", nil)
+	default:
+		resp, err = r.newHTTPRequest(ctx, baseURL, "GET", nil)
+
+	}
 	if err != nil {
 		return manifest, createAPIError("failed to make request for docker registry manifest", err.Error())
 	}
@@ -434,7 +476,8 @@ func (r *Registry) Manifest(ctx context.Context, repoName, tag string) (Manifest
 
 	if resp.StatusCode >= 400 {
 		if resp != nil {
-			err = json.NewDecoder(resp.Body).Decode(&apiError)
+			raw, _ := io.ReadAll(resp.Body) // read body for avoid error with unread response body and close connection
+			err = json.Unmarshal(raw, &apiError)
 			if err != nil {
 				return manifest, createAPIError("failed to parse request body with manifest fetch error", err.Error())
 			}
@@ -445,7 +488,7 @@ func (r *Registry) Manifest(ctx context.Context, repoName, tag string) (Manifest
 		return manifest, apiError
 	}
 
-	err = json.NewDecoder(resp.Body).Decode(&manifest)
+	err = r.readJson(resp, &manifest)
 	if err != nil {
 		return manifest, createAPIError("failed to parse request body with manifest data", err.Error())
 	}
@@ -454,6 +497,59 @@ func (r *Registry) Manifest(ctx context.Context, repoName, tag string) (Manifest
 	manifest.ContentDigest = resp.Header.Get(contentDigestHeader)
 
 	return manifest, nil
+}
+
+// ManifestList do fetch the manifest identified by 'name' and 'reference' where 'reference' can be a tag or digest.
+func (r *Registry) ManifestList(ctx context.Context, repoName, tag string) (ManifestListSchema, error) {
+	var manifest ManifestListSchema
+	var apiError APIError
+	baseURL := fmt.Sprintf("%s:%d/v2/%s/manifests/%s", r.settings.Host, r.settings.Port, repoName, tag)
+
+	resp, err := r.newHTTPRequestList(ctx, baseURL, "GET", nil)
+	if err != nil {
+		return manifest, createAPIError("failed to make request for docker registry manifest", err.Error())
+	}
+
+	if resp != nil {
+		defer func() {
+			_ = resp.Body.Close()
+		}()
+	}
+
+	if resp.StatusCode >= 400 {
+		if resp != nil {
+			err = r.readJson(resp, &apiError)
+			if err != nil {
+				return manifest, createAPIError("failed to parse request body with manifest fetch error", err.Error())
+			}
+		}
+		if resp.StatusCode == http.StatusNotFound {
+			return manifest, createAPIError("resource not found", "")
+		}
+		return manifest, apiError
+	}
+
+	err = r.readJson(resp, &manifest)
+	if err != nil {
+		return manifest, createAPIError("failed to parse request body with manifest data", err.Error())
+	}
+
+	manifest.calculateCompressedImageSize()
+	manifest.ContentDigest = resp.Header.Get(contentDigestHeader)
+
+	return manifest, nil
+}
+
+func (r *Registry) readJson(resp *http.Response, o any) error {
+	all, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	// log.Printf("Accept %s", resp.Request.Header.Get("Accept"))
+	// log.Printf("URL %s", resp.Request.URL.String())
+	// log.Print(string(all))
+	err = json.Unmarshal(all, &o)
+	return err
 }
 
 // DeleteTag will delete the manifest identified by name and reference. Note that a manifest can only be deleted by digest.
@@ -475,7 +571,7 @@ func (r *Registry) DeleteTag(ctx context.Context, repoName, digest string) error
 
 	if resp.StatusCode >= 400 {
 		if resp != nil {
-			err = json.NewDecoder(resp.Body).Decode(&apiError)
+			err = r.readJson(resp, &apiError)
 			if err != nil {
 				return createAPIError("failed to parse request body when manifest delete", err.Error())
 			}
@@ -516,7 +612,44 @@ func (r *Registry) newHTTPRequest(ctx context.Context, targetURL, method string,
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Add("Accept", manifestSchemeV2)
+	req.Header.Add("Accept", ManifestSchemeV2)
+
+	if r.settings.AuthType == SelfToken {
+		return r.newHTTPRequestWithToken(req)
+	}
+
+	req.SetBasicAuth(r.settings.credentials.login, r.settings.credentials.password)
+	return r.httpClient.Do(req)
+
+}
+
+func (r *Registry) newHTTPRequestImage(ctx context.Context, targetURL, method string, body []byte) (*http.Response, error) {
+
+	req, err := http.NewRequestWithContext(ctx, method, targetURL, bytes.NewBuffer(body))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Accept", ManifestImageScheme)
+
+	if r.settings.AuthType == SelfToken {
+		return r.newHTTPRequestWithToken(req)
+	}
+
+	req.SetBasicAuth(r.settings.credentials.login, r.settings.credentials.password)
+	return r.httpClient.Do(req)
+
+}
+
+// newHTTPRequest prepare http client and execute a request to docker registry api
+//
+//nolint:unparam // body pass as pointer for retrieve data from response in caller method
+func (r *Registry) newHTTPRequestList(ctx context.Context, targetURL, method string, body []byte) (*http.Response, error) {
+
+	req, err := http.NewRequestWithContext(ctx, method, targetURL, bytes.NewBuffer(body))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Accept", ManifestListSchemeV2)
 
 	if r.settings.AuthType == SelfToken {
 		return r.newHTTPRequestWithToken(req)
@@ -631,6 +764,14 @@ func (r *Registry) ParseAuthenticateHeaderRequest(headerValue string) (authReque
 func (m *ManifestSchemaV2) calculateCompressedImageSize() {
 
 	for _, v := range m.LayersDescriptors {
+		m.TotalSize += v.Size
+	}
+}
+
+// calculateCompressedImageSize will iterate with image layers in fetched manifest file and append size of each layers to TotalSize field
+func (m *ManifestListSchema) calculateCompressedImageSize() {
+
+	for _, v := range m.Manifests {
 		m.TotalSize += v.Size
 	}
 }

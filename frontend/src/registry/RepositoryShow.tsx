@@ -77,6 +77,12 @@ const TagList = ({ children, actions, filters, title, ...props }: any) => {
 const TagDescription = ({ source }: any) => {
     const record = useRecordContext();
     const translate = useTranslate();
+    var raw: Record<string, unknown> = {};
+    try {
+        raw = JSON.parse(record["raw"]);
+    } catch (e) {
+    }
+    var index = 0;
     return <Card sx={{ minWidth: 275 }}>
         <CardContent>
             <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
@@ -86,7 +92,15 @@ const TagDescription = ({ source }: any) => {
                 {translate('resources.repository.tag_digest')} <i>{record[source]}</i>
             </Typography>
             <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
-                {translate('resources.repository.tag_media_type')} <i>{record["raw"].mediaType}</i>
+                {typeof raw == "object" && Object.keys(raw).map((key) => {
+                    if (!["layers", "config", "content_digest"].includes(key)) {
+                        return <div key={`raw-key-${key}-${index}`}>{++index}. {translate(`resources.repository.tag.raw.${key}`)}
+                            {raw?.[key] && typeof raw[key] === "object" ?
+                                <pre>{JSON.stringify(raw?.[key], null, 2) as React.ReactNode}</pre>
+                                : <i>{raw?.[key] as React.ReactNode}</i>}
+                            </div>
+                    }
+                })}
             </Typography>
         </CardContent>
     </Card>

@@ -16,46 +16,46 @@ var _ registryInterface = &registryInterfaceMock{}
 
 // registryInterfaceMock is a mock implementation of registryInterface.
 //
-// 	func TestSomethingThatUsesregistryInterface(t *testing.T) {
+//	func TestSomethingThatUsesregistryInterface(t *testing.T) {
 //
-// 		// make and configure a mocked registryInterface
-// 		mockedregistryInterface := &registryInterfaceMock{
-// 			APIVersionCheckFunc: func(ctx context.Context) error {
-// 				panic("mock out the APIVersionCheck method")
-// 			},
-// 			CatalogFunc: func(ctx context.Context, n string, last string) (registry.Repositories, error) {
-// 				panic("mock out the Catalog method")
-// 			},
-// 			DeleteTagFunc: func(ctx context.Context, repoName string, digest string) error {
-// 				panic("mock out the DeleteTag method")
-// 			},
-// 			GetBlobFunc: func(ctx context.Context, name string, digest string) ([]byte, error) {
-// 				panic("mock out the GetBlob method")
-// 			},
-// 			ListingImageTagsFunc: func(ctx context.Context, repoName string, n string, last string) (registry.ImageTags, error) {
-// 				panic("mock out the ListingImageTags method")
-// 			},
-// 			LoginFunc: func(user store.User) (string, error) {
-// 				panic("mock out the Login method")
-// 			},
-// 			ManifestFunc: func(ctx context.Context, repoName string, tag string) (registry.ManifestSchemaV2, error) {
-// 				panic("mock out the Manifest method")
-// 			},
-// 			ParseAuthenticateHeaderRequestFunc: func(headerValue string) (registry.TokenRequest, error) {
-// 				panic("mock out the ParseAuthenticateHeaderRequest method")
-// 			},
-// 			TokenFunc: func(authRequest registry.TokenRequest) (string, error) {
-// 				panic("mock out the Token method")
-// 			},
-// 			UpdateHtpasswdFunc: func(usersFn registry.FetchUsers) error {
-// 				panic("mock out the UpdateHtpasswd method")
-// 			},
-// 		}
+//		// make and configure a mocked registryInterface
+//		mockedregistryInterface := &registryInterfaceMock{
+//			APIVersionCheckFunc: func(ctx context.Context) error {
+//				panic("mock out the APIVersionCheck method")
+//			},
+//			CatalogFunc: func(ctx context.Context, n string, last string) (registry.Repositories, error) {
+//				panic("mock out the Catalog method")
+//			},
+//			DeleteTagFunc: func(ctx context.Context, repoName string, digest string) error {
+//				panic("mock out the DeleteTag method")
+//			},
+//			GetBlobFunc: func(ctx context.Context, name string, digest string) ([]byte, error) {
+//				panic("mock out the GetBlob method")
+//			},
+//			ListingImageTagsFunc: func(ctx context.Context, repoName string, n string, last string) (registry.ImageTags, error) {
+//				panic("mock out the ListingImageTags method")
+//			},
+//			LoginFunc: func(user store.User) (string, error) {
+//				panic("mock out the Login method")
+//			},
+//			ManifestFunc: func(ctx context.Context, repoName string, tag string) (registry.ManifestSchemaV2, error) {
+//				panic("mock out the Manifest method")
+//			},
+//			ParseAuthenticateHeaderRequestFunc: func(headerValue string) (registry.TokenRequest, error) {
+//				panic("mock out the ParseAuthenticateHeaderRequest method")
+//			},
+//			TokenFunc: func(authRequest registry.TokenRequest) (string, error) {
+//				panic("mock out the Token method")
+//			},
+//			UpdateHtpasswdFunc: func(usersFn registry.FetchUsers) error {
+//				panic("mock out the UpdateHtpasswd method")
+//			},
+//		}
 //
-// 		// use mockedregistryInterface in code that requires registryInterface
-// 		// and then make assertions.
+//		// use mockedregistryInterface in code that requires registryInterface
+//		// and then make assertions.
 //
-// 	}
+//	}
 type registryInterfaceMock struct {
 	// APIVersionCheckFunc mocks the APIVersionCheck method.
 	APIVersionCheckFunc func(ctx context.Context) error
@@ -76,7 +76,10 @@ type registryInterfaceMock struct {
 	LoginFunc func(user store.User) (string, error)
 
 	// ManifestFunc mocks the Manifest method.
-	ManifestFunc func(ctx context.Context, repoName string, tag string) (registry.ManifestSchemaV2, error)
+	ManifestFunc func(ctx context.Context, repoName string, childDigest string, manifestList registry.ManifestListSchemaItem) (registry.ManifestSchemaV2, error)
+
+	// ManifestListFunc mocks the ManifestList method.
+	ManifestListFunc func(ctx context.Context, repoName string, tag string) (registry.ManifestListSchema, error)
 
 	// ParseAuthenticateHeaderRequestFunc mocks the ParseAuthenticateHeaderRequest method.
 	ParseAuthenticateHeaderRequestFunc func(headerValue string) (registry.TokenRequest, error)
@@ -192,7 +195,8 @@ func (mock *registryInterfaceMock) APIVersionCheck(ctx context.Context) error {
 
 // APIVersionCheckCalls gets all the calls that were made to APIVersionCheck.
 // Check the length with:
-//     len(mockedregistryInterface.APIVersionCheckCalls())
+//
+//	len(mockedregistryInterface.APIVersionCheckCalls())
 func (mock *registryInterfaceMock) APIVersionCheckCalls() []struct {
 	Ctx context.Context
 } {
@@ -227,7 +231,8 @@ func (mock *registryInterfaceMock) Catalog(ctx context.Context, n string, last s
 
 // CatalogCalls gets all the calls that were made to Catalog.
 // Check the length with:
-//     len(mockedregistryInterface.CatalogCalls())
+//
+//	len(mockedregistryInterface.CatalogCalls())
 func (mock *registryInterfaceMock) CatalogCalls() []struct {
 	Ctx  context.Context
 	N    string
@@ -266,7 +271,8 @@ func (mock *registryInterfaceMock) DeleteTag(ctx context.Context, repoName strin
 
 // DeleteTagCalls gets all the calls that were made to DeleteTag.
 // Check the length with:
-//     len(mockedregistryInterface.DeleteTagCalls())
+//
+//	len(mockedregistryInterface.DeleteTagCalls())
 func (mock *registryInterfaceMock) DeleteTagCalls() []struct {
 	Ctx      context.Context
 	RepoName string
@@ -305,7 +311,8 @@ func (mock *registryInterfaceMock) GetBlob(ctx context.Context, name string, dig
 
 // GetBlobCalls gets all the calls that were made to GetBlob.
 // Check the length with:
-//     len(mockedregistryInterface.GetBlobCalls())
+//
+//	len(mockedregistryInterface.GetBlobCalls())
 func (mock *registryInterfaceMock) GetBlobCalls() []struct {
 	Ctx    context.Context
 	Name   string
@@ -346,7 +353,8 @@ func (mock *registryInterfaceMock) ListingImageTags(ctx context.Context, repoNam
 
 // ListingImageTagsCalls gets all the calls that were made to ListingImageTags.
 // Check the length with:
-//     len(mockedregistryInterface.ListingImageTagsCalls())
+//
+//	len(mockedregistryInterface.ListingImageTagsCalls())
 func (mock *registryInterfaceMock) ListingImageTagsCalls() []struct {
 	Ctx      context.Context
 	RepoName string
@@ -383,7 +391,8 @@ func (mock *registryInterfaceMock) Login(user store.User) (string, error) {
 
 // LoginCalls gets all the calls that were made to Login.
 // Check the length with:
-//     len(mockedregistryInterface.LoginCalls())
+//
+//	len(mockedregistryInterface.LoginCalls())
 func (mock *registryInterfaceMock) LoginCalls() []struct {
 	User store.User
 } {
@@ -397,7 +406,27 @@ func (mock *registryInterfaceMock) LoginCalls() []struct {
 }
 
 // Manifest calls ManifestFunc.
-func (mock *registryInterfaceMock) Manifest(ctx context.Context, repoName string, tag string) (registry.ManifestSchemaV2, error) {
+func (mock *registryInterfaceMock) Manifest(ctx context.Context, repoName string, childDigest string, manifestList registry.ManifestListSchemaItem) (registry.ManifestSchemaV2, error) {
+	if mock.ManifestFunc == nil {
+		panic("registryInterfaceMock.ManifestFunc: method is nil but registryInterface.Manifest was just called")
+	}
+	callInfo := struct {
+		Ctx      context.Context
+		RepoName string
+		Tag      string
+	}{
+		Ctx:      ctx,
+		RepoName: repoName,
+		Tag:      childDigest,
+	}
+	mock.lockManifest.Lock()
+	mock.calls.Manifest = append(mock.calls.Manifest, callInfo)
+	mock.lockManifest.Unlock()
+	return mock.ManifestFunc(ctx, repoName, childDigest, manifestList)
+}
+
+// ManifestList calls ManifestListFunc.
+func (mock *registryInterfaceMock) ManifestList(ctx context.Context, repoName string, tag string) (registry.ManifestListSchema, error) {
 	if mock.ManifestFunc == nil {
 		panic("registryInterfaceMock.ManifestFunc: method is nil but registryInterface.Manifest was just called")
 	}
@@ -413,12 +442,13 @@ func (mock *registryInterfaceMock) Manifest(ctx context.Context, repoName string
 	mock.lockManifest.Lock()
 	mock.calls.Manifest = append(mock.calls.Manifest, callInfo)
 	mock.lockManifest.Unlock()
-	return mock.ManifestFunc(ctx, repoName, tag)
+	return mock.ManifestListFunc(ctx, repoName, tag)
 }
 
 // ManifestCalls gets all the calls that were made to Manifest.
 // Check the length with:
-//     len(mockedregistryInterface.ManifestCalls())
+//
+//	len(mockedregistryInterface.ManifestCalls())
 func (mock *registryInterfaceMock) ManifestCalls() []struct {
 	Ctx      context.Context
 	RepoName string
@@ -453,7 +483,8 @@ func (mock *registryInterfaceMock) ParseAuthenticateHeaderRequest(headerValue st
 
 // ParseAuthenticateHeaderRequestCalls gets all the calls that were made to ParseAuthenticateHeaderRequest.
 // Check the length with:
-//     len(mockedregistryInterface.ParseAuthenticateHeaderRequestCalls())
+//
+//	len(mockedregistryInterface.ParseAuthenticateHeaderRequestCalls())
 func (mock *registryInterfaceMock) ParseAuthenticateHeaderRequestCalls() []struct {
 	HeaderValue string
 } {
@@ -484,7 +515,8 @@ func (mock *registryInterfaceMock) Token(authRequest registry.TokenRequest) (str
 
 // TokenCalls gets all the calls that were made to Token.
 // Check the length with:
-//     len(mockedregistryInterface.TokenCalls())
+//
+//	len(mockedregistryInterface.TokenCalls())
 func (mock *registryInterfaceMock) TokenCalls() []struct {
 	AuthRequest registry.TokenRequest
 } {
@@ -515,7 +547,8 @@ func (mock *registryInterfaceMock) UpdateHtpasswd(usersFn registry.FetchUsers) e
 
 // UpdateHtpasswdCalls gets all the calls that were made to UpdateHtpasswd.
 // Check the length with:
-//     len(mockedregistryInterface.UpdateHtpasswdCalls())
+//
+//	len(mockedregistryInterface.UpdateHtpasswdCalls())
 func (mock *registryInterfaceMock) UpdateHtpasswdCalls() []struct {
 	UsersFn registry.FetchUsers
 } {
